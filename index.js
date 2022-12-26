@@ -3,7 +3,7 @@
   document.body.insertAdjacentHTML(`afterbegin`,`<div id="particles-js-el" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:2;pointer-events:none;"></div>`);
   setTimeout(()=>particlesJS?particlesJS('particles-js-el',{
     particles:{
-      number:{value:400,density:{enable:true,value_area:800}},
+      number:{value:200,density:{enable:true,value_area:800}},
       color:{value:'#ffffff'},
       shape:{type:'image',stroke:{width:3,color:'#fff'},polygon:{nb_sides:5},image:{src:`https://mypanty1.github.io/snow/snowflake3-min.png`,width:100,height:100}},
       opacity:{value:1,random:false,anim:{enable:false,speed:1,opacity_min:0.1,sync:false}},
