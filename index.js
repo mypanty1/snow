@@ -1,4 +1,4 @@
-(function(){
+/*(function(){
   document.head.insertAdjacentElement(`beforeend`,Object.assign(document.createElement('script'),{src:`https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js`}));
   document.body.insertAdjacentHTML(`afterbegin`,`<div id="particles-js-el" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:2;pointer-events:none;"></div>`);
   setTimeout(()=>particlesJS?particlesJS('particles-js-el',{
@@ -18,4 +18,4 @@
     },
     retina_detect:true
   }):null,1000);
-}())
+}())*/
