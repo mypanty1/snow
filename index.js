@@ -19,3 +19,110 @@
     retina_detect:true
   }):null,1000);
 }())*/
+
+Vue.component("SiteNodePage2",{//fix bug
+  template:`<section>
+    <page-navbar :title="title" @refresh="refresh" />
+    <card-block>
+      <info-text :title="site.address" :text="site.name+' • '+site.node">
+        <button-sq icon="pin" type="large" @click="toMap"/>
+      </info-text>
+    </card-block>
+    <card-block>
+      <title-main text="Устройства">
+        <button-sq icon="refresh" type="large" @click="pingAll"/>
+      </title-main>
+      <devider-line />
+      <loader-bootstrap v-if="loading.networkElements" text="загрузка данных по оборудованию"/>
+      <template v-for="(networkElement,i) of networkElements">
+        <devider-line v-if="i" class="mx-3"/>
+        <device-info :ref="'device_info_'+networkElement.nioss_id" :networkElement="networkElement" showDisplayName hideEntrances/>
+      </template>
+      <message-el v-if="!loading.networkElements&&!networkElements?.length" text="Нет устройств" type="warn" class="margin-left-16px margin-right-16px" box/>
+    </card-block>
+    <site-info :site="site"/>
+  </section>`,
+  props: {
+    siteProp: { type: Object, required: true },
+  },
+  data() {
+    return {
+      site: this.siteProp,
+      loading: {
+        networkElements: false
+      },
+      networkElements: [],
+    };
+  },
+  created() {
+    this.getNetworkElements();
+  },
+  computed:{
+    title(){return `узел ОС типа ${this.site.type}`},
+    device_info_refs(){
+      return Object.keys(this.$refs).filter(key=>key.startsWith('device_info_')&&this.$refs[key][0]&&this.$refs[key][0].ping).map(key=>this.$refs[key][0]);
+    },
+  },
+  methods: {
+    pingAll(){
+      this.device_info_refs.map(ref=>ref.ping());
+    },
+    refresh() {
+      this.networkElements=[];
+      this.getNetworkElements();
+    },
+    async getNetworkElements() {
+      const params = { site_id: this.site.id };
+      const url = buildUrl("devices", params, "/call/v1/device/");
+      this.loading.networkElements = true;
+      try {
+        const response = await CustomRequest.get(url);
+        if (Array.isArray(response)) {
+          this.networkElements = response.filter((el) => el.uzel.name === this.site.node);
+          this.networkElements=this.networkElements.map(networkElement=>({...networkElement,...{notAll:true}}));
+        } else {
+          throw new Error(response.message);
+        }
+      } catch (error) {
+        console.warn("devices.error", error);
+      }
+      this.loading.networkElements = false;
+    },
+    toMap(){
+      if(!this.site){return};
+      this.$router.push({
+        name:'map',
+        query:{
+          lat:this.site?.coordinates?.latitude,
+          long:this.site?.coordinates?.longitude,
+        },
+      });
+    },
+  },
+  beforeRouteEnter(to, from, next) {
+    if (!to.params.siteProp) {
+      next({
+        name: "search",
+        params: { text: to.params.id },
+      });
+      return;
+    }
+    next();
+  },
+});
+app.$router.addRoutes([
+  {
+    path:'/site-node-2/:id',
+    name:'site-node-2',
+    component:Vue.component('SiteNodePage2'),
+    props:true
+  }
+]);
+app.$watch('$route',({name,params})=>{
+  if(name==='site-node'){
+    app.$router.replace({
+      name: "site-node-2",
+      params
+    });
+  };
+});
