@@ -117,7 +117,7 @@ app.$router.addRoutes([
     component:Vue.component('SiteNodePage2'),
     props:true
   }
-]);*/
+]);
 app.$watch('$route',({name,params})=>{
   if(name==='site-node'){
     app.$router.replace({
@@ -125,4 +125,4 @@ app.$watch('$route',({name,params})=>{
       params
     });
   };
-});
+});*/
