@@ -20,7 +20,7 @@
   }):null,1000);
 }())*/
 
-Vue.component("SiteNodePage2",{//fix bug
+/*Vue.component("SiteNodePage2",{//fix bug
   template:`<section>
     <page-navbar :title="title" @refresh="refresh" />
     <card-block>
@@ -117,7 +117,7 @@ app.$router.addRoutes([
     component:Vue.component('SiteNodePage2'),
     props:true
   }
-]);
+]);*/
 app.$watch('$route',({name,params})=>{
   if(name==='site-node'){
     app.$router.replace({
