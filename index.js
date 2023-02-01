@@ -19,7 +19,21 @@
     retina_detect:true
   }):null,1000);
 }())*/
-
+function tasksToState(state,tasks){
+  for(const task of tasks){
+    const {id,started_at,deadline}=task;
+    const startMs=Date.parse(started_at);
+    const deadlineMs=Date.parse(deadline)//+999999999;
+    state.tasks[id]={
+      ...task,
+      startMs,
+      deadlineMs,
+      countdownRunning:false,
+      countdownTimer:null,
+      countdownMs:0
+    };
+  };
+}
 /*Vue.component("SiteNodePage2",{//fix bug
   template:`<section>
     <page-navbar :title="title" @refresh="refresh" />
