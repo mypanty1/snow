@@ -34,7 +34,7 @@ function tasksToState(state,tasks){
     };
   };
 }
-Vue.component('SelectedNetworkElementPlannedModal',{
+/*Vue.component('SelectedNetworkElementPlannedModal',{
   template:`<modal-container-custom ref="modal" :footer="false" :wrapperStyle="{'min-height':'auto'}">
       <div class="margin-left-16px margin-right-16px display-flex flex-direction-column gap-16px">
       
@@ -380,5 +380,5 @@ Vue.component('SelectedNetworkElementPlannedModal',{
       doPing:'ping/doPing',
     }),
   },
-});
+});*/
 
