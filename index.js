@@ -25,7 +25,7 @@
 
 Vue.component('SiteAdd',{
   template:`<div name="SiteAdd" class="display-content">
-    <link-block :actionIcon="open?'up':'down'" icon="card" text="Дополнительно" type="large" @block-click="open=!open" class="my-m8"/>
+    <link-block :actionIcon="open?'up':'down'" icon="card" text="Дополнительно" type="large" @block-click="open=!open" class="my-m8---"/>
     <div v-show="open" class="margin-left-right-16px">
       <loader-bootstrap v-if="loading" text="загрузка данных по дому"/>
       <div v-else class="site-add-table">
