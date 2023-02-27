@@ -21,6 +21,48 @@
 }())*/
 
 
+Vue.component('RemedyTaskItem',{
+  template:`<li class="tasks-list__item" name="RemedyTaskItem">
+    <title-main icon="in-work" :text="request_id" :text2="time" text2Class="font--13-500" class="margin-top-bottom--8px">
+      <button-sq icon="right-link" @click="goToRemedyTask"/>
+    </title-main>
+
+    <div class="display-flex flex-direction-column gap-8px">
+      <info-text-sec title="Описание работ" :rows="workDescriptionRows" class="margin-left-16px"/>
+      <RemedyTaskCounters v-bind="{countEth,countAbons}" class="margin-left-16px margin-right-16px"/>
+      <info-text-icon :text="shortAddress" icon="pin" iconColor="tone-500" class="margin-top--8px margin-bottom--8px"/>
+      <RemedyTaskEntrancesLine v-bind="{entrances}" class="margin-left-16px margin-right-16px"/>
+      <RemedyTaskStatusAndFio :icon="status.icon" :status="status.name" :fio="fio" class="margin-left-16px margin-right-16px"/>
+    </div>
+  </li>`,
+  props:{
+    task:{type:Object,required:true}
+  },
+  data:()=>({}),
+  computed:{
+    request_id(){return this.task.id},
+    status(){return REMEDY_TASK_STATUSES.find(({name})=>name===this.task.status)||{}},
+    workDescriptionRows(){return [this.task.classificatorcause,this.task.work,this.task.work_description]},
+    fio(){return this.task.persname2||''},
+    shortAddress(){return truncateSiteAddress(this.task.location||'')},
+    time(){return getRemedyTimeStartEndByTask(this.task)},
+    countEth(){return `${this.task.ne_quantity||0}`},
+    countAbons(){return `${this.task.count_cp||0}`},
+    entrances(){return this.task.entrances||[]},//нет данных по подъездам [1,2,3,5,6,8]
+  },
+  created(){},
+  methods:{
+    goToRemedyTask(){
+      const {request_id}=this;
+      this.$router.push({
+        name:'remedy-task',
+        params:{
+          request_id
+        }
+      })
+    },
+  },
+});
 
 
 Vue.component('SiteAdd',{
