@@ -518,4 +518,57 @@ app.$watch('$route',({name,params})=>{
   };
 });
 
-
+Vue.component('task-port-device', {
+  //template: '#task-port-device-template',
+  template:`<div>
+    <loader-bootstrap v-if="loading" text="загрузка данных по порту"/>
+    <template v-else-if="accountDevice?.port">
+      <PonPortLayout v-if="isPon" :portProp="accountDevice.port"/>
+      <PortLayout2 v-else :portProp="accountDevice.port"/>
+    </template>
+  </div>`,
+  props: {
+    task: { type: Object, required: true },
+    focused: { type: Boolean, default: false },
+  },
+  data: () => ({
+    accountDevice: null,
+    loading: false,
+    timeout: null,
+  }),
+  computed:{
+    isPon(){return this.accountDevice?.port?.name?.startsWith('PORT-OLT')},
+  },
+  methods: {
+    async loadAccountDevice(){
+      this.loading=true;
+      let response=this.$cache.getItem(`search_by_account/${this.task.clientNumber}`);
+      if(response){
+        this.accountDevice=response;
+      }else{
+        try{
+          response=await httpGet(buildUrl("search_by_account",{account:this.task.clientNumber},"/call/v1/device/"));
+          if(response.type==="error"){throw new Error(response.text)};
+          this.accountDevice=response;
+          this.$cache.setItem(`search_by_account/${this.task.clientNumber}`,response);
+        }catch(error){
+          console.warn("search_by_account.error",error);
+        };
+      };
+      this.loading=false;
+    },
+  },
+  watch: {
+    focused(isFocused) {
+      const startLoading = isFocused && !this.accountDevice && !this.loading;
+      if (startLoading) {
+        this.timeout = setTimeout(() => this.loadAccountDevice(), TASK_SLIDES_SCROLL_TIMEOUT);
+      } else {
+        clearTimeout(this.timeout);
+      }
+    }
+  },
+  beforeDestroy() {
+    clearTimeout(this.timeout);
+  }
+});
