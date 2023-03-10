@@ -81,14 +81,14 @@ Vue.component("PortLayout2", {
       <info-text-sec v-if="ifAlias" :title="ifAlias"/>
       <devider-line/>
 
-      <title-main :icon="(loads.status||!status)?'port-error tone-500':hasErrors?'warning main-orange':'button-on main-green'" :text="loads.status?'проверка ошибок ...':port_errors_text" :text2="loads.status?'':'ошибки порта'" textClass="font--13-500 tone-500">
+      <title-main :icon="(loads.status||!status)?'port-error tone-500':hasErrors?'warning main-orange':'button-on main-green'" :text="loads.status?'проверка ошибок ...':port_errors_text" :text2="loads.status?'':'ошибки порта'" :text1Class="loads.status?'font--13-500 tone-500':''" text2Class="font--13-500 tone-500">
         <span v-if="errors.doPortErrorsClean" slot="attentionIcon" class="ic-20 ic-warning main-orange"></span>
         <button-sq :icon="loads.doPortErrorsClean?'port-error rotating':'port-error'" @click="doPortErrorsClean" :disabled="loadingSome||loads.doPortErrorsClean||!networkElement"/>
       </title-main>
       <devider-line/>
       
       <template v-if="hasPortLbd">
-        <title-main :icon="(loads.getPortLbdInfo||!hasLbd)?'loop tone-500':hasLbdBlocked?'warning main-orange':'button-on main-green'" :text="loads.getPortLbdInfo?'проверка LBD ...':hasLbdBlocked?'петля на порту!':'петли нет'" textClass="font--13-500 tone-500">
+        <title-main :icon="(loads.getPortLbdInfo||!hasLbd)?'loop tone-500':hasLbdBlocked?'warning main-orange':'button-on main-green'" :text="loads.getPortLbdInfo?'проверка LBD ...':errors.getPortLbdInfo?'ошибка':hasLbdBlocked?'петля на порту!':resps.getPortLbdInfo?'петли нет':''" :textClass="(loads.getPortLbdInfo||errors.getPortLbdInfo)?'font--13-500 tone-500':''">
           <span v-if="errors.getPortLbdInfo" slot="attentionIcon" class="ic-20 ic-warning main-orange"></span>
           <button-sq :icon="loads.getPortLbdInfo?'sync rotating':'sync'" @click="getPortLbdInfo" :disabled="loadingSome||loads.getPortLbdInfo||!networkElement"/>
         </title-main>
@@ -105,13 +105,15 @@ Vue.component("PortLayout2", {
       <link-block icon="session">
         <template slot="text">
           <div v-if="loads.getPortVlans" class="font--13-500 tone-500">получение Vlan ...</div>
+          <div v-else-if="errors.getPortVlans" class="font--13-500 tone-500">ошибка</div>
+          <div v-else-if="!resps.getPortVlans" class="tone-500">Получить VLAN</div>
           <div v-else class="display-flex align-items-center gap-2px">
-            <div v-if="vlans.port_mode" class="font--13-500">{{vlans.port_mode}}</div>
-            <div v-if="vlans.titleUntag" class="font--13-500 tone-500">
+            <div v-if="vlans.port_mode" class="font--13-500--">{{vlans.port_mode}}</div>
+            <div v-if="vlans.titleUntag" class="font--13-500--">
               <span class="ic-18 ic-vlan-off"></span>
               <span>{{vlans.titleUntag}}</span>
             </div>
-            <div v-if="vlans.titleTag" class="font--13-500 tone-500">
+            <div v-if="vlans.titleTag" class="font--13-500-- tone-500">
               <span class="ic-18 ic-vlan-on"></span>
               <span>{{vlans.titleTag}}</span>
             </div>
