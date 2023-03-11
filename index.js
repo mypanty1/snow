@@ -233,7 +233,7 @@ Vue.component("PortLayout2", {
       this.getPortLink();
       await this.getDevice('update');
       if(this.hasPortLbd){
-        await this.getPortLbdInfo();
+        await this.getPortLbdInfo('no_getPortLink');
       };
       //await this.getPortVlans();
     },
@@ -319,7 +319,7 @@ Vue.component("PortLayout2", {
       };
       this.loads.doPortErrorsClean=false;
     },
-    async getPortLbdInfo(){
+    async getPortLbdInfo(no_getPortLink=false){
       if(!this.port?.snmp_name){return};
       if(!this.networkElement?.region?.mr_id){return};
       this.errors.getPortLbdInfo=false;
@@ -343,7 +343,9 @@ Vue.component("PortLayout2", {
           this.errors.getPortLbdInfo=true;
         }else{
           this.resps.getPortLbdInfo=response;
-          this.getPortLink();
+          if(!no_getPortLink){
+            this.getPortLink();
+          };
         };
       }catch(error){
         this.errors.getPortLbdInfo=true;
