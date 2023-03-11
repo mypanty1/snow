@@ -75,23 +75,43 @@ Vue.component("PortLayout2", {
 
     <CardBlock>
       <title-main :text="port?.snmp_name||''" :text2="status?.IF_OPER_STATUS?(status?.IF_SPEED||''):''" text2Class="font--13-500 tone-500 white-space-pre">
-        <LinkLed2050 slot="icon" @click="getPortLink" :loading="loads.status" :error="!status?.IF_SPEED" :admin_state="status?.admin_state" :oper_state="status?.oper_state"/>
-        <button-sq :icon="(loads.status||loadingSome)?'loading rotating':'refresh'" @click="getPortLink" :disabled="loadingSome||loads.status"/>
+        <LinkLed2050 slot="icon" @click="getPortLink" :loading="loads.getPortLink" :error="!status?.IF_SPEED" :admin_state="status?.admin_state" :oper_state="status?.oper_state"/>
+        <button-sq :icon="(loads.getPortLink||loadingSome)?'loading rotating':'refresh'" @click="getPortLink" :disabled="loadingSome||loads.getPortLink"/>
       </title-main>
       <info-text-sec v-if="ifAlias" :title="ifAlias"/>
       <devider-line/>
 
-      <title-main :icon="(loads.status||!status)?'port-error tone-500':hasErrors?'warning main-orange':'button-on main-green'" :text="loads.status?'проверка ошибок ...':port_errors_text" :text2="loads.status?'':'ошибки порта'" :text1Class="loads.status?'font--13-500 tone-500':''" text2Class="font--13-500 tone-500">
-        <span v-if="errors.doPortErrorsClean" slot="attentionIcon" class="ic-20 ic-warning main-orange"></span>
-        <button-sq :icon="loads.doPortErrorsClean?'port-error rotating':'port-error'" @click="doPortErrorsClean" :disabled="loadingSome||loads.doPortErrorsClean||!networkElement"/>
-      </title-main>
+     <link-block icon="-" :text="loads.doPortErrorsClean?'сброс ошибок ...':loads.getPortLink?'проверка ошибок ...':port_errors_text" :text2="(loads.getPortLink||loads.doPortErrorsClean)?'':'ошибки порта'" :text1Class="(loads.getPortLink||loads.doPortErrorsClean)?'font--13-500 tone-500':''" text2Class="font--13-500 tone-500">
+        <template slot="prefix">
+          <div class="display-flex align-items-center margin-right-12px">
+            <span class="ic-20" :class="'ic-'+((loads.getPortLink||!status||loads.doPortErrorsClean)?'exchange tone-500':hasErrors?'warning main-orange':'button-on main-green')"></span>
+          </div>
+        </template>
+        <template slot="postfix">
+          <button-sq :icon="loads.doPortErrorsClean?'port-error rotating':errors.doPortErrorsClean?'warning main-orange':'port-error'" @click="doPortErrorsClean" :disabled="loadingSome||loads.doPortErrorsClean||!networkElement"/>
+        </template>
+        <template slot="action">
+          <button-sq :icon="loads.getPortLink?'sync rotating':'sync'" @click="getPortLink" :disabled="loadingSome||loads.getPortLink"/>
+        </template>
+      </link-block>
       <devider-line/>
-      
+
       <template v-if="hasPortLbd">
-        <title-main :icon="(loads.getPortLbdInfo||!hasLbd)?'loop tone-500':hasLbdBlocked?'warning main-orange':'button-on main-green'" :text="loads.getPortLbdInfo?'проверка LBD ...':errors.getPortLbdInfo?'ошибка':hasLbdBlocked?'петля на порту!':resps.getPortLbdInfo?'петли нет':''" :textClass="(loads.getPortLbdInfo||errors.getPortLbdInfo)?'font--13-500 tone-500':''">
-          <span v-if="errors.getPortLbdInfo" slot="attentionIcon" class="ic-20 ic-warning main-orange"></span>
-          <button-sq :icon="loads.getPortLbdInfo?'sync rotating':'sync'" @click="getPortLbdInfo" :disabled="loadingSome||loads.getPortLbdInfo||!networkElement"/>
-        </title-main>
+        <link-block icon="-" :text="loads.getPortLbdInfo?'проверка LBD ...':errors.getPortLbdInfo?'ошибка':hasLbdBlocked?'петля на порту!':resps.getPortLbdInfo?'петли нет':'LBD'" :textClass="(loads.getPortLbdInfo||errors.getPortLbdInfo)?'font--13-500 tone-500':!resps.getPortLbdInfo?'tone-500':''">
+          <template slot="prefix">
+            <div class="display-flex align-items-center margin-right-12px">
+              <span class="ic-20" :class="'ic-'+((loads.getPortLbdInfo||!hasLbd||errors.getPortLbdInfo)?'loop tone-500':hasLbdBlocked?'warning main-orange':'button-on main-green')"></span>
+            </div>
+          </template>
+          <template slot="postfix">
+            <div class="display-flex align-items-center margin-right-12px">
+              <span v-if="errors.getPortLbdInfo" class="ic-20 ic-warning main-orange"></span>
+            </div>
+          </template>
+          <template slot="action">
+            <button-sq :icon="loads.getPortLbdInfo?'sync rotating':'sync'" @click="getPortLbdInfo" :disabled="loadingSome||loads.getPortLbdInfo||!networkElement"/>
+          </template>
+        </link-block>
         <devider-line/>
       </template>
 
@@ -120,7 +140,7 @@ Vue.component("PortLayout2", {
           </div>
         </template>
         <template slot="postfix">
-          <button-sq icon="expand" :disabled="loads.getPortVlans||(!vlans.titleUntag&&!vlans.titleTag)" type="large" @click="openPortVlansModal"/>
+          <button-sq :icon="errors.getPortVlans?'warning main-orange':resps.getPortVlans?'expand':''" :disabled="loads.getPortVlans||(!vlans.titleUntag&&!vlans.titleTag)" type="large" @click="openPortVlansModal"/>
         </template>
         <template slot="action">
           <button-sq :icon="loads.getPortVlans?'repeat rotating-r':'repeat'" :disabled="loadingSome||loads.getPortVlans||!networkElement" type="large" @click="getPortVlans"/>
@@ -147,7 +167,7 @@ Vue.component("PortLayout2", {
   data:()=>({
     loads: {
       port:false,
-      status:false,
+      getPortLink:false,
       networkElement:false,
       doPortErrorsClean:false,
       getPortLbdInfo:false,
@@ -156,7 +176,7 @@ Vue.component("PortLayout2", {
     },
     resps:{
       port:null,
-      status:null,
+      getPortLink:null,
       networkElement:null,
       doPortErrorsClean:null,
       getPortLbdInfo:null,
@@ -177,7 +197,7 @@ Vue.component("PortLayout2", {
   computed:{
     port(){return this.resps.port||this.portProp||this.$route.params.portProp},
     networkElement(){return this.resps.networkElement},
-    status(){return this.resps.status},
+    status(){return this.resps.getPortLink},
     in_errors(){return parseInt(this.status?.in_error)||0},
     out_errors(){return parseInt(this.status?.out_error)||0},
     hasErrors(){return this.in_errors||this.out_errors},
@@ -240,18 +260,18 @@ Vue.component("PortLayout2", {
     async getPortLink(){
       if(!this.port?.device_name){return};
       if(!this.port?.snmp_number){return};
-      this.loads.status=true;
-      this.resps.status=null;
+      this.loads.getPortLink=true;
+      this.resps.getPortLink=null;
       try{
         const response=await httpGet(buildUrl('port_status_by_ifindex',{
           device:this.port.device_name,
           port_ifindex:this.port.snmp_number
         },'/call/hdm/'));
-        this.resps.status=response;
+        this.resps.getPortLink=response;
       }catch(error){
         console.warn('port_status_by_ifindex.error',error);
       }
-      this.loads.status=false;
+      this.loads.getPortLink=false;
     },
     async getDevice(update=false){
       if(!this.port?.device_name){return};
@@ -463,7 +483,7 @@ Vue.component("PortPage2",{
         this.device=cache;
       }else{
         try{
-          let response=await httpGet(buildUrl('search_ma',{pattern:device_name,component:'pon-wrapper'},'/call/v1/search/'));
+          let response=await httpGet(buildUrl('search_ma',{pattern:device_name},'/call/v1/search/'));
           if(response.data){
             this.$cache.setItem(`device/${device_name}`,response.data);
             this.device=response.data
