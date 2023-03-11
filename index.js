@@ -126,7 +126,7 @@ Vue.component("PortLayout2", {
         <template slot="text">
           <div v-if="loads.getPortVlans" class="font--13-500 tone-500">получение Vlan ...</div>
           <div v-else-if="errors.getPortVlans" class="font--13-500 tone-500">ошибка</div>
-          <div v-else-if="!resps.getPortVlans" class="tone-500">Получить VLAN</div>
+          <div v-else-if="!resps.getPortVlans" class="tone-500">VLAN</div>
           <div v-else class="display-flex align-items-center gap-2px">
             <div v-if="vlans.port_mode" class="font--13-500--">{{vlans.port_mode}}</div>
             <div v-if="vlans.titleUntag" class="font--13-500--">
