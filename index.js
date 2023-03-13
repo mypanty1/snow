@@ -21,7 +21,7 @@
 }())*/
 
 //add msk
-Vue.component('RemedyTaskItem',{
+Vue.component('RemedyTaskItem_test',{
   template:`<li class="tasks-list__item" name="RemedyTaskItem">
     <title-main icon="in-work" :text="request_id" :text2="time" text2Class="font--13-500" class="margin-top-bottom--8px">
       <button-sq icon="right-link" @click="goToRemedyTask"/>
