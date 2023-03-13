@@ -74,7 +74,7 @@ Vue.component("PortLayout2", {
     </CardBlock>
 
     <CardBlock>
-      <title-main :text="port?.snmp_name||''" :text2="status?.IF_OPER_STATUS?(status?.IF_SPEED||''):''" text2Class="font--13-500 tone-500 white-space-pre">
+      <title-main :text="port?.snmp_name||''" :textSub="status?.IF_OPER_STATUS?(status?.IF_SPEED||''):''" textSubClass="font--13-500 tone-500 white-space-pre">
         <LinkLed2050 slot="icon" @click="getPortLink" :loading="loads.getPortLink" :error="!status?.IF_SPEED" :admin_state="status?.admin_state" :oper_state="status?.oper_state"/>
         <button-sq :icon="(loads.getPortLink||loadingSome)?'loading rotating':'refresh'" @click="getPortLink" :disabled="loadingSome||loads.getPortLink"/>
       </title-main>
