@@ -20,6 +20,112 @@
   }):null,1000);
 }())*/
 
+//add link length
+Vue.component('PortSfp',{
+  template:`<div name="PortSfp" class="sfp-info">
+    <loader-bootstrap v-if="loads.sfp" text="получение SFP"/>
+    <template v-if="!loads.sfp&&sfp">
+      <info-value label="model" :value="DdmInfoVendorName+' '+DdmInfoVendorPartNum" withLine/>
+      <info-value label="serial" :value="DdmInfoVendorSerialNum" withLine/>
+      <info-value label="length" :value="DdmInfoLinklength" v-if="DdmInfoLinklength" withLine/>
+      <div class="si-params-table margin-bottom-4px">
+        <div class="si-pt-type">{{DdmInfoWavelength||DdmInfoType}}</div>
+        <param-el title="Rx" :value="DdmInfoRxpower" units="dBm" class="si-pt-rx bb br" :valueStyle="warns.rx" :loading="loads.sfp" :error="!isValidParams||error||sfp.error" plus/>
+        <param-el title="Tx" :value="DdmInfoTxpower" units="dBm" class="si-pt-tx bb br" :valueStyle="warns.tx" :loading="loads.sfp" :error="!isValidParams||error||sfp.error" plus/>
+        <param-el title="Bias" :value="DdmIndexBias" units="mA" class="si-pt-bias bb" :valueStyle="warns.bias" :loading="loads.sfp" :error="!isValidParams||error||sfp.error"/>
+        <param-el title="Vcc" :value="DdmInfoVoltage" units="V" class="si-pt-vcc bb" :valueStyle="warns.vcc" :loading="loads.sfp" :error="!isValidParams||error||sfp.error" fixed/>
+        <param-el title="Temp" :value="DdmInfoTemperature" units="°C" class="si-pt-temp bb" :valueStyle="warns.temp" :loading="loads.sfp" :error="!isValidParams||error||sfp.error" plus/>
+      </div>
+      <link-block text="История" @block-click="openHistory" actionIcon="right-link" v-if="canGetHistory"/>
+      <PortSfpModal v-bind="{port,networkElement}" ref="modal_sfpHistoryModal" v-if="canGetHistory"/>
+    </template>
+    <message-el v-if="!loads.sfp&&error" :text="error" type="warn" class="margin-bottom-8px" box/>
+  </div>`,
+  props:{
+    networkElement:{type:Object,default:()=>({}),required:true},
+    port:{type:Object,default:()=>({}),required:true},
+  },
+  data:()=>({
+    loads:{
+      sfp:false,
+    },
+    sfp:null,
+    error:false,
+  }),
+  created(){
+    this.getPortSfp();
+  },
+  computed:{
+    DdmInfoWavelength(){return this.sfp?.DdmInfoWavelength?(parseInt(this.sfp?.DdmInfoWavelength)+' nm'):''},
+    DdmInfoLinklength(){return this.sfp?.DdmInfoLinklength?(parseInt(this.sfp?.DdmInfoLinklength)+' m'):''},
+    DdmIndexBias(){return parseFloat(this.sfp?.DdmIndexBias)},
+    DdmInfoManufacturingDate(){return this.sfp?.DdmInfoManufacturingDate||''},
+    DdmInfoRxpower(){return parseFloat(this.sfp?.DdmInfoRxpower)},
+    DdmInfoTemperature(){return parseFloat(this.sfp?.DdmInfoTemperature)},
+    DdmInfoTxpower(){return parseFloat(this.sfp?.DdmInfoTxpower)},
+    DdmInfoType(){return this.sfp?.DdmInfoType||''},
+    DdmInfoVendorName(){return this.sfp?.DdmInfoVendorName||''},
+    DdmInfoVendorPartNum(){return this.sfp?.DdmInfoVendorPartNum||''},
+    DdmInfoVendorRevNum(){return this.sfp?.DdmInfoVendorRevNum||''},
+    DdmInfoVendorSerialNum(){return this.sfp?.DdmInfoVendorSerialNum||''},
+    DdmInfoVoltage(){return parseFloat(this.sfp?.DdmInfoVoltage)},
+
+    warns(){
+      const warnStyle='background-color:#fd974d69;';
+      return {
+        rx:this.DdmInfoRxpower<-14||this.DdmInfoRxpower>-1?warnStyle:'',
+        tx:this.DdmInfoTxpower<-2||this.DdmInfoTxpower>3?warnStyle:'',
+        bias:this.DdmIndexBias<5||this.DdmIndexBias>39?warnStyle:'',
+        vcc:this.DdmInfoVoltage<3.1||this.DdmInfoVoltage>3.5?warnStyle:'',
+        temp:this.DdmInfoTemperature<10||this.DdmInfoTemperature>59?warnStyle:''
+      };
+    },
+
+    isValidParams(){
+      return this.DdmInfoVoltage
+    },
+    canGetHistory(){return this.port?.snmp_name&&this.networkElement?.name},
+  },
+  methods:{
+    async getPortSfp(){
+      if(!this.port?.snmp_name){return};
+      if(!this.networkElement?.system_object_id){return};
+      if(this.loads.sfp){return};
+      this.sfp=null;
+      this.error=false;
+      this.loads.sfp=true;
+      const {region:{mr_id:MR_ID},ip:IP_ADDRESS,system_object_id:SYSTEM_OBJECT_ID,vendor:VENDOR,snmp:{version:SNMP_VERSION,community:SNMP_COMMUNITY}}=this.networkElement;
+      const {snmp_name:PORT}=this.port;
+      try{
+        const response=await httpGet(buildUrl('sfp_detail',{
+          MR_ID,IP_ADDRESS,SYSTEM_OBJECT_ID,SNMP_COMMUNITY,VENDOR,SNMP_VERSION,ACT:'sfp_iface',PORT
+        },'/call/hdm/'));
+        if(response.type==='error'){
+          this.error=response.text||response.message||'ошибка';
+          throw new Error(response.text);
+        };
+        if(typeof response==="object"){
+          this.sfp={};
+          const params=response[Object.keys(response)[0]];
+          for(const param in params){
+            this.sfp[param]=Object.keys(params[param])[0];
+          };
+          console.log({response,sfp:this.sfp})
+        }else{
+          this.error='нет данных';
+        };
+      }catch(error){
+        console.warn('sfp_detail.error',error);
+      };
+      this.loads.sfp=false;
+    },
+    openHistory(){
+      if(!this.$refs.modal_sfpHistoryModal){return};
+      this.$refs.modal_sfpHistoryModal.open()
+    },
+  },
+});
+
 Date.prototype.toDateTimeString=function(date=this){
   return [
     date.toLocaleDateString('ru',{year:'2-digit',month:'2-digit',day:'2-digit'}),
