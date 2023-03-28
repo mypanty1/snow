@@ -552,7 +552,7 @@ Vue.component('SiteNetworkElements',{
   }),
   async created(){
     const {site_id,task_id}=this;
-    this.getRemedyWorkStages({task_id});
+    //this.getRemedyWorkStages({task_id});
     this.getSiteNodes({site_id});
     this.getSiteEntrances({site_id});
     await this.getSiteRacks({site_id});
@@ -819,7 +819,7 @@ Vue.component('SiteNetworkElementsPlanned',{
     this.selected_ne_id=this.next_ne_id||this.selected_ne_id;//9154819735513194600
     const {site_id,stages,task_id}=this;
     if(!stages?.length){
-      this.getRemedyWorkStages({task_id});
+      //this.getRemedyWorkStages({task_id});
     };
     this.getSiteNodes({site_id});
     this.getSiteEntrances({site_id});
