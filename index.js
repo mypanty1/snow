@@ -684,8 +684,8 @@ Vue.component('SiteNetworkElements',{
     isIpoe(){return /IPoE/i.test(this.auth_type||'')}
   },
   methods:{
-    neIsAvailToStage(name){
-      //if(!this.stages){return};
+    neIsAvailToStage(name){return true
+      if(!this.stages){return};
       return !neInStage(this.stages,name);
     },
     ...mapActions({
@@ -849,7 +849,7 @@ Vue.component('SiteNetworkElementsPlanned',{
     },
     stagesLoading(){return this.getRemedyWorkStagesLoadingById(this.task_id)},
     stages(){return !this.stagesLoading?this.getRemedyWorkStagesResultById(this.task_id):null},
-    next_stage_id(){return 1||Array.isArray(this.stages)?this.stages.length:-1},
+    next_stage_id(){return 1/*||Array.isArray(this.stages)?this.stages.length:-1*/},
     networkElementsProps(){
       return Object.values(this.networkElementsFiltered).reduce((networkElements,ne)=>{
         const {ne_id,site_id,rack_id,ne_name}=ne;
@@ -919,8 +919,8 @@ Vue.component('SiteNetworkElementsPlanned',{
     countNetworkElementsNotInRack(){return Object.keys(this.networkElementsProps).length},
   },
   methods:{
-    neIsAvailToStage(name){
-      //if(!this.stages){return};
+    neIsAvailToStage(name){return true
+      if(!this.stages){return};
       return !neInStage(this.stages,name);
     },
     ...mapActions({
