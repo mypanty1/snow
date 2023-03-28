@@ -849,7 +849,7 @@ Vue.component('SiteNetworkElementsPlanned',{
     },
     stagesLoading(){return this.getRemedyWorkStagesLoadingById(this.task_id)},
     stages(){return !this.stagesLoading?this.getRemedyWorkStagesResultById(this.task_id):null},
-    next_stage_id(){return Array.isArray(this.stages)?this.stages.length:-1},
+    next_stage_id(){return 1||Array.isArray(this.stages)?this.stages.length:-1},
     networkElementsProps(){
       return Object.values(this.networkElementsFiltered).reduce((networkElements,ne)=>{
         const {ne_id,site_id,rack_id,ne_name}=ne;
