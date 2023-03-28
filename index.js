@@ -685,7 +685,7 @@ Vue.component('SiteNetworkElements',{
   },
   methods:{
     neIsAvailToStage(name){
-      if(!this.stages){return};
+      //if(!this.stages){return};
       return !neInStage(this.stages,name);
     },
     ...mapActions({
@@ -920,7 +920,7 @@ Vue.component('SiteNetworkElementsPlanned',{
   },
   methods:{
     neIsAvailToStage(name){
-      if(!this.stages){return};
+      //if(!this.stages){return};
       return !neInStage(this.stages,name);
     },
     ...mapActions({
