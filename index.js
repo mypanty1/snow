@@ -20,6 +20,56 @@
   }):null,1000);
 }())*/
 
+Vue.component('url-el',{
+  template:`<div>
+    <template v-if="urlObj.urls">
+      <title-main :text="urlObj.title" :text2="urlObj?.urls?.length||'нет'" text2Class="tone-500" :iconClass="urlObj.icon +' main-lilac margin-right-8px'" :iconClassEnable="!urlObj.icon" @open="open=!open"/>
+      <info-text-sec :text="urlObj.description" class="margin-bottom-8px" style="margin-top:-8px;"/>
+      <template v-if="open">
+        <template v-for="(url,i) of urlObj.urls">
+          <devider-line v-if="i"/>
+          <url-el :key="i" :url="url"/>
+        </template>
+      </template>
+    </template>
+    <template v-else>
+      <link-block v-if="urlObj.title" iconClass="fas fa-link main-lilac padding-right-4px" :text="urlObj.title" textClass="font--11-600" @block-click="goTo(urlObj.url)" @click.stop="goTo(urlObj.url)" type="medium" class="padding-right-8px"/>
+      <link-block v-if="urlObj.url" :text="urlObj.url.length>30?urlObj.url.slice(0,30)+'...':urlObj.url" textClass="font--11-600" textStyle="color:#0066cc;" @block-click="copy(urlObj.url)" @click="copy(urlObj.url)" type="medium" actionIcon="copy" class="padding-right-8px" style="margin-top:-8px;"/>
+      <info-text-sec :text="urlObj.description" class="margin-bottom-8px" style="margin-top:-8px;"/>
+      <link-block v-if="urlObj.url2" :text="urlObj.url2.length>30?urlObj.url2.slice(0,30)+'...':urlObj.url2" textClass="font--11-600" textStyle="color:#0066cc;" @block-click="copy(urlObj.url2)" @click="copy(urlObj.url2)" type="medium" actionIcon="copy" class="padding-right-8px" style="margin-top:-8px;"/>
+      <slot></slot>
+    </template>
+  </div>`,
+  props:{
+    url:{type:Object,default:()=>({}),required:true},
+  },
+  data:()=>({
+    open:false,
+    newUrl:null,
+  }),
+  async created(){
+    const {id=''}=this.url;
+    if(!id){return};
+    const newUrl=await fetch(`https://script.google.com/macros/s/AKfycbzcwUJXRO9lytE8Olmc6nzciGrjWTJxzQHUNJUzPsbFbItGzTmHbbRFupi-tdzZqOyLdA/exec?id=${id}`).then(r=>r.json())
+    if(typeof newUrl==='object'&&!newUrl.error){
+      this.newUrl=newUrl
+    };
+  },
+  computed:{
+    urlObj(){return this.newUrl||this.url},
+  },
+  methods:{
+    goTo(url=''){
+      if(!url){return};
+      window.open(url,'_blank');
+    },
+    copy(text=''){
+      if(!text){return};
+      copyToBuffer(text,()=>console.log('Copied:',text));
+    },
+  },
+});
+
 Vue.component("SiteNodeInfo", {
   template:`<CardBlock name="SiteNodeInfo">
     <title-main text="Инфо по площадке и доступу*" @open="show=!show">
