@@ -20,6 +20,9 @@
   }):null,1000);
 }())*/
 
+//test cpe cfg fix
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/FX_test/AccountCpePage2.js',type:'text/javascript'}));
+
 Vue.component('url-el',{
   template:`<div>
     <template v-if="urlObj.urls">
@@ -34,9 +37,9 @@ Vue.component('url-el',{
     </template>
     <template v-else>
       <link-block v-if="urlObj.title" iconClass="fas fa-link main-lilac padding-right-4px" :text="urlObj.title" textClass="font--11-600" @block-click="goTo(urlObj.url)" @click.stop="goTo(urlObj.url)" type="medium" class="padding-right-8px"/>
-      <link-block v-if="urlObj.url" :text="urlObj.url.length>30?urlObj.url.slice(0,30)+'...':urlObj.url" textClass="font--11-600" textStyle="color:#0066cc;" @block-click="copy(urlObj.url)" @click="copy(urlObj.url)" type="medium" actionIcon="copy" class="padding-right-8px" style="margin-top:-8px;"/>
+      <link-block v-if="urlObj.url" :text="urlObj.url.length>30?urlObj.url.slice(0,30)+'...':urlObj.url" textClass="font--11-600" textStyle="color:#0066cc;" @block-click="copy(urlObj.url)" @click.stop="copy(urlObj.url)" type="medium" actionIcon="copy" class="padding-right-8px" style="margin-top:-8px;"/>
       <info-text-sec :text="urlObj.description" class="margin-bottom-8px" style="margin-top:-8px;"/>
-      <link-block v-if="urlObj.url2" :text="urlObj.url2.length>30?urlObj.url2.slice(0,30)+'...':urlObj.url2" textClass="font--11-600" textStyle="color:#0066cc;" @block-click="copy(urlObj.url2)" @click="copy(urlObj.url2)" type="medium" actionIcon="copy" class="padding-right-8px" style="margin-top:-8px;"/>
+      <link-block v-if="urlObj.url2" :text="urlObj.url2.length>30?urlObj.url2.slice(0,30)+'...':urlObj.url2" textClass="font--11-600" textStyle="color:#0066cc;" @block-click="copy(urlObj.url2)" @click.stop="copy(urlObj.url2)" type="medium" actionIcon="copy" class="padding-right-8px" style="margin-top:-8px;"/>
       <slot></slot>
     </template>
   </div>`,
@@ -205,10 +208,6 @@ Vue.component('device-info',{
       <div v-if="!noMinimap&&neIsETH&&!neIsNotInstalled" class="device-info__minimap" @click="toNetworkElement">
         <div class="device-info__ports--bad" :style="portsLine.bad"></div>
         <div class="device-info__ports--busy" :style="portsLine.busy"></div>
-      </div>
-
-      <div v-if="noMinimap&&!showLink" class="margin-left-auto">
-        <i class="ic-20 ic-checkmark main-green"></i>
       </div>
 
       <slot name="link">
