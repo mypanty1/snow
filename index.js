@@ -21,7 +21,7 @@
 }())*/
 
 //test cpe cfg fix
-if(store?.state?.main?.userData?.username=='mypanty1'){
+if(true||store?.state?.main?.userData?.username=='mypanty1'){
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/FX_test/AccountCpePage2.js',type:'text/javascript'}));
 };
 
