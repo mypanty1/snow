@@ -20,6 +20,133 @@
   }):null,1000);
 }())*/
 
+Vue.component('rack-box', {
+  template: `<div :class="rackClass">
+    <div class="rack-box__link" @click="toRack">
+      <div :class="typeClass" style="width:32px;" v-if="rackType">{{rackType}}</div>
+      <div :class="typeClass" v-if="iconRack"><i class="fas" :class="iconRack"></i></div>
+      <div class="rack-box__floor"><span class="ic-20 ic-entrance-mini"></span>{{ entrance }}</div>
+      <div class="rack-box__location" :class="{'rack-box--error':!rackLocation}"><span class="ic-20 ic-floor"></span>{{ rackLocation||'неизвестно'}}</div>
+      <div v-if="horizontalLocation" class="rack-box__drs-number">{{horizontalLocation}}</div>
+    </div>
+    <title-main v-if="locationFilteredAndTrunkated||notes||description" icon="circle-1" :text="locationFilteredAndTrunkated" text1Class="font--13-500" @open="show_notes=!show_notes" :opened="show_notes" class="margin-top--8px margin-bottom--16px">
+      <button-sq v-if="nioss_loading" icon="loading rotating" type="large" @click=""/>
+      <button-sq v-else-if="!nioss_object" icon="refresh" type="large" @click="get_nioss_object"/>
+    </title-main>
+    <template v-if="show_notes">
+      <info-text-sec v-if="location!==locationFilteredAndTrunkated" :text="location"/>
+      <info-text-sec :text="notes"/>
+      <info-text-sec :text="description"/>
+      <devider-line v-if="location||notes||description"/>
+    </template>
+    <loader-bootstrap v-if="isLoading" text="загрузка данных"/>
+    <slot v-else>
+      <span class="font--13-500 tone-500 text-align-center">нет оборудования</span>
+    </slot>
+  </div>`,
+  props:{
+    rack:{type:Object,default:null,required:true},
+    isLoading:{type:Boolean,default:false},
+    reversed:{type:Boolean,default:false},
+  },
+  data(){
+    return {
+      nioss_loading:false,
+      nioss_object:null,
+      show_notes:!!(this.rack?.notes||this.rack?.description),
+    }
+  },
+  created(){
+    if(this.$route.name!=='rack'){//открыть и обновить если компонент не в rack-content
+      //на одной странице может быть множество рк, многовато запросов к oss/j
+      //this.show_notes=!!(this.rack?.notes||this.rack?.description);
+      //this.get_nioss_object();
+    };
+  },
+  watch:{
+    'nioss_object'(nioss_object){//toggle notes по обновлению nioss_object
+      this.show_notes=!!(nioss_object?.Primechanie||nioss_object?.description);
+    },
+    'show_notes'(show_notes){//если компонент в rack-content и пользователь все же его открыл
+      if(show_notes&&!this.nioss_object&&!this.nioss_loading){this.get_nioss_object()};
+    }
+  },
+  computed: {
+    rackClass() {
+      const isVandal = this.rack?.type === "Антивандальный";
+      return {
+        'rack-box': true,
+        'rack-box--reversed': this.reversed,
+        'rack-box--empty': !this.rack,
+        'rack-box--solid': isVandal,
+        'rack-box--dashed': !isVandal,
+      }
+    },
+    typeClass() {
+      const isVandal = this.rack?.type === "Антивандальный";
+      return {
+        'rack-box__type': true,
+        'rack-box--solid': isVandal,
+        'rack-box--dashed': !isVandal,
+      }
+    },
+    isOptical(){//return true//FAKE для демо, все шкафы - ОРШ
+      return this.rack?.ne_in_rack.filter(ops=>/(ops|odf)/i.test(ops)).length;
+    },
+    rackType(){
+      return {
+        "Антивандальный":this.isOptical?'ОРШ':'ШДУ',
+        "Абонентская Распределительная Коробка":this.isOptical?'ОРК':'РК',
+      }[this.rack.type]
+    },
+    iconRack() {
+      if(!this.rack){return ''};
+      if(this.rack?.ne_in_rack?.length){return "ic-20 ic-plint"};
+      return '';
+    },
+    rackLocation(){
+      return ({'Чердак':'на чердаке','Технический этаж':'на тех.этаже','Подвал':'в подвале'}[this.off_floor])||("этаж "+this.floor)||''
+    },
+    horizontalLocation(){
+      if(!this.drs_number){return ''};
+      if(this.drs_number.length<3){return 'стояк '+this.drs_number};
+      return this.drs_number;//левый,средний,правый
+    },
+    entrance(){return this.rack?.entrance?.number||''},
+    location(){return this.nioss_object?.RaspologenieShkaf||this.rack?.location||''},
+    notes(){return this.nioss_object?.Primechanie||this.rack?.notes||''},
+    description(){return this.nioss_object?.description||this.rack?.description||''},
+    off_floor(){return this.nioss_object?.VneEtashnoeRazmechenie||this.rack?.off_floor||''},
+    floor(){return this.nioss_object?.Etazh||this.rack?.floor||''},
+    drs_number(){return this.nioss_object?.NomerDRS||this.rack?.drs_number||''},
+    locationFilteredAndTrunkated(){
+      let location=this.location.replace(`Подъезд ${this.entrance}.`,'').replace(`Этаж ${this.floor}.`,'').replace(`${this.off_floor}.`,'').trim().toLowerCase();
+      return location.length>27?location.substring(0,25)+'...':location
+    },
+  },
+  methods:{
+    toRack(){
+      this.$router.push({
+        name:'rack',
+        params:{
+          rackProp:this.rack,
+          rack_id:this.rack?.name,
+        },
+      });
+    },
+    async get_nioss_object(){
+      this.nioss_loading=true;
+      try{
+        const response=await httpGet(buildUrl('get_nioss_object',{object_id:this.rack?.id,object:'rack'},'/call/nioss/'), true);
+        this.nioss_object=response;
+      }catch(error){
+        console.warn('get_nioss_object.error',error);
+      }
+      this.nioss_loading=false;
+    },
+  },
+});
+
 Vue.component('url-el',{
   template:`<div>
     <template v-if="urlObj.urls">
