@@ -20,6 +20,154 @@
   }):null,1000);
 }())*/
 
+//временно заблочено открытие так как неработает в ACS
+Vue.component('CpeSetLanModal',{
+  template:`<modal-container-custom name="CpeSetLanModal" ref="modal" @open="onModalOpen" @close="onModalClose" header :footer="false" :wrapperStyle="{'min-height':'auto','margin-top':'4px'}">
+    <div class="margin-left-right-16px">
+      <header class="margin-top-8px">
+        <div class="font--18-600 tone-900 text-align-center">LAN</div>
+        <div class="font--13-500 tone-500 text-align-center white-space-pre">{{$route.params.serial}} • {{$route.params.account}}</div>
+      </header>
+      
+      <section class="margin-top-8px">
+        <div class="display-flex align-items-center justify-content-space-between gap-4px">
+          <div class="font--13-500" :class="[!dhcp&&'tone-500']">DHCP сервер</div>
+          <switch-el class="width-40px" v-model="dhcp" :disabled="cpeUpdateLoading"/>
+        </div>
+      </section>
+      
+      <section class="margin-top-8px">
+        <div>
+          <input-el label="Начальный IP-адрес диапазона" v-model="config.lan_dhcp_min" :error="!!lan_dhcp_min_verifyText" :disabled="cpeUpdateLoading" inputmode="numeric"/>
+          <input-error :text="lan_dhcp_min_verifyText"/>
+        </div>
+        <div>
+          <input-el label="Конечный IP-адрес диапазона" v-model="config.lan_dhcp_max" :error="!!lan_dhcp_max_verifyText" :disabled="cpeUpdateLoading" inputmode="numeric"/>
+          <input-error :text="lan_dhcp_max_verifyText"/>
+        </div>
+        <div>
+          <input-el label="Маска подсети" v-model="config.lan_mask" :error="!!lan_mask_verifyText" :disabled="cpeUpdateLoading" inputmode="numeric"/>
+          <input-error :text="lan_mask_verifyText"/>
+        </div>
+        <div>
+          <input-el label="Локальный IP-адрес (LAN IP)" v-model="config.lan_ip" :error="!!lan_ip_verifyText" :disabled="cpeUpdateLoading" inputmode="numeric"/>
+          <input-error :text="lan_ip_verifyText"/>
+        </div>
+      </section>
+      
+      <section class="margin-top-8px">
+        <div class="display-flex align-items-center justify-content-space-between gap-4px">
+          <div class="font--13-500" :class="[!igmp&&'tone-500']">IGMP прокси</div>
+          <switch-el class="width-40px" v-model="igmp" :disabled="cpeUpdateLoading"/>
+        </div>
+      </section>
+      
+      <section class="margin-top-8px">
+        <loader-bootstrap v-if="cpeUpdateLoading" text="применение настроек"/>
+        <template v-else-if="cpeUpdateResult?.text">
+          <message-el text="ошибка конфигурации" :subText="cpeUpdateResult?.message" type="warn" box class="margin-top-8px"/>
+          <info-text-sec :text="cpeUpdateResult?.text" class="padding-left-right-0"/>
+        </template>
+        <message-el v-else-if="cpeUpdateResult?.key" text="конфигурирование успешно" type="success" box class="margin-top-8px"/>
+      </section>
+      
+      <section class="display-flex align-items-center justify-content-space-between width-100-100 margin-top-16px">
+        <button-main label="Закрыть" @click="close" buttonStyle="outlined" size="content" icon="close-1"/>
+        <button-main label="Применить" @click="save" :disabled="!!verifyText||cpeUpdateLoading" buttonStyle="contained" size="content"/>
+      </section>
+    </div>
+  </modal-container-custom>`,
+  props:{
+    mr_id:{type:[Number,String],required:true},
+    serial:{type:[Number,String],required:true},
+    account:{type:[Number,String],required:true},
+  },
+  data:()=>({
+    dhcp:false,
+    igmp:false,
+    config:{
+      dhcp_ena:null,
+      igmp_ena:null,
+      lan_dhcp_min:null,
+      lan_dhcp_max:null,
+      lan_mask:null,
+      lan_ip:null
+    }
+  }),
+  watch:{
+    
+  },
+  computed:{
+    ...mapGetters({
+      cpe:'cpe/getCpeResult',
+      cpeUpdateLoading:'cpe/doCpeUpdateLoading',
+      cpeUpdateResult:'cpe/doCpeUpdateResult',
+    }),
+    initial(){
+      const {lan_dhcp_min,lan_dhcp_max,lan_mask,lan_ip,dhcp_ena,igmp_ena}=this.cpe||{};
+      return {
+        dhcp_ena:dhcp_ena=='Up'?'Up':'Down',
+        igmp_ena:igmp_ena=='Up'?'Up':'Down',
+        lan_dhcp_min:lan_dhcp_min||'',
+        lan_dhcp_max:lan_dhcp_max||'',
+        lan_mask:lan_mask||'',
+        lan_ip:lan_ip||'',
+      }
+    },
+    lan_dhcp_min_verifyText(){return !ACS_CPE.testIp(this.config.lan_dhcp_min)?'Не верный формат IP':''},
+    lan_dhcp_max_verifyText(){return !ACS_CPE.testIp(this.config.lan_dhcp_max)?'Не верный формат IP':''},
+    lan_mask_verifyText(){return !ACS_CPE.testIp(this.config.lan_mask)?'Не верный формат IP':''},
+    lan_ip_verifyText(){return !ACS_CPE.testIp(this.config.lan_ip)?'Не верный формат IP':''},
+    verifyText(){return this.lan_dhcp_min_verifyText||this.lan_dhcp_max_verifyText||this.lan_mask_verifyText||this.lan_ip_verifyText},
+  },
+  methods:{
+    open(){//public
+      return;
+      this.$refs.modal.open();
+    },
+    close(){//public
+      this.$refs.modal.close();
+    },
+    onModalOpen(){
+      this.init();
+    },
+    onModalClose(){
+      this.reset('doCpeUpdate');
+    },
+    init(){
+      const {lan_dhcp_min,lan_dhcp_max,lan_mask,lan_ip,dhcp_ena,igmp_ena}=this.initial;
+      this.config.dhcp_ena=dhcp_ena;
+      this.config.igmp_ena=igmp_ena;
+      this.dhcp=this.config.dhcp_ena=='Up';
+      this.igmp=this.config.igmp_ena=='Up';
+      this.config.lan_dhcp_min=lan_dhcp_min;
+      this.config.lan_dhcp_max=lan_dhcp_max;
+      this.config.lan_mask=lan_mask;
+      this.config.lan_ip=lan_ip;
+    },
+    ...mapActions({
+      doCpeUpdate:'cpe/doCpeUpdate',
+      getCpe:'cpe/getCpe',
+    }),
+    ...mapMutations({
+      reset:'cpe/reset',
+    }),
+    async save(){
+      this.config.dhcp_ena=this.dhcp?'Up':'Down';
+      this.config.igmp_ena=this.igmp?'Up':'Down';
+      await this.doCpeUpdate({
+        ...this.$route.params,
+        lan:ACS_CPE.getDiffParams(this.initial,this.config)
+      });
+      if(this.cpeUpdateResult?.key){
+        this.getCpe(this.$route.params);
+        this.reset('doCpeUpdate');
+      }
+    },
+  },
+});
+
+//правка текста по ОС от ТБ
 Vue.component('rack-box', {
   template: `<div :class="rackClass">
     <div class="rack-box__link" @click="toRack">
@@ -147,6 +295,7 @@ Vue.component('rack-box', {
   },
 });
 
+//fix click
 Vue.component('url-el',{
   template:`<div>
     <template v-if="urlObj.urls">
@@ -197,6 +346,7 @@ Vue.component('url-el',{
   },
 });
 
+//fix address_id
 Vue.component("SiteNodeInfo", {
   template:`<CardBlock name="SiteNodeInfo">
     <title-main text="Инфо по площадке и доступу*" @open="show=!show">
@@ -315,7 +465,7 @@ Vue.component("SiteNodeInfo", {
 
 
 
-
+//fix sessions Get
 Vue.component('device-info',{
   template:`<article class="device-info" :class="[addBorder&&'border-gray']" :style="neIsNotInstalled?'background-color:#eeeeee;':''">
     <info-text-sec v-if="showLocation":text="networkElement?.region?.location" class="padding-left-right-unset margin-bottom-8px"/>
@@ -694,6 +844,9 @@ Vue.component('device-info',{
 
 
 
+
+
+//далее временные правки для тестирования замены КД
 
 Vue.component('SiteNetworkElements',{
   template:`<CardBlock name="SiteNetworkElements" class="display-flex flex-direction-column gap-8px">
