@@ -20,6 +20,751 @@
   }):null,1000);
 }())*/
 
+//подсветка выбора
+Vue.component('FindPort',{
+  template:`<CardBlock name="FindPort" class="find-port">
+    <title-main :text="titleText" @open="show=!show">
+      <button-sq icon="mark-circle" type="large" @click="help.show=!help.show"/>
+    </title-main>
+    <info-text-icon v-if="help.show" icon="info" :text="help.text"/>
+    <template v-if="show">
+      <message-el v-if="noEth" text="Нет коммутаторов" type="warn" class="padding-left-right-16px margin-bottom-8px" box/>
+      <template v-else>
+        <title-main icon="server" text="Коммутаторы" :text2="titleText2" :text2Class="titleText2Class" @open="showSelect=!showSelect" :opened="showSelect" class="margin-top--16px">
+          <button-sq icon="factors" @click="showSelect=!showSelect"/>
+        </title-main>
+        <div v-if="showSelect" class="margin-left-right-16px">
+
+          <title-main text="Выбор по модели" :text2="filterByVendor_countChecked" text2Class="tone-500" @open="showFilterByModel=!showFilterByModel" class="margin-top-bottom--8px padding-left-unset"/>
+          <template v-if="showFilterByModel">
+            <checkbox-el v-for="(filter,vendor) in filterByVendor" :key="vendor" :label="filter.label" v-model="filter.state" :class="{'width-100-100 bg-main-lilac-light border-radius-4px':filter.state}"/>
+          </template>
+
+          <title-main v-if="isFiltrableByEntrance" text="Выбор по подъезду ШДУ" :text2="filterByEntrance_countChecked" text2Class="tone-500" @open="showFilterByEntrance=!showFilterByEntrance" class="margin-top-bottom--8px padding-left-unset"/>
+          <template v-if="showFilterByEntrance">
+            <checkbox-el v-for="(filter,entrance) in filterByEntrance" :key="'entrance_'+entrance" :label="filter.label" v-model="filter.state" :class="{'width-100-100 bg-main-lilac-light border-radius-4px':filter.state}"/>
+          </template>
+
+          <title-main v-if="isFiltrableByFloor" text="Выбор по этажу ШДУ" :text2="filterByFloor_countChecked" text2Class="tone-500" @open="showFilterByFloor=!showFilterByFloor" class="margin-top-bottom--8px padding-left-unset"/>
+          <template v-if="showFilterByFloor">
+            <checkbox-el v-for="(filter,floor) in filterByFloor" :key="'floor_'+floor" :label="filter.label" v-model="filter.state" :class="{'width-100-100 bg-main-lilac-light border-radius-4px':filter.state}"/>
+          </template>
+
+          <title-main v-if="isFiltrableByEntrances" text="Выбор по ГГО коммутатора" :text2="filterByEntrances_countChecked" text2Class="tone-500" @open="showFilterByEntrances=!showFilterByEntrances" class="margin-top-bottom--8px padding-left-unset"/>
+          <template v-if="showFilterByEntrances">
+            <checkbox-el v-for="(filter,entrance) in filterByEntrances" :key="'ggo_entrance_'+entrance" :label="filter.label" v-model="filter.state" :class="{'width-100-100 bg-main-lilac-light border-radius-4px':filter.state}"/>
+          </template>
+
+          <title-main text="Выбор по IP" :text2="ethSelect_countChecked" text2Class="tone-500" @open="showFilterByIp=!showFilterByIp" class="margin-top-bottom--8px padding-left-unset"/>
+          <template v-if="showFilterByIp">
+            <checkbox-el v-for="device of ethDevices" :key="device.name" :label="device.ip" :label2="device.model" :disabled="ethSelect[device.ip].filtered" v-model="ethSelect[device.ip].selected" @change="setSelect(device.ip)" reverse>
+              <div slot="label" class="display-inline-flex gap-2px justify-content-space-between width-100-100" :class="{'tone-500 text-decoration-line-through':ethSelect[device.ip].filtered}">
+                <span>{{device.ip}}</span>
+                <span>{{device.model}}</span>
+              </div>
+            </checkbox-el>
+          </template>
+
+          <div class="width-100-100 display-inline-flex justify-content-space-between" hidden>
+            <span class="font--15-500">Не выбрать все</span>
+            <checkbox-el v-if="replaceSwitchOnCheckbox" v-model="selectAll"/>
+            <switch-el v-else v-model="selectAll" @change-test="toggleSelectAll"/>
+            <span class="font--15-500">Выбрать все</span>
+          </div>
+          <devider-line/>
+        </div>
+        
+        <div class="width-100-100 display-inline-flex justify-content-space-between align-items-center padding-left-right-16px">
+          <span class="font--15-500">C кабель-тестом</span>
+          <checkbox-el v-if="replaceSwitchOnCheckbox" v-model="saveData.cableTest" :disabled="!selectedCount"/>
+          <switch-el v-else v-model="saveData.cableTest" :disabled="!selectedCount"/>
+        </div>
+
+        <div class="width-100-100 display-inline-flex justify-content-center padding-left-right-16px" v-if="selectedCount!==totalCount">
+          <info-text-sec :text="selectedTest"/>
+        </div>
+
+        <div class="margin-left-right-16px margin-top-8px">
+          <button-main @click="getPortStatuses('save')" label="Сохранить состояние портов" :loading="loading.save" :disabled="!selectedCount" :buttonStyle="saveStatus.style" size="full"/>
+          <collapse-slide :opened="!!saveTime&&!!selectedCount">
+            <message-el :text="savedText" :type="saveData.savedCount?'success':'warn'" box class="margin-top-8px"/>
+          </collapse-slide>
+        </div>
+        
+        <div class="margin-left-right-16px margin-top-8px">
+          <div v-if="allPortsCount" class="width-100-100 display-inline-flex justify-content-space-between align-items-center" @click="showAll=!showAll">
+            <span class="font--15-500">{{'Показать все порты '+(allPortsCount?('('+allPortsCount+')'):'')}}</span>
+            <checkbox-el v-if="replaceSwitchOnCheckbox" v-model="showAll" :disabled="!ports.savedPorts"/>
+            <switch-el v-else v-model="showAll" :disabled="!ports.savedPorts"/>
+          </div>
+        </div>
+        
+        <template v-if="showAll">
+          <devider-line/>
+          <title-main icon="view-module" text="Все порты" :text2="saveTime?('кэш: '+saveTime):''" text2Class="tone-500"/>
+          <template v-for="(device,i) of allPorts">
+            <devider-line v-if="i" class="margin-left-right-16px"/>
+            <title-main icon="router" :text="device.ip||device.name" :text2="device.ports.length?(device.ports.length+' портов'):''" text2Class="tone-500" @open="showDevicePorts[device.name]=!showDevicePorts[device.name]" class="margin-top-bottom--8px">
+              <button-sq icon="refresh" type="large" @click="update_port_status('find_port_all_',device.name)"/>
+            </title-main>
+            <FindPortItem v-if="showDevicePorts[device.name]" v-for="port of device.ports" :key="port.key" :changedPort="port" :ref="'find_port_all_'+device.name"/>
+          </template>
+        </template>
+       
+        <div class="margin-left-right-16px margin-top-8px">
+          <button-main @click="getPortStatuses('compare')" label="Сравнить состояние портов" size="full" :loading="loading.compare" :disabled="!selectedCount||compareStatus.disabled||!saveData.savedCount" :buttonStyle="compareStatus.style"/>
+          <collapse-slide :opened="!!ports.comparedPorts&&!!selectedCount">
+            <message-el :text="comparedText" type="success" box class="margin-top-8px"/>
+          </collapse-slide>
+        </div>
+        <!--9135155036913492310-->
+        <message-el v-for="device in ports.savedPorts||{}" :key="device.name+':'+device.ip" v-if="device.message" :text="device.name+':'+device.ip" :subText="device.message" type="warn" box class="margin-left-right-16px margin-top-bottom-4px"/>
+        
+        <template v-if="!showAll&&ports.changedPorts&&ports.changedPorts.length">
+          <devider-line/>
+          <title-main icon="search" text="Найденные порты" :text2="saveTime?('кэш: '+saveTime):''" text2Class="tone-500">
+            <button-sq icon="refresh" type="large" @click="update_port_status('find_port_changed_')"/>
+          </title-main>
+          <template v-for="(device,ip,i) in changedPortsByDevices">
+            <devider-line v-if="i" class="margin-left-right-16px"/>
+            <title-main icon="router" :text="device.ip||device.name" :text2="device.ports.length?(device.ports.length+' портов'):''" text2Class="tone-500" @open="showDevicePortsChanged[device.name]=!showDevicePortsChanged[device.name]" class="margin-top-bottom--8px">
+              <button-sq icon="refresh" type="large" @click="update_port_status('find_port_changed_',device.name)"/>
+            </title-main>
+            <FindPortItem v-if="showDevicePortsChanged[device.name]" v-for="port of device.ports" :key="port.key" :changedPort="port" :ref="'find_port_changed_'+device.name"/>
+          </template>
+        </template>
+      </template>
+    </template>
+  </CardBlock>`,
+  props:{
+    devices:{type:Object,default:()=>({})},
+    racks:{type:Object,default:()=>({})},
+    entrances:{type:Object,default:()=>({})},
+    replaceSwitchOnCheckbox:{type:Boolean,default:false},
+    selectedEntrance:{type:Object},
+    site_id:{type:String,default:'[site_id]'},
+  },
+  data:()=>({
+    loading:{
+      save:false,
+      compare:false
+    },
+    show:true,
+    help:{
+      text:`Можно сохранить состояние всех портов и после сравнить их состояние. Состояние изменяется при пропадании либо появлении линка на порту. Можно расширить сравнение кабель-тестом, будет отслеживаться замыкание/размыкание пар и расхождение в длинне более 3м. Некторые модели коммутаторов прозводят кабель-тест дольше обычного на пару минут, для быстрого поиска рекомендуется искать изменение по линку на порту. 
+      С помощью фильтра, для ускорения поиска, можно сузить список коммутаторов для опроса. Можно выбрать по месту устновки ШДУ, по ГГО коммутатора, а также по IP и по производителю.`,
+      show:false,
+    },
+    ports:{
+      savedPorts:null,
+      comparedPorts:null,
+      changedPorts:null,
+    },
+    portsInfo:{},
+    saveData:{
+      time:null,
+      cableTest:false,
+      savedCount:0,
+      changedCount:0
+    },
+    showSelect:false,//свернуть селектор и фильтр
+    showFilterByModel:true,
+    showFilterByEntrance:true,
+    showFilterByFloor:true,
+    showFilterByEntrances:true,
+    showFilterByIp:true,
+    ethSelect:{},//селектор устройств для опроса
+    filterByVendor:{},//по вендору
+    filterByEntrance:{},//по шкафу
+    filterByFloor:{},//по шкафу
+    filterByEntrances:{},//по ГГО
+    selectAll:true,
+    showAll:false,
+    showDevicePorts:{},//список устройств для просмотра портов
+    showDevicePortsChanged:{},//список устройств для просмотра портов
+  }),
+  created() {
+    this.loadCache();
+  },
+  watch:{
+    'selectAll'(selectAll){
+      this.toggleSelectAll();
+    }
+  },
+  computed: {
+    isFiltrableByEntrance(){return !!Object.keys(this.filterByEntrance).length},
+    isFiltrableByFloor(){return !!Object.keys(this.filterByFloor).length},
+    isFiltrableByEntrances(){return !!Object.keys(this.filterByEntrances).length},
+    filteredAndSelectedEthDevices(){
+      let selected=Object.keys(this.ethSelect).filter(ip=>this.ethSelect[ip].selected).map(ip=>this.ethDevices.find(device=>device.ip===ip)).filter(d=>d);
+      let filtered=[...selected];
+      
+      const vendors=Object.keys(this.filterByVendor).reduce((variants,key)=>{
+        if(this.filterByVendor[key]?.state){variants.push(key)}
+        return variants
+      },[]);
+      if(vendors.length){
+        filtered=filtered.filter(device=>vendors.includes(device?.vendor));
+      };
+      
+      const entrances=Object.keys(this.filterByEntrance).reduce((variants,key)=>{
+        if(this.filterByEntrance[key]?.state){variants.push(key)}
+        return variants
+      },[]);
+      if(entrances.length){
+        filtered=filtered.filter(device=>entrances.includes(device?.filter?.entrance_number));
+      };
+      
+      const floors=Object.keys(this.filterByFloor).reduce((variants,key)=>{
+        if(this.filterByFloor[key]?.state){variants.push(key)}
+        return variants
+      },[]);
+      if(floors.length){
+        filtered=filtered.filter(device=>floors.includes(device?.filter?.floor_name));
+      };
+      
+      const ggo=Object.keys(this.filterByEntrances).reduce((variants,key)=>{
+        if(this.filterByEntrances[key]?.state){variants.push(key)}
+        return variants
+      },[]);
+      if(ggo.length){
+        filtered=filtered.filter(device=>(device?.filter?.entrances||[]).find(entrance=>ggo.includes((entrance.number/*+'_'+entrance.range*/))));
+      };
+      
+      selected.map(device=>{
+        this.$set(this.ethSelect,device.ip,{//серим фильтрацию в селекторе
+          ...this.ethSelect[device.ip],
+          filtered:!filtered.find(fd=>fd.ip===device.ip)
+        });
+      });
+      return filtered;
+    },
+    ethSelect_countChecked(){return Object.values(this.ethSelect).filter(filter=>!filter.filtered&&filter.selected).length},
+    filterByVendor_countChecked(){return Object.values(this.filterByVendor).filter(filter=>filter.state).length},
+    filterByEntrance_countChecked(){return Object.values(this.filterByEntrance).filter(filter=>filter.state).length},
+    filterByFloor_countChecked(){return Object.values(this.filterByFloor).filter(filter=>filter.state).length},
+    filterByEntrances_countChecked(){return Object.values(this.filterByEntrances).filter(filter=>filter.state).length},
+    saveStatus() {
+      return {
+        style: this.ports.savedPorts ? 'outlined' : 'contained',
+        loading: this.loading.save,
+        time: this.saveData.time,
+      };
+    },
+    saveTime(){
+      const {time}=this.saveData;
+      if(!time){return ''};
+      return time;//время до секунд, для быстрых сохранений
+    },
+    compareStatus() {
+      return {
+        style: 'contained',
+        loading: this.loading.compare,
+        disabled: !this.ports.savedPorts,
+      };
+    },
+    ethDevices(){//only descovered ETH and adm state = T or C
+      return Object.values(this.devices).filter(device=>/eth/i.test(device.name)&&device.system_object_id&&!device.ne_status&&device.ip).reduce((devices,device,i,_devices)=>{
+        //add filter keys to device.filter
+        const entrances=Object.values(this.entrances).filter(entrance=>entrance.device_id_list.includes(device.nioss_id)).reduce((entrances,entrance)=>{
+          if(entrances.find(e=>e.id===entrance.id)){return entrances};
+          const {id=0,number=0,flats={}}=entrance;
+          const {from=0,to=0,range='',count=0}=flats;
+          return [...entrances,{id,number,from,to,range,count}];
+        },[]);
+
+        const rack=Object.values(this.racks).find(rack=>rack.ne_in_rack.includes(device.name));
+        const {entrance={},floor=null,off_floor=null}=rack||{};
+        const {number:entrance_number=null}=entrance;
+        const floor_name=off_floor||floor;
+
+        return [...devices,{...device,filter:{entrances,entrance_number,floor_name}}]
+      },[]).map(device=>{
+        //set filters initial store
+        this.$set(this.ethSelect,device.ip,{selected:true,filtered:true});
+        const vendor=device?.vendor;
+        if(vendor){
+          const isHuawei=vendor==='HUAWEI';
+          //this.$set(this.filterByVendor,vendor,{label:`${isHuawei?'только не ':''}${vendor}`,state:false,invert:isHuawei});
+          this.$set(this.filterByVendor,vendor,{label:vendor,state:false});
+        };
+        const entrance_number=device?.filter?.entrance_number;
+        if(entrance_number){
+          this.$set(this.filterByEntrance,entrance_number,{label:`подъезд №${entrance_number}`,state:false});
+        };
+        const floor_name=device?.filter?.floor_name;
+        if(floor_name){
+          const off_floor={'Чердак':'на чердаке','Технический этаж':'на тех.этаже','Подвал':'в подвале'}[floor_name];
+          this.$set(this.filterByFloor,floor_name,{label:off_floor||`этаж ${floor_name}`,state:false});
+        };
+        for(const entrance of device?.filter?.entrances||[]){
+          const state=this.selectedEntrance?.id==entrance.id;
+          this.$set(this.filterByEntrances,entrance.number/*+'_'+entrance.range*/,{label:`подъезд №${entrance.number} (кв. ${entrance.range})`,state});
+        };
+        return device;
+      }).sort((a,b)=>{//sort by ip octets
+        const a12=a.ip.split('.').map(oct=>oct.padStart(3,0)).join('');
+        const b12=b.ip.split('.').map(oct=>oct.padStart(3,0)).join('');
+        return parseInt(a12)-parseInt(b12);
+      });
+    },
+    noEth(){
+      return !this.ethDevices.length;
+    },
+    allPorts(){
+      let allPorts=[];
+      for(let devicename in this.ports.savedPorts||{}){
+        allPorts.push({
+          ...this.ports.savedPorts[devicename],
+          ports:(this.ports.savedPorts[devicename].ports||[]).map(port=>{
+            return {
+              port,
+              device:this.ports.savedPorts[devicename].device,
+              key:this.ports.savedPorts[devicename].ip+':'+port.index_iface+':'+port.iface
+            };
+          }),
+        });
+        this.$set(this.showDevicePorts,devicename,this.showDevicePorts[devicename]||false);
+      };
+      return allPorts.sort((a,b)=>parseInt(a.ip.split('.')[3])-parseInt(b.ip.split('.')[3]));//sorted by ip
+    },
+    allPortsCount(){
+      return Object.keys(this.ports.savedPorts||{}).map(device_name=>this.ports.savedPorts[device_name].ports||[]).flat().length
+    },
+    changedPortsByDevices(){//group by ip
+      if(!this.ports.changedPorts){return};
+      return this.ports.changedPorts.reduce((groups,changedPort,i)=>{
+        const {port,device={},key=i}=changedPort;
+        const {ip,name}=device;
+        this.$set(this.showDevicePortsChanged,name,this.showDevicePortsChanged[name]||true);
+        return {
+          ...groups,
+          [ip]:{
+            ...device,
+            ports:[
+              ...groups[ip]?.ports||[],
+              changedPort
+            ]
+          }
+        }
+      },{})
+    },
+    titleText(){return `Поиск ${this.saveData.cableTest?'кабеля в':'линка на'} порту`},
+    totalCount(){return this.ethDevices.length},
+    selectedCount(){return this.filteredAndSelectedEthDevices.length},
+    titleText2(){return `${this.selectedCount||'0'} из ${this.totalCount||'0'}`},
+    titleText2Class(){return `tone-500 ${(this.selectedCount!=this.totalCount)&&'bg-main-lilac-light border-radius-4px padding-left-right-4px'}`},
+    selectedTest(){return `выбрано ${this.selectedCount||'0'} из ${this.totalCount||'0'} устройств`},
+    savedText(){return `Сохранение портов прошло успешно в ${this.saveTime}, опрошено ${this.saveData.savedCount} устройств`},
+    comparedText(){return `Сравнение портов прошло успешно, изменилось ${this.saveData.changedCount} порта`},
+  },
+  methods: {
+    update_port_status(prefix,device_name){
+      if(!prefix){return};
+      const regexp=new RegExp('^'+prefix+(device_name?('('+device_name+')$'):''))
+      const refs=Object.keys(this.$refs).reduce((refs,key)=>{
+        const ref=this.$refs[regexp.test(key)?key:null];
+        if(!ref?.length){return refs};
+        return [...refs,...ref]
+      },[]);
+      for(const find_port of shuffle(refs||[])){
+        if(find_port?.update_port_status){find_port.update_port_status()};
+      };
+    },
+    toggleSelectAll(){//выбрать/не выбрать по всем
+      for(let ip in this.ethSelect){
+        this.$set(this.ethSelect,ip,{
+          ...this.ethSelect[ip],
+          selected:this.selectAll
+        });
+        this.setSelect(ip);
+      };
+    },
+    setSelect(ip=''){//применяем селектор selected по ip
+      this.$set(this.ethSelect,ip,{
+        ...this.ethSelect[ip],
+        selected:this.ethSelect[ip].selected
+      });
+      this.selectAll=this.ethSelect[ip].selected||this.selectAll;//переключаем если выбрали хоть один
+    },
+    async fetchPortStatuses() {
+      //TODO: бекенд должен принимать новую структуру с name
+      const devices=this.filteredAndSelectedEthDevices.map(device=>({...device,DEVICE_NAME:device.name}));
+      let response={};
+      try{
+        response=await httpPost('/call/hdm/port_statuses?_devices='+devices.map(device=>device.ip).join(), {
+          devices,
+          add:this.saveData.cableTest?'cable':'speed',
+        });
+      }catch(error){
+        console.warn('port_statuses.error',error);
+      };
+      for(let deviceName in response){//для port-find-el
+        let device=response[deviceName];
+        response[deviceName]={
+          ...device,
+          device:devices.find(ne=>ne.name==device.name&&ne.ip==device.ip),
+        };
+      };
+      return response;
+    },
+    async getPortStatuses(action = 'save') {
+      this.showSelect=false;//закрываем фильтр чтоб не мешал листать результаты
+      const someLoading = Object.values(this.loading).some((val) => val);
+      if (someLoading) return;
+      if (action === 'save') this.resetData();
+
+      this.loading[action] = true;
+      const response = await this.fetchPortStatuses()
+      this.loading[action] = false;
+
+      if (action === 'save') this.actionSave(response);
+      if (action === 'compare') this.actionCompare(response);
+    },
+    actionSave(response) {
+      this.saveData = {
+        time: new Date().toLocaleTimeString(),
+        cableTest: this.saveData.cableTest,
+        savedCount: this.countSavedPorts(response),
+      };
+      this.ports.savedPorts = response;
+      this.saveCache();//add cache
+    },
+    actionCompare(response) {
+      this.saveData.time = new Date().toLocaleTimeString();
+      this.ports.comparedPorts = response;
+      this.comparePorts();
+      //перезаписываем сохраненные
+      this.ports.savedPorts = { ...this.ports.comparedPorts };
+      this.saveData.savedCount = this.countSavedPorts(this.ports.savedPorts);
+      this.saveCache();//add cache
+      this.showAll=false;//выключаем обратно просмотр всех
+    },
+    comparePorts(){
+      const {savedPorts,comparedPorts}=this.ports;
+      if(!comparedPorts||!savedPorts) return;
+
+      const changedPorts = [];;
+      for(const {name,ip,ports,device} of Object.values(savedPorts)){
+        if(!ports) continue;
+        for(const savedPort of ports){
+          const comparedDevice=comparedPorts[name];
+          const comparedDevicePorts=(comparedDevice&&comparedDevice.ports)||[];
+          const comparedPort=comparedDevicePorts.find(p=>p.iface===savedPort.iface);
+          if(!comparedPort){
+            console.warn('Не найден порт для сравнения:',savedPort);
+            continue;
+          };
+          if (this.portChanged(savedPort,comparedPort)){
+            changedPorts.push({
+              port:comparedPort,
+              device,
+              key:ip+':'+comparedPort.iface
+            });
+          };
+        };
+      };
+
+      this.ports.changedPorts=changedPorts;
+      this.saveData.changedCount=this.countChangedPorts();
+      this.saveCache();
+    },
+    portChanged(savedPort, comparedPort) {
+      if(this.showAllComparedPorts){return true};
+      let diff = 0;
+      if (savedPort.oper_state !== comparedPort.oper_state) diff++;
+
+      if (this.saveData.cableTest) {
+        for (let i = 1; i < 5; i++) {
+          const pair = 'pair_' + i;
+          const metr = 'mert_' + i;
+          if (savedPort[pair]) {
+            if (savedPort[pair] !== comparedPort[pair]) diff++;
+            if (parseInt(savedPort[metr]) - parseInt(comparedPort[metr]) > 3) diff++;
+          }
+        }
+      }
+      return diff !== 0;
+    },
+    portName(port) {
+      return encodeURIComponent(`PORT-${port.devicename}/${port.index_iface}`);
+    },
+    ipShort(ip=''){
+      let octs=ip.split('.');
+      if(octs.length<4){return ip};
+      return `..${octs[2]}.${octs[3]}`;
+    },
+    resetData() {
+      this.ports = { savedPorts: null, comparedPorts: null, changedPorts: null };
+      this.saveData = { ...this.saveData, time: null };
+    },
+    countSavedPorts(devices) {
+      let count = 0;
+      if (!devices) return count;
+      for (let deviceName in devices) {
+        const { ports, message } = devices[deviceName];
+        if (ports && ports.length && !message) count++;
+      }
+      return count;
+    },
+    countChangedPorts() {
+      return (this.ports.changedPorts&&this.ports.changedPorts.length)||0;
+    },
+    saveCache(cacheKey=`port_statuses/${this.site_id}`){
+      const {ports,saveData}=this;
+      this.$cache.setItem(cacheKey,{ports,saveData},60);//1h
+    },
+    loadCache(cacheKey=`port_statuses/${this.site_id}`){
+      const cache=this.$cache.getItem(cacheKey);
+      if(!cache){return};
+      const {ports,saveData}=cache;
+      this.ports=ports;
+      this.saveData=saveData;
+    }
+  },
+});
+
+Vue.component('FindPortItem',{
+  template:`<div class="find-port-el">
+    <div class="display-flex flex-direction-column gap-2px">
+      <span :class="'ic-20 ic-loading rotating-'+leftOrRight+' main-lilac'" v-if="loads.port_status"></span>
+      <span v-else @click="update_port_status_and_port_cable_test" class="ic-20 ic-status" :class="port_status.admin_state==='up'?(port_status.oper_state==='up'?'main-green':'tone-500'):'main-red'"></span>
+      <span :class="'ic-20 ic-loading rotating-'+leftOrRight+' main-lilac'" v-if="portInfo_loading||loads.port_cable_test"></span>
+    </div>
+    <div class="find-port-c font--13-500" @click="toPort" :class="{'is-free':isFreeOrMaybeFree,[portClass]:true}">
+      <div class="fp-c-iface" :class="{'is-free':isFreeOrMaybeFree}">{{port.iface}}</div>
+      <div v-if="ifAlias" class="port-ifalias tone-650">{{ifAlias}}</div>
+      <div v-if="portLast||lldpDevice||ipByMac" class="port-last" :class="portClass">{{lldpDevice||ipByMac||portLast}}</div>
+      <div class="port-cable">
+        <template v-if="!user_cable_test">
+          <div v-for="i in [1,2,3,4]" :key="'pair_'+i" v-if="port['pair_'+i]">Пара {{i}}: {{port['pair_'+i]}} {{port['metr_'+i]}};</div>
+        </template>
+        <template v-else-if="port_cable_test">
+          <div v-for="row of port_cable_test">{{row}}</div>
+        </template>
+        <loader-bootstrap v-else-if="loads.port_cable_test" text="testing ..." :height="loader_height"/>
+      </div>
+    </div>
+    <button-sq icon="right-link" class="margin-left-auto" @click="toPort"/>
+  </div>`,
+  props:{
+    changedPort:{type:Object,required:true},
+  },
+  data:()=>({
+    loader_height:58,
+    portInfo:{},
+    portInfo_loading:false,
+    loads:{
+      neignbors:false,
+      macs:false,
+      port_status:false,
+      port_cable_test:false,
+    },
+    resps:{
+      neignbors:[],
+      macs:[],
+      port_status:null,
+      port_cable_test:null,
+    },
+    user_cable_test:0,
+  }),
+  async created(){
+    //await this.getPortStatus();
+    await this.getPortInfo();
+    if(this.portInfo.is_trunk||this.portInfo.state.includes('trunk')){
+      if(this.portInfo.is_link){
+        this.getLLDPNeignbors();
+      }else{
+        this.getMacNeignbors();
+      };
+      
+    };
+  },
+  watch:{},
+  computed:{
+    port_cable_test(){
+      return this.resps.port_cable_test
+    },
+    port_status(){
+      return {
+        admin_state:this.resps.port_status?.admin_state||this.port.admin_state,
+        oper_state:this.resps.port_status?.oper_state||this.port.oper_state,
+      }
+    },
+    loading(){
+      return Object.values(this.loads).some(l=>l);
+    },
+    leftOrRight(){
+      return randcode(1,'lr');
+    },
+    port(){
+      return {
+        ...this.changedPort.port,
+        device:this.changedPort.device,
+        name:this.changedPort.port.iface.split('/').reverse()[0].replaceAll(/\D/g,''),
+      };
+    },
+    portName(){
+      return `PORT-${this.changedPort.device.name}/${this.changedPort.port.index_iface}`;
+    },
+    portClass(){
+      if(!this.portInfo.state){return ''};
+      return `state--${(this.portInfo.state||'').replace(/ /g,'-')}`
+    },
+    ifAlias(){
+      if(!this.portInfo.state){return };
+      return (this.portInfo.snmp_description||'').includes('HUAWEI, Quidway Series,')?'':this.portInfo.snmp_description;
+    },
+    portLast(){
+      if(!this.portInfo.state){return };
+      if(!this.portInfo.last_mac||!this.portInfo.last_mac.last_at){return };
+      let flatList=(this.portInfo.subscriber_list||[]).map(sub=>sub.flat);
+      return [
+        this.portInfo.last_mac.last_at.split(' ')[0],
+        flatList.length?('кв. '+flatList.join(', ')+((flatList.length>1)?' ...':'')):this.portInfo.last_mac.value||'?',
+      ].join(' • ');
+    },
+    lldpDevice(){
+      if(this.loads.neignbors||!this.resps.neignbors?.length){return};
+      const neignbor=this.resps.neignbors[0];
+      return `${neignbor.LINK_DEVICE_NAME.split('_')[0].split('-')[0]}#${neignbor.LINK_DEVICE_NAME.split('_').reverse()[0]} • ${neignbor.LINK_DEVICE_IP_ADDRESS}`;
+    },
+    ipByMac(){
+      if(this.loads.macs||!this.resps.macs?.length){return};
+      return this.resps.macs.find(mac=>mac.CLIENT_IP&&mac.LAST_DATE&&mac.LAST_DATE.split(' ')[0]==new Date().toLocaleDateString())?.CLIENT_IP;
+    },
+    isFreeOrMaybeFree(){
+      return !this.portInfo.is_trunk&&['free','double','closed','expired','move'].includes(this.portInfo?.state)
+    }
+  },
+  methods:{
+    update_port_status(){//public
+      if(this.loads.port_status){return};
+      this.getPortStatus();
+    },
+    async update_port_status_and_port_cable_test(){
+      await this.getPortStatus();
+      if(!this.portInfo?.is_link&&!this.portInfo?.is_trunk&&this.port_status?.oper_state!=='up'){
+        this.getCableTest();
+      }
+    },
+    async getCableTest() {
+      this.loads.port_cable_test=true;
+      this.resps.port_cable_test=null;
+      this.user_cable_test++;
+      try{
+        const {number:PORT_NUMBER,snmp_name:SNMP_PORT_NAME}=this.portInfo||{};
+        const {
+          name:DEVICE_NAME,firmware:FIRMWARE,firmware_revision:FIRMWARE_REVISION,ip:IP_ADDRESS,
+          region:{mr_id:MR_ID},patch_version:PATCH_VERSION,system_object_id:SYSTEM_OBJECT_ID,vendor:VENDOR
+        }=this.port?.device||{};
+        const response = await httpPost("/call/hdm/port_cable_test", {
+          port:{PORT_NUMBER,SNMP_PORT_NAME},
+          device:{DEVICE_NAME,FIRMWARE,FIRMWARE_REVISION,IP_ADDRESS,MR_ID,PATCH_VERSION,SYSTEM_OBJECT_ID,VENDOR},
+        });
+        if(Array.isArray(response.text)){
+          this.resps.port_cable_test=response.text;
+        }else{
+          this.resps.port_cable_test=[response.text];
+        };
+      }catch (error){
+        console.warn('port_cable_test.error',error);
+      };
+      this.loads.port_cable_test=false;
+    },
+    async getPortStatus(){
+      const device=this.port?.devicename;
+      if(!device){return};
+      const port_ifindex=this.port?.index_iface;
+      if(!port_ifindex){return};
+      this.loads.port_status=true;
+      this.resps.port_status=null;
+      try{
+        const response=await httpGet(buildUrl('port_status_by_ifindex',{device,port_ifindex},"/call/hdm/"));
+        if(!response.code){
+          this.resps.port_status=response;
+        };
+      }catch(error){
+        console.warn('port_status.error', error);
+      };
+      this.loads.port_status=false;
+    },
+    async getPortInfo(){
+      this.portInfo_loading=true;
+      const cache=this.$cache.getItem(`port/${this.portName}`);
+      if(cache){
+        this.portInfo=cache;
+      }else{
+        try{
+          const portInfo=await httpGet(buildUrl('search_ma',{
+            pattern:encodeURIComponent(this.portName),
+            component:'find-port-el'
+          },'/call/v1/search/'));
+          this.portInfo=portInfo.data;
+          this.$cache.setItem(`port/${this.portName}`,portInfo.data);
+        }catch(error){
+          console.warn('search_ma.error',error);
+        }
+      };
+      this.portInfo_loading=false;
+    },
+    async getLLDPNeignbors(){
+      this.loads.neignbors=true;
+      this.resps.neignbors=[];
+      const cache=this.$cache.getItem(`port_info:neignbors/${this.portInfo.name}`);
+      if(cache){
+        this.resps.neignbors=cache;
+      }else{
+        try{
+          const neignbors=await httpGet(buildUrl('port_info',{
+            device:this.portInfo.device_name,
+            port:this.portInfo.name,
+            trunk:true,component:'find-port-el'
+          }));
+          this.resps.neignbors=neignbors.length?neignbors:[];
+          this.$cache.setItem(`port_info:neignbors/${this.portInfo.name}`,this.resps.neignbors);
+        }catch(error){
+          console.warn('port_info.error', error);
+        }
+      }
+      this.loads.neignbors=false;
+    },
+    async getMacNeignbors(){
+      this.loads.macs=true;
+      this.resps.macs=[];
+      const cache=this.$cache.getItem(`port_info:macs/${this.portInfo.name}`);
+      if(cache){
+        this.resps.macs=cache;
+      }else{
+        try{
+          const macs=await httpGet(buildUrl('port_info',{
+            device:this.portInfo.device_name,
+            port:this.portInfo.name,
+            trunk:false,component:'find-port-el'
+          }));
+          this.resps.macs=macs.length?macs:[];
+          this.$cache.setItem(`port_info:macs/${this.portInfo.name}`,this.resps.macs);
+        }catch(error){
+          console.warn('port_info.error', error);
+        }
+      }
+      this.loads.macs=false;
+    },
+    toPort(){
+      this.$router.push({
+        name:'eth-port',
+        params:{
+          id:this.portName,
+          ...this.portInfo.state?{
+            portProp:this.portInfo
+          }:null
+        }
+      });
+    },
+  },
+});
+
+//корректировка DdmIndexBias
 Vue.component('PortSfp',{
   template:`<div name="PortSfp" class="sfp-info">
     <loader-bootstrap v-if="loads.sfp" text="получение SFP"/>
