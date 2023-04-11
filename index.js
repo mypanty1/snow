@@ -2621,6 +2621,151 @@ Vue.component('SelectedNetworkElementPlannedModal',{
   },
 });
 
+Vue.component('RemedyTaskContentMain',{
+  template:`<div name="RemedyTaskContentMain">
+    <CardBlock>
+      <title-main icon="task" text="Работа">
+        <div class="display-flex align-items-center margin-right-12px gap-4px font--13-500" v-if="remedyWorkIsStarted">
+          <span v-if="isOver" class="tone-500">просрочен</span>
+          <template v-else>
+            <span class="tone-500">Осталось:</span>
+            <span class="white-space-nowrap">{{leftTime}} (c {{startTime}})</span>
+          </template>
+          <i class="ic-20 ic-timer tone-500"></i>
+        </div>
+      </title-main>
+      <devider-line />
+
+      <link-block :text="task_id" @click="copy(task_id)" actionIcon="copy" type="medium"/>
+      <devider-line />
+
+      <info-text-sec title="Описание работ" :rows="workDescriptionRows" class="margin-left-16px margin-bottom-8px"/>
+      <RemedyTaskCounters v-bind="{countEth,countAbons}" class="margin-left-16px margin-right-16px"/>
+      <devider-line />
+
+      <RemedyTaskStatusAndFio :icon="status.icon" :status="status.name" :fio="fio" class="margin-left-16px margin-right-16px"/>
+
+      <div class="margin-left-16px margin-right-16px margin-top-8px">
+        <button-main v-if="!remedyWorkIsStarted" label="Взять в работу" @click="openStartRemedyTaskModal" buttonStyle="contained" size="full"/>
+        <button-main v-if="remedyWorkIsProgress" label="Завершить работу" @click="openDoneRemedyTaskModal" buttonStyle="contained" size="full"/>
+      </div>
+    </CardBlock>
+
+    <StartRemedyTaskModal ref="StartRemedyTaskModal" :task_id="task_id" :task_site_id="task_site_id"/>
+    <DoneRemedyTaskModal ref="DoneRemedyTaskModal" :task_id="task_id" :task_site_id="task_site_id"/>
+
+    <CardBlock v-if="siteNode">
+      <title-main :text="shortAddress" class="margin-top-8px">
+        <button-sq type="large" icon="pin" @click="toMap"/>
+      </title-main>
+      <devider-line />
+      
+      <link-block icon="du" :text="siteNode.name||site_id" :search="siteNode.node||site_id" type="medium"/>
+      <RemedyTaskEntrancesLine v-bind="{entrances}" class="margin-left-16px margin-right-16px"/>
+      <link-block icon="home" text="Инфо по площадке и доступу" @block-click="open_modal_site_info" actionIcon="expand" type="medium"/>
+    </CardBlock>
+
+    <modal-container ref="modal_site_info">
+      <SiteNodeDetails :siteNode="siteNode"/>
+    </modal-container>
+  </div>`,
+  props:{
+    task_id:{type:String,required:true},
+    task_site_id:{type:String,required:true},
+  },
+  data:()=>({
+    loads:{
+      siteNode:false,
+    },
+    resps:{
+      siteNode:null,
+    },
+  }),
+  computed:{
+    ...mapGetters({
+      getTaskById:'remedy/getTaskById',
+    }),
+    task(){return this.getTaskById(atok(this.task_id,this.task_site_id))},
+    status(){return REMEDY_TASK_STATUSES.find(({name})=>name===this.task.status)||{}},
+    workDescriptionRows(){return [this.task.classificatorcause,this.task.work,this.task.work_description]},
+    fio(){return this.task.persname2||''},
+    site_id(){return this.siteNode?.id||this.task.site_id},
+    siteNode(){return this.resps.siteNode},
+    shortAddress(){return truncateSiteAddress(this.resps.siteNode?.address||this.task.location||'')},
+    countEth(){return this.task.ne_quantity||0},
+    countAbons(){return this.task.count_cp||0},
+    entrances(){return this.task.entrances||[]},//нет данных по подъездам [1,2,3,5,6,8]
+    time(){return getRemedyTimeStartEndByTask(this.task)},
+    remedyWorkIsStarted(){return !!this.task.started_at},
+    startMs(){return this.task.startMs},
+    deadlineMs(){return this.task.deadlineMs},
+    isOver(){return this.task.countdownMs<=0},
+    leftTime(){return msToLeftTime(this.task.countdownMs)},
+    startTime(){return new Date(this.startMs).toLocaleTimeString()},
+    countdownRunning(){return this.task.countdownRunning},
+    countdownMs(){return this.task.countdownMs},
+    remedyWorkIsProgress(){return this.task.status==REMEDY_TASK_STATUS_4},
+  },
+  created(){
+    this.getSite();
+    this.initTaskCountdown();
+  },
+  watch:{
+    'remedyWorkIsStarted'(){
+      this.initTaskCountdown();
+    }
+  },
+  methods:{
+    ...mapActions({
+      startTaskCountdownById:'remedy/startTaskCountdownById'
+    }),
+    initTaskCountdown(){
+      if(!this.remedyWorkIsStarted){return};
+      if(this.countdownRunning){return};
+      const {task_id,task_site_id,deadlineMs}=this;
+      const countdownMs=deadlineMs-Date.now();
+      this.startTaskCountdownById({id:atok(task_id,task_site_id),countdownMs});
+    },
+    async getSite(){
+      const {site_id}=this;
+      if(!site_id){return};
+      let cache=this.$cache.getItem(`search_ma/${site_id}`);
+      if(cache){
+        this.resps.site=selectNodeDuAsSite(cache);
+        return;
+      };
+      try{
+        let response=await httpGet(buildUrl("search_ma",{pattern:site_id},"/call/v1/search/"));
+        if(response.type==='error'){throw new Error(response.message)};
+        this.$cache.setItem(`search_ma/${site_id}`,response.data);
+        this.resps.siteNode=selectNodeDuAsSite(response.data);
+      }catch(error){
+        console.warn('search_ma:siteNode.error',error);
+      };
+    },
+    copy(text){
+      copyToBuffer(text,()=>console.log('Copied:',text));
+    },
+    open_modal_site_info(){
+      this.$refs.modal_site_info.open();
+    },
+    openStartRemedyTaskModal(){
+      this.$refs.StartRemedyTaskModal.open();
+    },
+    openDoneRemedyTaskModal(){
+      this.$refs.DoneRemedyTaskModal.open();
+    },
+    toMap(){
+      const coordinates=this.siteNode?.coordinates||this.task.coordinates
+      if(!coordinates){return};
+      const {latitude:lat,longitude:long}=coordinates;
+      this.$router.push({
+        name:'map',
+        query:{lat,long},
+      });
+    },
+  },
+});
 
 
 
