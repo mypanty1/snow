@@ -1404,176 +1404,6 @@ Vue.component('rack-box', {
   },
 });
 
-//fix click
-Vue.component('url-el',{
-  template:`<div>
-    <template v-if="urlObj.urls">
-      <title-main :text="urlObj.title" :text2="urlObj?.urls?.length||'нет'" text2Class="tone-500" :iconClass="urlObj.icon +' main-lilac margin-right-8px'" :iconClassEnable="!urlObj.icon" @open="open=!open"/>
-      <info-text-sec :text="urlObj.description" class="margin-bottom-8px" style="margin-top:-8px;"/>
-      <template v-if="open">
-        <template v-for="(url,i) of urlObj.urls">
-          <devider-line v-if="i"/>
-          <url-el :key="i" :url="url"/>
-        </template>
-      </template>
-    </template>
-    <template v-else>
-      <link-block v-if="urlObj.title" iconClass="fas fa-link main-lilac padding-right-4px" :text="urlObj.title" textClass="font--11-600" @block-click="goTo(urlObj.url)" @click.stop="goTo(urlObj.url)" type="medium" class="padding-right-8px"/>
-      <link-block v-if="urlObj.url" :text="urlObj.url.length>30?urlObj.url.slice(0,30)+'...':urlObj.url" textClass="font--11-600" textStyle="color:#0066cc;" @block-click="copy(urlObj.url)" @click.stop="copy(urlObj.url)" type="medium" actionIcon="copy" class="padding-right-8px" style="margin-top:-8px;"/>
-      <info-text-sec :text="urlObj.description" class="margin-bottom-8px" style="margin-top:-8px;"/>
-      <link-block v-if="urlObj.url2" :text="urlObj.url2.length>30?urlObj.url2.slice(0,30)+'...':urlObj.url2" textClass="font--11-600" textStyle="color:#0066cc;" @block-click="copy(urlObj.url2)" @click.stop="copy(urlObj.url2)" type="medium" actionIcon="copy" class="padding-right-8px" style="margin-top:-8px;"/>
-      <slot></slot>
-    </template>
-  </div>`,
-  props:{
-    url:{type:Object,default:()=>({}),required:true},
-  },
-  data:()=>({
-    open:false,
-    newUrl:null,
-  }),
-  async created(){
-    const {id=''}=this.url;
-    if(!id){return};
-    const newUrl=await fetch(`https://script.google.com/macros/s/AKfycbzcwUJXRO9lytE8Olmc6nzciGrjWTJxzQHUNJUzPsbFbItGzTmHbbRFupi-tdzZqOyLdA/exec?id=${id}`).then(r=>r.json())
-    if(typeof newUrl==='object'&&!newUrl.error){
-      this.newUrl=newUrl
-    };
-  },
-  computed:{
-    urlObj(){return this.newUrl||this.url},
-  },
-  methods:{
-    goTo(url=''){
-      if(!url){return};
-      window.open(url,'_blank');
-    },
-    copy(text=''){
-      if(!text){return};
-      copyToBuffer(text,()=>console.log('Copied:',text));
-    },
-  },
-});
-
-//fix address_id
-Vue.component("SiteNodeInfo", {
-  template:`<CardBlock name="SiteNodeInfo">
-    <title-main text="Инфо по площадке и доступу*" @open="show=!show">
-      <button-sq :icon="loading?'loading rotating':'mark-circle'" type="large" @click="help.show=!help.show"/>
-    </title-main>
-    <info-text-icon v-if="help.show" icon="info" :text="help.text" />
-    <template v-if="show&&site">
-      <info-text-sec v-if="site.lessor" :text="site?.lessor?.name" class="margin-bottom-4px"/>
-      <account-call v-if="site?.lessor?.phone" :phone="site.lessor.phone" title="Контактный номер телефона" :descr="[site.lessor.person,site.lessor.position]" class="margin-bottom-4px"/>
-      <account-call v-if="site?.lessor?.phone2" :phone="site.lessor.phone2" title="Контактный номер телефона по вопросам доступа" class="margin-bottom-4px"/>
-      <account-call v-if="site?.lessor?.phone3" :phone="site.lessor.phone3" title="Телефонные номера аварийных служб" class="margin-bottom-4px"/>
-      
-      <devider-line v-if="site.address_descr||site.details"/>
-      <info-text-sec v-if="site.address_descr||site.details" title="Примечание к адресу" :text="site.address_descr||site.details" class="margin-bottom-4px"/>
-      
-      <devider-line v-if="has_site_info_from_nioss"/>
-      <info-text-sec v-if="has_site_info_from_nioss" title="Примечание к площадке" :rows="site_info_rows"/>
-      
-      <devider-line v-if="has_node_info_from_nioss"/>
-      <info-text-sec v-if="has_node_info_from_nioss" title="Примечание к узлу ОС" :rows="node_info_rows"/>
-      
-      <devider-line v-if="address_id"/>
-      <url-el v-if="address_id" :url="urlToInventory"/>
-    </template>
-  </CardBlock>`,
-  props:{
-    site:{type:Object},
-  },
-  data:()=>({
-    show:true,
-    help:{
-      text:`Информация об арендодателе площадей под размещение оборудования ПАО МТС может быть устаревшей либо вовсе не быть информацией по доступу. 
-      Для корректировки данной информации нужно обратиться к ФГТСЖ. Подробная информация по доступу в помещения подъезда находится на странице Подъезд`,
-      show:false,
-    },
-    resps:{//8100749217013993313 - получены все доступные атрибуты
-      nioss_node:null,
-      nioss_site:null,
-    },
-    loads:{
-      nioss_node:false,
-      nioss_site:false,
-    },
-  }),
-  created(){
-    this.get_nioss_object('site',this.site?.id);
-    this.get_nioss_object('node',this.site?.node_id||this.site?.uzel_id);
-  },
-  watch:{
-    'site'(site){
-      if(!site){return};
-      if(!this.resps.nioss_site){
-        this.get_nioss_object('site',this.site?.id);
-      }
-      if(!this.resps.nioss_node){
-        this.get_nioss_object('node',this.site?.node_id||this.site?.uzel_id);
-      }
-    }
-  },
-  computed:{
-    loading(){return Object.values(this.loads).some(l=>l)},
-    site_info_rows(){
-      if(!this.resps.nioss_site){return};
-      const {description=''}=this.resps.nioss_site;
-      return [description||this.site?.site_descr].filter(s=>s);
-    },
-    node_info_rows(){
-      if(!this.resps.nioss_node){return};
-      const {description=''}=this.resps.nioss_node;
-      return [description||this.site?.node_descr].filter(s=>s);
-    },
-    has_site_info_from_nioss(){return this.site_info_rows?.length},
-    has_node_info_from_nioss(){return this.node_info_rows?.length},
-    has_info_from_nioss(){ return this.has_site_info_from_nioss||this.has_node_info_from_nioss},
-    address_id(){return this.resps.nioss_site?.AddressPA?.NCObjectKey||this.site?.address_id||''},
-    site_name(){return this.resps.nioss_site?.SiteName||this.site?.name||''},
-    urlToInventory(){
-      return {
-        url:`https://inventory.ural.mts.ru/tb/address_view.php?id_address=${this.address_id}`,
-        title:`Инвентори площадки ${this.site_name}`,
-        description:this.isApp?`*переход из приложения пока может не работать\n(можно скопировать)`:''
-      }
-    },
-    ...mapGetters({
-      isApp:'app/isApp',
-    }),
-  },
-  methods:{
-    async get_nioss_object(object='unknown',object_id=''){
-      if(!object_id){return};
-      const cache=this.$cache.getItem(`get_nioss_object/${object_id}`);
-      if(cache){
-        this.resps['nioss_'+object]=cache;
-        return;
-      };
-      this.loads['nioss_'+object]=true;
-      const response=await this.get_nioss_object_and_save({object_id,object});
-      this.resps['nioss_'+object]=response||null;
-      this.loads['nioss_'+object]=false;
-    },
-    async get_nioss_object_and_save({object_id,object}){
-      try{
-        const response=await httpGet(buildUrl("get_nioss_object",{object_id,object},"/call/nioss/"),true);
-        if(response?.parent){this.$cache.setItem(`get_nioss_object/${object_id}`,response)};
-        return response;
-      }catch(error){
-        console.warn("get_nioss_object.error",{object_id,object},error);
-      }
-      return null;
-    },
-  }
-});
-
-
-
-
-
-
 //fix sessions Get
 Vue.component('device-info',{
   template:`<article class="device-info" :class="[addBorder&&'border-gray']" :style="neIsNotInstalled?'background-color:#eeeeee;':''">
@@ -2260,26 +2090,28 @@ Vue.component('SiteNetworkElementsPlanned',{
     this.getSiteEntrances({site_id});
     await this.getSiteRacks({site_id});
     this.getSiteNetworkElements({site_id});
-    this.getSiteNetworkElementsPlanned({site_id});
+    //this.getSiteNetworkElementsPlanned({site_id});
   },
   computed:{
     ...mapGetters({
       getSiteById:'site/getSiteById',
       getEntrancesBySiteId:'site/getEntrancesBySiteId',
       getRacksBySiteId:'site/getRacksBySiteId',
-      getNetworkElementsPlannedBySiteId:'site/getNetworkElementsPlannedBySiteId',
+      getNetworkElementsBySiteId:'site/getNetworkElementsBySiteId',
+      //getNetworkElementsPlannedBySiteId:'site/getNetworkElementsPlannedBySiteId',
       getRemedyWorkStagesResultById:'remedy/getRemedyWorkStagesResultById',
       getRemedyWorkStagesLoadingById:'remedy/getRemedyWorkStagesLoadingById',
     }),
     site(){return this.getSiteById(this.site_id)},
     entrances(){return this.getEntrancesBySiteId(this.site_id)},
     racks(){return this.getRacksBySiteId(this.site_id)},
-    networkElements(){return this.getNetworkElementsPlannedBySiteId(this.site_id)},
+    networkElements(){return this.getNetworkElementsBySiteId(this.site_id)},
+    //networkElements(){return this.getNetworkElementsPlannedBySiteId(this.site_id)},
     networkElementsFiltered(){
       return select(this.networkElements,{
         ne_name:testByName.neIsETH,
         //node_name:testByName.nodeIsDu,
-        ne_status:testByName.statusIsP
+        //ne_status:testByName.statusIsP
       })
     },
     stagesLoading(){return this.getRemedyWorkStagesLoadingById(this.task_id)},
@@ -2502,10 +2334,10 @@ Vue.component('SelectedNetworkElementPlannedModal',{
   created(){},
   computed:{
     ...mapGetters({
-      getSiteNetworkElementPlannedById:'site/getSiteNetworkElementPlannedById',
+      //getSiteNetworkElementPlannedById:'site/getSiteNetworkElementPlannedById',
       getSiteNetworkElementById:'site/getSiteNetworkElementById',
     }),
-    networkElement(){return this.getSiteNetworkElementPlannedById(this.target_ne_id)||this.getSiteNetworkElementById(this.target_ne_id)},
+    networkElement(){return /*this.getSiteNetworkElementPlannedById(this.target_ne_id)||*/this.getSiteNetworkElementById(this.target_ne_id)},
     site_id(){return this.networkElement?.site_id},
     mr_id(){return this.networkElement?.mr_id},
     ne_id(){return this.networkElement?.ne_id},
@@ -2611,7 +2443,8 @@ Vue.component('SelectedNetworkElementPlannedModal',{
       this.loaderText='обновление устройства';
       //await this.getNetworkElement();//TODO: нет метода получения СЭ в статусе планируется
       const {site_id}=this;
-      await this.getSiteNetworkElementsPlanned({site_id,update:true});
+      //await this.getSiteNetworkElementsPlanned({site_id,update:true});
+      await this.getSiteNetworkElements({site_id,update:true});
       if(!this.sysObjectID){
         this.errorText='устройство не опросилось';
         this.iconProps=this.iconPresets.warning;
@@ -2668,7 +2501,7 @@ Vue.component('SelectedNetworkElementPlannedModal',{
         return
       };
 
-      const sourceNetworkElement=this.getSiteNetworkElementPlannedById(source_ne_id)||this.getSiteNetworkElementById(source_ne_id);
+      const sourceNetworkElement=/*this.getSiteNetworkElementPlannedById(source_ne_id)||*/this.getSiteNetworkElementById(source_ne_id);
       if(!sourceNetworkElement?.ne_name){
         this.errorText='Нет демонтируемого СЭ';
         this.iconProps=this.iconPresets.warning;
@@ -2779,7 +2612,7 @@ Vue.component('SelectedNetworkElementPlannedModal',{
     },
     ...mapActions({
       getSiteNetworkElements:'site/getSiteNetworkElements',
-      getSiteNetworkElementsPlanned:'site/getSiteNetworkElementsPlanned',
+      //getSiteNetworkElementsPlanned:'site/getSiteNetworkElementsPlanned',
       addRemedyWorkStage:'remedy/addRemedyWorkStage',
       getRemedyWorkStages:'remedy/getRemedyWorkStages',
       clientsReconnect:'xrad/clientsReconnect',
