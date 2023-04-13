@@ -20,6 +20,11 @@
   }):null,1000);
 }())*/
 
+//matomo test
+window._paq=window._paq||[];
+window._paq.push(["setDomains", ["inetcore.mts.ru", "fx.mts.ru"]]);
+window._paq.push(["enableCrossDomainLinking"]);
+
 //1061
 Vue.component("LbsvService",{
   template:`<section name="LbsvService">
