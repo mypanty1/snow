@@ -20,11 +20,6 @@
   }):null,1000);
 }())*/
 
-//matomo test
-window._paq=window._paq||[];
-window._paq.push(["setDomains", ["inetcore.mts.ru", "fx.mts.ru"]]);
-window._paq.push(["enableCrossDomainLinking"]);
-
 //в FF and SF неработает startLocal GMT+0300 ?
 Vue.component('SessionItem',{
   template:`<section name="SessionItem">
@@ -161,265 +156,6 @@ Vue.component('SessionItem',{
     },
   }
 });
-
-//1061
-Vue.component("LbsvService",{
-  template:`<section name="LbsvService">
-    <title-main textClass="font--13-500" :text="typeService" :text2="service.statusname" :text2Class="stateClass" :textSub="service.agentdescr" textSubClass="tone-500 font--12-400">
-      <i slot="icon" class="ic-20" :class="['ic-'+icon,stateClass]"></i>
-      <button-sq v-if="service.type=='internet'" :icon="loading.get_user_rate?'loading rotating':(user_rate&&user_rate.length&&!user_rate[0].isError)?'info':'warning tone-300'" type="large" @click="testAndOpenModalOrLoadInfo"/>
-    </title-main>
-    <billing-info-modal ref="billing_info_modal" :billing-info="[user_rate||[]]" :loading="loading.get_user_rate"/>
-    
-    <title-main textClass="tone-500 font--12-400" :text="service.tarif||service.tardescr" textSubClass="font--13-500" textSub1Class="tone-500" :textSub="auth_type||rate" :textSub2="auth_type?rate:''" :style="(auth_type||rate)?'':'margin:-10px 0px;'">
-      <button-sq :icon="(loading.get_auth_type||loading.get_user_rate)?'loading rotating':''" type="medium"/>
-    </title-main>
-    
-    <div class="margin-left-right-16px" style="display:grid;gap:4px;grid-template-columns:1fr 1fr 1fr 1fr;">
-      <lbsv-login-pass v-if="serviceHasPassword" :service="service" :billingid="account.billingid" style="grid-area: 1/1/2/5;"/>
-      <title-main v-else textClass="font--16-500" :text1Class="[1,4,5,6].includes(service.billing_type)?'':'tone-500'" :text2Class="[2,3].includes(service.billing_type)?'':'tone-500'" :text="service.login||service.vgid" :text2="service.login?service.vgid:''" style="grid-area: 1/1/2/5;"/>
-      <template v-if="service.available_for_activation">
-        <button-main style="grid-area: 2/1/3/3;" label="Активировать(old)" @click="activate" button-style="outlined" size="full"/>
-        <button-main style="grid-area: 2/3/3/5;" label="Активировать" @click="openModal('service_activation_modal')" button-style="outlined" size="full"/>
-      </template>
-      <template>
-        <button-main style="grid-area: 3/1/4/3;" label="Заменить AO" @click="openModal('equipment_replace_modal')" button-style="outlined" size="full"/>
-        <button-main style="grid-area: 3/3/4/5;" label="Привязать AO" @click="openModal('equipment_add_modal')" button-style="outlined" size="full"/>
-      </template>
-      <account-iptv-code v-if="serviceType==='IPTV'" :account="accountNumber" :service="service" style="grid-area: 4/1/5/5;"/>
-      
-      <EquipmentCredentials v-for="(credentials,hardnumber,i) in credentialsByEquipments" :credentials="credentials" :hardnumber="hardnumber" :key="i" :style="{'grid-area': (5+i)+'/1/'+(6+i)+'/5'}"/>
-    </div>
-    <info-text-sec v-if="service.descr" :text="service.descr" rowClass="font--12-400" rowStyle="color:#918f8f;"/>
-    <!--если есть оборудование которое смапилось с услугой в lbsv-account-content-->
-    <title-main v-if="service.equipments&&service.equipments.length" @open="open_eq=!open_eq" text="Оборудование" :text2="service.equipments.length" textClass="font--13-500"/>
-    <template v-if="open_eq">
-      <template v-for="(equipment,i) of service.equipments">
-        <devider-line style="margin:0px 16px;"/>
-        <equipment :key="i" :equipment="equipment" :account="accountNumber" :mr_id="mr_id" :services="[service]"/>
-      </template>
-    </template>
-    
-    <modal-container ref="modal">
-      <activation-modal :service="service" :account="accountNumber"/>
-    </modal-container>
-    <modal-container-custom ref="service_activation_modal" :footer="false" :wrapperStyle="{'min-height':'auto'}">
-      <service-activation-modal @close="closeModal('service_activation_modal')" :service="service" :account="accountNumber" :serviceType="serviceType" :serviceName="typeService"/>
-    </modal-container-custom>
-    <modal-container-custom ref="equipment_replace_modal" :footer="false">
-      <equipment-replace-modal @close="closeModal('equipment_replace_modal')" :service="service" :account="accountNumber" :serviceType="serviceType" :serviceParams="serviceParams"/>
-    </modal-container-custom>
-    <modal-container-custom ref="equipment_add_modal" :footer="false">
-      <equipment-add-modal @close="closeModal('equipment_add_modal')" :service="service" :account="accountNumber" :serviceType="serviceType" :serviceParams="serviceParams"/>
-    </modal-container-custom>
-  </section>`,
-  props: {
-    account: { type: Object, required: true },
-    accountNumber: { type: String, required: true },
-    service: { type: Object, required: true },
-    mr_id: { type: Number },
-    isB2b: Boolean,
-    isTooManyInternetServices: Boolean,
-  },
-  data: () => ({
-    auth_type: "",
-    user_rate: null,
-    rate: "",
-    loading: {
-      get_auth_type: false,
-      get_user_rate: false,
-      get_params: false,
-    },
-    serviceParams: [],
-    open_eq: true,
-  }),
-  computed: {
-    isInernet() {
-      return this.service.type == "internet" && this.service.isSession;
-    },
-    typeService() {
-      return {
-        "internet":"Интернет",
-        "tv":"Телевидение",
-        "analogtv":"Аналоговое ТВ",
-        "digittv":"Цифровое ТВ",
-        "phone":"Телефония",
-        "hybrid":"ИТВ",
-        "iptv":"IPTV",
-        "other":"Другое",
-      }[this.service.type]||this.service.serviceclassname;
-    },
-    serviceType() {
-      switch (this.service.type) {
-        case "phone":
-          return "VOIP";
-        case "digittv":
-          return "CTV";
-        case "internet":
-        case "ott":
-          return "SPD";
-        case "iptv":
-          return "IPTV";
-        case "hybrid":
-          return "ITV";
-        case "analogtv":
-        case "other":
-        default:
-          return;
-      }
-    },
-    icon() {
-      switch (this.service.type) {
-        case "internet":
-          return "eth";
-        case "tv":
-        case "analogtv":
-        case "digittv":
-        case "hybrid":
-          return "tv";
-        case "phone":
-          return "phone-1";
-        case "other":
-        default:
-          return "amount";
-      }
-    },
-    serviceHasPassword() {
-      const {type,billing_type,agenttype}=this.service;
-      const isWrongPasswordService=billing_type==5&&agenttype==1;//40206469306
-      return ["internet","phone"].includes(type) && !isWrongPasswordService;
-    },
-    stateClass() {
-      return this.service.status == "0" ||
-        (this.service.billing_type == 4 && this.service.status == "12")
-        ? "main-green"
-        : "main-red";
-    },
-    authAndSpeed() {
-      const fields = [this.auth_type, this.rate];
-      if (fields.length == 1) {
-        return fields[0];
-      }
-      return fields.filter((field) => field).join(" • ");
-    },
-    credentialsByEquipments(){
-      const {equipments}=this.service;
-      return equipments.reduce((credentialsBySerial,equipment)=>{
-        const {credentials,service_equipment:{hardnumber=''}}=equipment;
-        if(credentials&&hardnumber){
-          credentialsBySerial[hardnumber]=credentials
-        };
-        return credentialsBySerial
-      },{});
-    },
-  },
-  created() {
-    if (this.isInernet && !this.isB2b && !this.isTooManyInternetServices) {
-      this.getAuthAndSpeed();
-    }
-    this.getParams();
-  },
-  methods: {
-    testAndOpenModalOrLoadInfo() {
-      if (this.loading.get_user_rate) {
-        return;
-      }
-      if (!this.user_rate && this.isInernet) {
-        this.getAuthAndSpeed();
-      } else {
-        this.openModal("billing_info_modal");
-      }
-    },
-    getAuthAndSpeed() {
-      let params = {
-        login: this.service.login,
-        vgid: this.service.vgid,
-        serverid: this.service.serverid,
-      };
-
-      this.loading.get_auth_type = true;
-      httpGet(buildUrl("get_auth_type", params, "/call/aaa/"), true)
-        .then((response) => {
-          this.loading.get_auth_type = false;
-          if (
-            response.code == "200" &&
-            response.data &&
-            response.data.length &&
-            response.data[0].auth_type
-          ) {
-            this.auth_type = response.data[0].auth_type;
-          }
-        })
-        .catch((error) => {
-          console.warn("get_auth_type:error", error);
-          this.loading.get_auth_type = false;
-        });
-
-      this.loading.get_user_rate = true;
-      httpGet(buildUrl("get_user_rate", params, "/call/aaa/"), true)
-        .then((response) => {
-          this.loading.get_user_rate = false;
-          if (
-            response.code == "200" &&
-            response.data &&
-            response.data.length &&
-            (response.data[0].rate || response.data[0].rate == 0)
-          ) {
-            this.rate = response.data[0].rate + " Мбит/c";
-            this.user_rate = response.data;
-          } else {
-            this.user_rate = [response]; //временный костыль чтобы показать ошибку
-          }
-        })
-        .catch((error) => {
-          console.warn("get_user_rate:error", error);
-          this.loading.get_user_rate = false;
-        });
-    },
-    getParams() {
-      if (!this.accountNumber || !this.serviceType) return;
-      this.loading.get_params = true;
-      httpGet(
-        buildUrl(
-          "get_params",
-          {
-            account: this.accountNumber,
-            service_type: this.serviceType,
-          },
-          "/call/sms_gateway/"
-        )
-      )
-        .then((result) => {
-          this.loading.get_params = false; //result=dev_getParams['20410086886']['SPD'].data;
-          if (
-            !result.isError &&
-            result.result_code === "OK" &&
-            result.parameters
-          ) {
-            this.serviceParams = result.parameters;
-          }
-        })
-        .catch((error) => {
-          console.warn(error);
-          this.loading.get_params = false;
-        });
-    },
-    activate() {
-      this.$refs.modal.open();
-    },
-    openModal(ref = "") {
-      if (ref && this.$refs[ref]) {
-        this.$refs[ref].open();
-      }
-    },
-    closeModal(ref = "") {
-      if (ref && this.$refs[ref]) {
-        this.$refs[ref].close();
-      }
-    },
-  },
-});
-
 
 //подсветка выбора
 Vue.component('FindPort',{
@@ -753,11 +489,11 @@ Vue.component('FindPort',{
     titleText(){return `Поиск ${this.saveData.cableTest?'кабеля в':'линка на'} порту`},
     totalCount(){return this.ethDevices.length},
     selectedCount(){return this.filteredAndSelectedEthDevices.length},
-    titleText2(){return `${this.selectedCount||'0'} из ${this.totalCount||'0'}`},
+    titleText2(){return `${this.selectedCount||0} из ${this.totalCount||0}`},
     titleText2Class(){return `tone-500 ${(this.selectedCount!=this.totalCount)&&'bg-main-lilac-light border-radius-4px padding-left-right-4px'}`},
-    selectedTest(){return `выбрано ${this.selectedCount||'0'} из ${this.totalCount||'0'} устройств`},
-    savedText(){return `Сохранение портов прошло успешно в ${this.saveTime}, опрошено ${this.saveData.savedCount} устройств`},
-    comparedText(){return `Сравнение портов прошло успешно, изменилось ${this.saveData.changedCount} порта`},
+    selectedTest(){return `выбрано ${this.selectedCount||0} из ${this.totalCount||0} устройств`},
+    savedText(){return `Сохранение портов прошло успешно в ${this.saveTime}, опрошено ${this.saveData.savedCount||0} устройств`},
+    comparedText(){return `Сравнение портов прошло успешно, изменилось ${this.saveData.changedCount||0} порта`},
   },
   methods: {
     update_port_status(prefix,device_name){
@@ -1165,112 +901,6 @@ Vue.component('FindPortItem',{
   },
 });
 
-//корректировка DdmIndexBias
-Vue.component('PortSfp',{
-  template:`<div name="PortSfp" class="sfp-info">
-    <loader-bootstrap v-if="loads.sfp" text="получение SFP"/>
-    <template v-if="!loads.sfp&&sfp">
-      <info-value label="model" :value="DdmInfoVendorName+' '+DdmInfoVendorPartNum" withLine/>
-      <info-value label="serial" :value="DdmInfoVendorSerialNum" withLine/>
-      <info-value label="length" :value="DdmInfoLinklength" v-if="DdmInfoLinklength" withLine/>
-      <div class="si-params-table margin-bottom-4px">
-        <div class="si-pt-type">{{DdmInfoWavelength||DdmInfoType}}</div>
-        <param-el title="Rx" :value="DdmInfoRxpower" units="dBm" class="si-pt-rx bb br" :valueStyle="warns.rx" :loading="loads.sfp" :error="!isValidParams||error||sfp.error" plus/>
-        <param-el title="Tx" :value="DdmInfoTxpower" units="dBm" class="si-pt-tx bb br" :valueStyle="warns.tx" :loading="loads.sfp" :error="!isValidParams||error||sfp.error" plus/>
-        <param-el title="Bias" :value="DdmIndexBias" units="mA" class="si-pt-bias bb" :valueStyle="warns.bias" :loading="loads.sfp" :error="!isValidParams||error||sfp.error"/>
-        <param-el title="Vcc" :value="DdmInfoVoltage" units="V" class="si-pt-vcc bb" :valueStyle="warns.vcc" :loading="loads.sfp" :error="!isValidParams||error||sfp.error" fixed/>
-        <param-el title="Temp" :value="DdmInfoTemperature" units="°C" class="si-pt-temp bb" :valueStyle="warns.temp" :loading="loads.sfp" :error="!isValidParams||error||sfp.error" plus/>
-      </div>
-      <link-block text="История" @block-click="openHistory" actionIcon="right-link" v-if="canGetHistory"/>
-      <PortSfpModal v-bind="{port,networkElement}" ref="modal_sfpHistoryModal" v-if="canGetHistory"/>
-    </template>
-    <message-el v-if="!loads.sfp&&error" :text="error" type="warn" class="margin-bottom-8px" box/>
-  </div>`,
-  props:{
-    networkElement:{type:Object,default:()=>({}),required:true},
-    port:{type:Object,default:()=>({}),required:true},
-  },
-  data:()=>({
-    loads:{
-      sfp:false,
-    },
-    sfp:null,
-    error:false,
-  }),
-  created(){
-    this.getPortSfp();
-  },
-  computed:{
-    DdmInfoWavelength(){return this.sfp?.DdmInfoWavelength?(parseInt(this.sfp?.DdmInfoWavelength)+' nm'):''},
-    DdmInfoLinklength(){return this.sfp?.DdmInfoLinklength?(parseInt(this.sfp?.DdmInfoLinklength)+' m'):''},
-    DdmIndexBias(){return parseFloat(this.sfp?.DdmIndexBias||this.sfp?.DdmInfoIndexBias)},
-    DdmInfoManufacturingDate(){return this.sfp?.DdmInfoManufacturingDate||''},
-    DdmInfoRxpower(){return parseFloat(this.sfp?.DdmInfoRxpower)},
-    DdmInfoTemperature(){return parseFloat(this.sfp?.DdmInfoTemperature)},
-    DdmInfoTxpower(){return parseFloat(this.sfp?.DdmInfoTxpower)},
-    DdmInfoType(){return this.sfp?.DdmInfoType||''},
-    DdmInfoVendorName(){return this.sfp?.DdmInfoVendorName||''},
-    DdmInfoVendorPartNum(){return this.sfp?.DdmInfoVendorPartNum||''},
-    DdmInfoVendorRevNum(){return this.sfp?.DdmInfoVendorRevNum||''},
-    DdmInfoVendorSerialNum(){return this.sfp?.DdmInfoVendorSerialNum||''},
-    DdmInfoVoltage(){return parseFloat(this.sfp?.DdmInfoVoltage)},
-
-    warns(){
-      const warnStyle=`background-color:${PORT_SFP.bgWarn};`;
-      return {
-        rx:this.DdmInfoRxpower<-14||this.DdmInfoRxpower>-1?warnStyle:'',
-        tx:this.DdmInfoTxpower<-2||this.DdmInfoTxpower>3?warnStyle:'',
-        bias:this.DdmIndexBias<5||this.DdmIndexBias>39?warnStyle:'',
-        vcc:this.DdmInfoVoltage<3.1||this.DdmInfoVoltage>3.5?warnStyle:'',
-        temp:this.DdmInfoTemperature<10||this.DdmInfoTemperature>59?warnStyle:''
-      };
-    },
-
-    isValidParams(){
-      return this.DdmInfoVoltage
-    },
-    canGetHistory(){return this.port?.snmp_name&&this.networkElement?.name},
-  },
-  methods:{
-    async getPortSfp(){
-      if(!this.port?.snmp_name){return};
-      if(!this.networkElement?.system_object_id){return};
-      if(this.loads.sfp){return};
-      this.sfp=null;
-      this.error=false;
-      this.loads.sfp=true;
-      const {region:{mr_id:MR_ID},ip:IP_ADDRESS,system_object_id:SYSTEM_OBJECT_ID,vendor:VENDOR,snmp:{version:SNMP_VERSION,community:SNMP_COMMUNITY}}=this.networkElement;
-      const {snmp_name:PORT}=this.port;
-      try{
-        const response=await httpGet(buildUrl('sfp_detail',{
-          MR_ID,IP_ADDRESS,SYSTEM_OBJECT_ID,SNMP_COMMUNITY,VENDOR,SNMP_VERSION,ACT:'sfp_iface',PORT
-        },'/call/hdm/'));
-        if(response.type==='error'){
-          this.error=response.text||response.message||'ошибка';
-          throw new Error(response.text);
-        };
-        if(typeof response==="object"){
-          this.sfp={};
-          const params=response[Object.keys(response)[0]];
-          for(const param in params){
-            this.sfp[param]=Object.keys(params[param])[0];
-          };
-          console.log({response,sfp:this.sfp})
-        }else{
-          this.error='нет данных';
-        };
-      }catch(error){
-        console.warn('sfp_detail.error',error);
-      };
-      this.loads.sfp=false;
-    },
-    openHistory(){
-      if(!this.$refs.modal_sfpHistoryModal){return};
-      this.$refs.modal_sfpHistoryModal.open()
-    },
-  },
-});
-
 //временно заблочено открытие так как неработает в ACS
 Vue.component('CpeSetLanModal',{
   template:`<modal-container-custom name="CpeSetLanModal" ref="modal" @open="onModalOpen" @close="onModalClose" header :footer="false" :wrapperStyle="{'min-height':'auto','margin-top':'4px'}">
@@ -1418,502 +1048,7 @@ Vue.component('CpeSetLanModal',{
   },
 });
 
-//правка текста по ОС от ТБ
-Vue.component('rack-box', {
-  template: `<div :class="rackClass">
-    <div class="rack-box__link" @click="toRack">
-      <div :class="typeClass" style="width:32px;" v-if="rackType">{{rackType}}</div>
-      <div :class="typeClass" v-if="iconRack"><i class="fas" :class="iconRack"></i></div>
-      <div class="rack-box__floor"><span class="ic-20 ic-entrance-mini"></span>{{ entrance }}</div>
-      <div class="rack-box__location" :class="{'rack-box--error':!rackLocation}"><span class="ic-20 ic-floor"></span>{{ rackLocation||'неизвестно'}}</div>
-      <div v-if="horizontalLocation" class="rack-box__drs-number">{{horizontalLocation}}</div>
-    </div>
-    <title-main v-if="locationFilteredAndTrunkated||notes||description" icon="circle-1" :text="locationFilteredAndTrunkated" text1Class="font--13-500" @open="show_notes=!show_notes" :opened="show_notes" class="margin-top--8px margin-bottom--16px">
-      <button-sq v-if="nioss_loading" icon="loading rotating" type="large" @click=""/>
-      <button-sq v-else-if="!nioss_object" icon="refresh" type="large" @click="get_nioss_object"/>
-    </title-main>
-    <template v-if="show_notes">
-      <info-text-sec v-if="location!==locationFilteredAndTrunkated" :text="location"/>
-      <info-text-sec :text="notes"/>
-      <info-text-sec :text="description"/>
-      <devider-line v-if="location||notes||description"/>
-    </template>
-    <loader-bootstrap v-if="isLoading" text="загрузка данных"/>
-    <slot v-else>
-      <span class="font--13-500 tone-500 text-align-center">нет оборудования</span>
-    </slot>
-  </div>`,
-  props:{
-    rack:{type:Object,default:null,required:true},
-    isLoading:{type:Boolean,default:false},
-    reversed:{type:Boolean,default:false},
-  },
-  data(){
-    return {
-      nioss_loading:false,
-      nioss_object:null,
-      show_notes:!!(this.rack?.notes||this.rack?.description),
-    }
-  },
-  created(){
-    if(this.$route.name!=='rack'){//открыть и обновить если компонент не в rack-content
-      //на одной странице может быть множество рк, многовато запросов к oss/j
-      //this.show_notes=!!(this.rack?.notes||this.rack?.description);
-      //this.get_nioss_object();
-    };
-  },
-  watch:{
-    'nioss_object'(nioss_object){//toggle notes по обновлению nioss_object
-      this.show_notes=!!(nioss_object?.Primechanie||nioss_object?.description);
-    },
-    'show_notes'(show_notes){//если компонент в rack-content и пользователь все же его открыл
-      if(show_notes&&!this.nioss_object&&!this.nioss_loading){this.get_nioss_object()};
-    }
-  },
-  computed: {
-    rackClass() {
-      const isVandal = this.rack?.type === "Антивандальный";
-      return {
-        'rack-box': true,
-        'rack-box--reversed': this.reversed,
-        'rack-box--empty': !this.rack,
-        'rack-box--solid': isVandal,
-        'rack-box--dashed': !isVandal,
-      }
-    },
-    typeClass() {
-      const isVandal = this.rack?.type === "Антивандальный";
-      return {
-        'rack-box__type': true,
-        'rack-box--solid': isVandal,
-        'rack-box--dashed': !isVandal,
-      }
-    },
-    isOptical(){//return true//FAKE для демо, все шкафы - ОРШ
-      return this.rack?.ne_in_rack.filter(ops=>/(ops|odf)/i.test(ops)).length;
-    },
-    rackType(){
-      return {
-        "Антивандальный":this.isOptical?'ОРШ':'ШДУ',
-        "Абонентская Распределительная Коробка":this.isOptical?'ОРК':'РК',
-      }[this.rack.type]
-    },
-    iconRack() {
-      if(!this.rack){return ''};
-      if(this.rack?.ne_in_rack?.length){return "ic-20 ic-plint"};
-      return '';
-    },
-    rackLocation(){
-      return ({'Чердак':'на чердаке','Технический этаж':'на тех.этаже','Подвал':'в подвале'}[this.off_floor])||("этаж "+this.floor)||''
-    },
-    horizontalLocation(){
-      if(!this.drs_number){return ''};
-      if(this.drs_number.length<3){return 'стояк '+this.drs_number};
-      return this.drs_number;//левый,средний,правый
-    },
-    entrance(){return this.rack?.entrance?.number||''},
-    location(){return this.nioss_object?.RaspologenieShkaf||this.rack?.location||''},
-    notes(){return this.nioss_object?.Primechanie||this.rack?.notes||''},
-    description(){return this.nioss_object?.description||this.rack?.description||''},
-    off_floor(){return this.nioss_object?.VneEtashnoeRazmechenie||this.rack?.off_floor||''},
-    floor(){return this.nioss_object?.Etazh||this.rack?.floor||''},
-    drs_number(){return this.nioss_object?.NomerDRS||this.rack?.drs_number||''},
-    locationFilteredAndTrunkated(){
-      let location=this.location.replace(`Подъезд ${this.entrance}.`,'').replace(`Этаж ${this.floor}.`,'').replace(`${this.off_floor}.`,'').trim().toLowerCase();
-      return location.length>27?location.substring(0,25)+'...':location
-    },
-  },
-  methods:{
-    toRack(){
-      this.$router.push({
-        name:'rack',
-        params:{
-          rackProp:this.rack,
-          rack_id:this.rack?.name,
-        },
-      });
-    },
-    async get_nioss_object(){
-      this.nioss_loading=true;
-      try{
-        const response=await httpGet(buildUrl('get_nioss_object',{object_id:this.rack?.id,object:'rack'},'/call/nioss/'), true);
-        this.nioss_object=response;
-      }catch(error){
-        console.warn('get_nioss_object.error',error);
-      }
-      this.nioss_loading=false;
-    },
-  },
-});
 
-//fix sessions Get
-Vue.component('device-info',{
-  template:`<article class="device-info" :class="[addBorder&&'border-gray']" :style="neIsNotInstalled?'background-color:#eeeeee;':''">
-    <info-text-sec v-if="showLocation":text="networkElement?.region?.location" class="padding-left-right-unset margin-bottom-8px"/>
-    
-    <header class="device-info__header">
-      <div class="device-info__status" :class="'device-info__status--'+status" @click="updatePing" :title="sysUpTime">
-        <div :class="'ic-20 ic-'+(loading.ping?'loading rotating':'status')"></div>
-      </div>
-
-      <div @click="toNetworkElement" class="title display-flex align-items-center gap-4px">
-        <span class="title-ip">{{networkElementPrefix}} {{networkElement.ip}}</span>
-      </div>
-
-      <div v-if="!noMinimap&&neIsETH&&!neIsNotInstalled" class="device-info__minimap" @click="toNetworkElement">
-        <div class="device-info__ports--bad" :style="portsLine.bad"></div>
-        <div class="device-info__ports--busy" :style="portsLine.busy"></div>
-      </div>
-
-      <slot name="link">
-        <button-sq v-if="showLink" @click="toNetworkElement" class="margin--10px">
-          <i class="ic-24 ic-right-link main-lilac"></i>
-        </button-sq>
-      </slot>
-    </header>
-
-    <div v-if="!hideEntrances" class="device-info__main" @click="toNetworkElement">
-      <div class="device-info__entrances">
-        <i class="ic-16 ic-entrance"></i>
-        <span class="device-info__entrance-dot"> • </span>
-        <template v-if="networkElementEntrances.length">
-          <div v-for="(entrance, index) of networkElementEntrances" class="device-info__entrance">
-            <span>{{entrance.number}}</span>
-            <span>{{(index + 1 < networkElementEntrances.length)?',':''}}</span>
-          </div>
-        </template>
-        <div v-else>Нет данных</div>
-      </div>
-    </div>
-
-    <div v-if="showNetworkElementAdminStatus" class="ne-admin-status">{{networkElementAdminStatus}}</div>
-    
-    <footer class="device-info__params" @click="toNetworkElement">
-      <info-value :label="networkElementLabel" value type="small" />
-      <info-subtitle v-if="sysName" :text="sysName"/>
-      
-      <div v-if="sysUpTime" class="width-100-100 display-flex align-items-center justify-content-end gap-4px">
-        <div class="font--13-500 tone-500">sysUpTime:</div>
-        <div class="font--13-500">{{sysUpTime}}</div>
-        <button-sq @click.stop="updateCmtsDeviceInfo" class="width-20px min-width-20px height-20px">
-          <span v-if="loadingSystem" class="ic-20 ic-loading rotating main-lilac"></span>
-          <span v-else class="ic-20 ic-refresh main-lilac"></span>
-        </button-sq>
-      </div>
-
-    </footer>
-    
-    <template v-if="showSessions&&neIsETH&&xRad_region_id">
-      <devider-line/>
-      
-      <title-main text="Активные сессии" :text2="!loading.sessions?sessionsOk:''" text2Class="main-green" :text3="!loading.sessions?sessionsBad:''" text3Class="main-orange" size="medium" @open="open.sessions=!open.sessions" class="padding-left-0" style="margin-top:-10px;" :style="!open.sessions?'margin-bottom:-10px;':''">
-        <button-sq :icon="loading.sessions?'loading rotating':'refresh'" type="medium" @click="get_device_session"/>
-      </title-main>
-
-      <div v-show="open.sessions">
-        <template v-for="(port_session,i) of sessions">
-          <devider-line v-if="i"/>
-          <port-info :port="port_session"/>
-        </template>
-      </div>
-    </template>
-
-    <slot name="ports">
-      <template v-for="(port,key) of ports">
-        <devider-line/>
-        <port-info-v1 v-bind="{port,key}" class="margin-left--8px width--webkit-fill-available" noSubs/>
-      </template>
-    </slot>
-  </article>`,
-  props:{
-    networkElement:{type:Object,required:true},
-    entrances:{type:Array},
-    hideEntrances:{type:Boolean,default:false},//обслуживаемые подъезды
-    showSessions:{type:Boolean,default:false},//кнопка сессий xRad
-    rack:{type:Object,default:()=>{}},
-    disabled:{type:Boolean,default:false},
-    ports:{type:Array,default:()=>[]},
-    showLocation:{type:Boolean,default:false},//адрес плошадки СЭ
-    showLink:{type:Boolean,default:false},//кнопка перехода на карточку СЭ из виджета
-    noMinimap:{type:Boolean,default:false},//линия утилизации
-    addBorder:{type:Boolean,default:false},//граница вокруг
-    showNetworkElementAdminStatus:{type:Boolean,default:false},
-    autoSysInfo:{type:Boolean,default:false},
-  },
-  data:()=>({
-    loading:{
-      ping:false,
-      dscv:false,
-      ports_lite:false,
-      sessions:false,
-      networkElementDeviceInfo:false,
-      deviceInfo:false,
-      networkElement:false,
-    },
-    response:{
-      ping:{
-        code:''
-      },
-      dscv:null,
-      ports_lite:null,
-      sessions:[],
-      networkElementDeviceInfo:null,
-      deviceInfo:null,
-      networkElement:null,
-    },
-    open:{
-      sessions:false,
-    },
-  }),
-  computed:{
-    loadingSystem(){return this.loading.deviceInfo||this.loading.networkElementDeviceInfo||this.loading.networkElement},
-    sysName(){return this.response.deviceInfo?.SysName||this.response.networkElementDeviceInfo?.sys_name||''},
-    sysUpTime(){return this.response.deviceInfo?.SysUptime||''},
-    isOnline(){
-      if(this.loading.ping){return};
-      return {200:true,400:false}[this.response.ping.code];
-    },
-    status(){
-      if(this.loading.ping||typeof this.isOnline!=='boolean'){return 'loading'};
-      return this.isOnline?'on':'off';
-    },
-    neIsETH(){return testByName.neIsETH(this.networkElement.name)},
-    neIsNotInstalled(){return testByName.neIsNotInstalled(this.networkElement.ne_status)},
-    networkElementPrefix(){return getNetworkElementPrefix(this.networkElement.name)},
-    portsLine(){
-      if(!this.response.ports_lite){return {}};
-      const {total,busy,bad}=this.response.ports_lite;
-      if(!total){return {}};
-      return {
-        busy:`width:${Math.round((busy/total)*100)}%;`,
-        bad:`width:${Math.round((bad/total)*100)}%;`,
-      };
-    },
-    networkElementEntrances(){return (this.entrances||[]).filter(({device_list})=>device_list.includes(this.networkElement.name))},
-    modelText(){
-      const {vendor,model,system_object_id,}=this.networkElement;
-      return getModelText(vendor,model,system_object_id);
-    },
-    networkElementAdminStatus(){return NIOSS_NE_ADM_STATUS[this.networkElement.ne_status]||''},
-    networkElementLabel(){
-      const {name}=this.networkElement;
-      const model_or_status=this.modelText||this.networkElementAdminStatus||'';
-      return name+(model_or_status?' • '+model_or_status:'')
-    },
-    xRad_region_id(){//TODO переделать ВЕ для фильтра по region_id коммутатора и площадки
-      return [
-        22,28,29,30,33,34,35,91,93,37,40,41,42,43,23,
-        24,46,77,52,53,54,55,56,57,58,59,25,2,3,12,14,
-        16,18,61,64,66,67,26,68,69,71,72,73,27,86,89,76
-      ].includes(this.networkElement.region.id);
-    },
-    sessions(){//only ports with account
-      return this.response.sessions.sort((a,b)=>a.number-b.number).filter(p=>p.account);
-    },
-    sessionsOk(){
-      return this.sessions.filter(s=>s?.session?.active).length;
-    },
-    sessionsBad(){
-      return this.sessions.filter(s=>!s?.session?.active).length;
-    },
-    isValidIcmpAttrs(){
-      const networkElement=this.response.networkElement||this.networkElement;
-      const {ip,region:{mr_id}}=networkElement;
-      return mr_id&&ip
-    },
-    isValidSnmpAttrs(){
-      const networkElement=this.response.networkElement||this.networkElement;
-      const {ip,region:{mr_id},snmp:{version,community}}=networkElement;
-      return mr_id&&ip&&version&&community
-    }
-  },
-  async created() {
-    if(this.neIsETH&&!this.neIsNotInstalled){
-      this.getPortsLite();
-    };
-    if(this.isValidIcmpAttrs){
-      this.getNetworkElementDeviceInfo();
-      await this.ping();
-      if(!this.isValidSnmpAttrs){
-        await this.getNetworkElement();
-      };
-      if(this.isOnline&&this.autoSysInfo){
-        this.updateCmtsDeviceInfo();
-      }
-    };
-  },
-  methods: {
-    updateCmtsDeviceInfo(){
-      this.getCmtsDeviceInfo(true);
-    },
-    async getNetworkElement(){
-      const {name}=this.networkElement;
-      this.loading.networkElement=true;
-      const cache=this.$cache.getItem(`device/${name}`);
-      if(cache){
-        this.response.networkElement=cache;
-      }else{
-        try{
-          const response=await httpGet(buildUrl('search_ma',{pattern:name,component:'device-info'},'/call/v1/search/'));
-          if(response.data){
-            this.$cache.setItem(`device/${name}`,response.data);
-            this.response.networkElement=response.data;
-          };
-        }catch(error){
-          console.warn('search_ma:device.error',error);
-        }
-      };
-      this.loading.networkElement=false;
-    },
-    async getCmtsDeviceInfo(update=false){
-      const networkElement=this.response.networkElement||this.networkElement;
-      const {ip,region:{mr_id},snmp:{version,community},name}=networkElement;
-      if(!ip||!mr_id||!version||!community){return};
-
-      const cache=this.$cache.getItem(`cmts_info_2/${name}`);
-      if(cache&&!update){
-        this.response.deviceInfo=cache;
-        return
-      };
-
-      this.loading.deviceInfo=true;
-      const response=await httpGet(buildUrl('cmts_info',objectToQuery({
-        ip,name,MR_ID:mr_id,IP_ADDRESS:ip,SNMP_VERSION:version,SNMP_COMMUNITY:community,
-        VENDOR:'HUAWEI', SYSTEM_OBJECT_ID:'.1.3.6.1.4.1.2011.2.249',ACT:'info',
-      }),'/call/hdm/')).catch(console.warn);
-      if(Array.isArray(response?.data)){
-        this.response.deviceInfo=response.data.reduce((data,row)=>{
-          const [key,[value]]=Object.entries(row)[0];
-          return Object.assign(data,{[key]:value});
-        },{});
-        this.$cache.setItem(`cmts_info_2/${name}`,this.response.deviceInfo,5);
-      };
-      this.loading.deviceInfo=false;
-    },
-    async getNetworkElementDeviceInfo(update=false){
-      const {name}=this.networkElement;
-      const cache=this.$cache.getItem(`get_dismantled_devices:installed/${name}`);
-      if(cache&&!update){
-        this.response.networkElementDeviceInfo=cache;
-        return
-      };
-
-      this.loading.networkElementDeviceInfo=true;
-      const response=await httpGet(buildUrl('get_dismantled_devices',{device_name:name},'/call/v1/device/')).catch(console.warn);
-      if(Array.isArray(response)){
-        this.response.networkElementDeviceInfo=response.find(device=>device.status_device=='INSTALLED_DEVICE');
-        this.$cache.setItem(`get_dismantled_devices:installed/${name}`,this.response.networkElementDeviceInfo);
-        this.$cache.setItem(`get_dismantled_devices/${name}`,response);
-      };
-      this.loading.networkElementDeviceInfo=false;
-    },
-    async updatePing(){//public
-      await this.ping();
-      if(this.isOnline){
-        this.updateCmtsDeviceInfo();
-      }
-    },
-    async ping(){
-      const {ip,region:{mr_id}}=this.networkElement;
-      if(!ip||!mr_id){return};
-      this.loading.ping=true;
-      try{
-        const response=await httpPost(`/call/hdm/device_ping`,{ip,mr_id,device:{MR_ID:mr_id,IP_ADDRESS:ip,SYSTEM_OBJECT_ID:null,VENDOR:null}}).catch(console.warn);
-        this.response.ping=response;
-      }catch(error){
-        console.warn('device_ping.error',error);
-      };
-      this.loading.ping=false;
-    },
-    async get_device_session(){//public
-      if(!this.neIsETH){return};
-      if(!this.showSessions){return};
-      if(!this.xRad_region_id){return};
-      if(this.loading.sessions){return};
-      this.response.sessions=[];
-      this.loading.sessions=true;
-      try{
-        const query=objectToQuery({name:this.networkElement.name,serverid:78});
-        const response=await httpGet(buildUrl('device_sessions',query,'/call/v1/device/')).catch(console.warn);
-        if(Array.isArray(response)){
-          this.response.sessions=response;
-        };
-      }catch(error){
-        console.warn('device_sessions.error',error);
-      };
-      this.loading.sessions=false;
-    },
-    async discovery(){//public
-      if(!this.networkElement.ip){return};
-      if(this.neIsNotInstalled){return};//СЭ не введен в эксплуатацию
-      const networkElement=this.response.networkElement||this.networkElement;
-      const {name,ip,region:{mr_id},system_object_id,vendor,snmp:{version,community}}=networkElement;
-      if(!version||!community){return};//если networkElement получен НЕ из массива по сайту(недостаточно данных)
-      this.loading.dscv=true;
-      try{
-        const response=await httpPost(buildUrl('dev_discovery',objectToQuery({ip,name}),'/call/hdm/'),{
-          ip,mr_id,
-          device:{
-            MR_ID:mr_id,DEVICE_NAME:name,IP_ADDRESS:ip,
-            SYSTEM_OBJECT_ID:system_object_id||'',VENDOR:vendor||'',
-            SNMP_VERSION:version,SNMP_COMMUNITY:community,
-          }
-        }).catch(console.warn);
-        this.response.dscv=response;
-        if(response?.code==200){
-          this.$cache.removeItem(`device/${name}`);
-          this.$cache.removeItem(`search_ma/${name}`);
-        };
-      }catch(error){
-        console.warn('dev_discovery.error',error);
-      };
-      this.loading.dscv=false;
-    },
-    async getPortsLite(){
-      const {name}=this.networkElement;
-      this.loading.ports_lite=true;
-      try{
-        const response=await httpGet(buildUrl('device_port_list_lite',{device:name,summary:'user'}));
-        if(response?.type!=='error'){
-          this.response.ports_lite=response;
-        };
-      }catch(error){
-        console.warn('device_port_list_lite.error',error);
-      };
-      this.loading.ports_lite=false;
-    },
-    toNetworkElement(){
-      if(this.disabled){return};
-      if(this.rack?.name){
-        this.$router.push({
-          name:'network-element-in-rack',
-          params:{
-            deviceProp:this.networkElement,
-            rackProp:this.rack,
-            device_id:this.networkElement.name,
-            rack_id:this.rack.name,
-          },
-        });
-      }else{
-        const prefix=getNetworkElementPrefix(this.networkElement.name);
-        if(prefix==='CMTS'){//CMTS_16KR_03383_1 site:9135155036813484532
-          this.$router.push({
-            name: "ds_device",
-            params: { name: this.networkElement.name},
-          });
-        }else{
-          this.$router.push({//direct route for support unmount ETH devices
-            name:"network-element",
-            params:{
-              device_id:this.networkElement.name,
-              deviceProp:this.networkElement,
-            },
-          });
-        }
-      };
-    },
-  },
-});
 
 
 
@@ -1929,6 +1064,7 @@ Vue.component('device-info',{
 
 //далее временные правки для тестирования замены КД
 
+//заглушки в логике выбора СЭ
 Vue.component('SiteNetworkElements',{
   template:`<CardBlock name="SiteNetworkElements" class="display-flex flex-direction-column gap-8px">
     <template v-if="countRacksWithNetworkElements">
@@ -2180,6 +1316,7 @@ Vue.component('SiteNetworkElements',{
   },
 });
 
+//заглушки в логике выбора СЭ
 Vue.component('SiteNetworkElementsPlanned',{
   template:`<CardBlock name="SiteNetworkElementsPlanned">
     <title-main icon="server" text="Заменить на новый коммутатор" text2Class="tone-500" :text2="countNetworkElementsPlanned||''" @open="opened=!opened"/>
@@ -2349,69 +1486,7 @@ Vue.component('SiteNetworkElementsPlanned',{
   },
 });
 
-Vue.component('DoneRemedyTaskModal',{
-  template:`<modal-container-custom ref="modal" header :footer="false" :wrapperStyle="{'min-height':'auto'}">
-    <div class="margin-left-16px margin-right-16px display-flex flex-direction-column gap-16px">
-      <template v-if="status">
-        <icon-80 class="margin-auto" v-bind="iconProps"/>
-        <loader-bootstrap v-if="changeRemedyWorkStatusLoading" text="взаимодействие с Remedy"/>
-        <message-el v-if="status==='error'" :text="errorMessage" type="warn"/>
-      </template>
-      <template v-else>
-        <div class="text-align-center">
-          <span class="font--13-500">Вы хотите завершить работу <span class="main-orange">{{task_id}}</span> ?</span>
-        </div>
-      </template>
-      <button-main v-if="status!=='success'" label="Завершить работу" @click="start" :disabled="changeRemedyWorkStatusLoading" buttonStyle="contained" size="full"/>
-    </div>
-    <div class="margin-top-16px display-flex justify-content-space-around">
-      <button-main label="Закрыть" @click="close" buttonStyle="outlined" size="medium"/>
-    </div>
-  </modal-container-custom>`,
-  props:{
-    task_id:{type:String,required:true},
-    task_site_id:{type:String,required:true},
-  },
-  data:()=>({}),
-  computed:{
-    ...mapGetters({
-      username:'main/username',
-      getTaskById:'remedy/getTaskById',
-      changeRemedyWorkStatusLoading:'remedy/changeRemedyWorkStatusLoading',
-      changeRemedyWorkStatusResult:'remedy/changeRemedyWorkStatusResult',
-      changeRemedyWorkStatusError:'remedy/changeRemedyWorkStatusError',
-    }),
-    errorMessage(){return JSON.stringify(this.changeRemedyWorkStatusError,0,2)},
-    task(){return this.getTaskById(atok(this.task_id,this.task_site_id))},
-    status(){
-      return this.changeRemedyWorkStatusLoading?'loading':this.changeRemedyWorkStatusError?'error':this.changeRemedyWorkStatusResult?'success':''
-    },
-    iconProps(){
-      switch(this.status){
-        case 'loading':return {icon:'loading rotating',bgColor:'bg-main-lilac-light',icColor:'main-lilac'};
-        case 'error':return {icon:'warning',bgColor:'bg-attention-warning',icColor:'main-orange'};
-        case 'success':return {icon:'checkmark',bgColor:'bg-attention-success',icColor:'main-green'};
-      };
-    },
-  },
-  methods:{
-    open(){this.$refs.modal.open()},//public
-    close(){this.$refs.modal.close()},//public
-    ...mapActions({
-      changeRemedyWorkStatus:'remedy/changeRemedyWorkStatus',
-      getRemedyTasks:'remedy/getRemedyTasks',
-    }),
-    async start(){
-      const {task_id}=this
-      await this.changeRemedyWorkStatus({task_id,status:'Закрыта'});
-      if(this.status=='success'){
-        const {username}=this;
-        this.getRemedyTasks({username,task_id})
-      }
-    },
-  },
-});
-
+//clear error text for retry
 Vue.component('SelectedNetworkElementPlannedModal',{
   template:`<modal-container-custom ref="modal" :footer="false" :wrapperStyle="{'min-height':'auto'}">
       <div class="margin-left-16px margin-right-16px display-flex flex-direction-column gap-16px">
@@ -2763,6 +1838,7 @@ Vue.component('SelectedNetworkElementPlannedModal',{
   },
 });
 
+//remove old modals
 Vue.component('RemedyTaskContentMain',{
   template:`<div name="RemedyTaskContentMain">
     <CardBlock>
@@ -2785,16 +1861,14 @@ Vue.component('RemedyTaskContentMain',{
       <RemedyTaskCounters v-bind="{countEth,countAbons}" class="margin-left-16px margin-right-16px"/>
       <devider-line />
 
-      <RemedyTaskStatusAndFio :icon="status.icon" :status="status.name" :fio="fio" class="margin-left-16px margin-right-16px"/>
+      <RemedyTaskStatusAndFio :icon="statusIcon" :status="task.status" :persname2="persname2" class="margin-left-16px margin-right-16px"/>
 
       <div class="margin-left-16px margin-right-16px margin-top-8px">
-        <button-main v-if="!remedyWorkIsStarted" label="Взять в работу" @click="openStartRemedyTaskModal" buttonStyle="contained" size="full"/>
-        <button-main v-if="remedyWorkIsProgress" label="Завершить работу" @click="openDoneRemedyTaskModal" buttonStyle="contained" size="full"/>
+        <button-main :label="changeStatusProps.buttonText" @click="$refs.ChangeRemedyTaskStatusModal.open()" buttonStyle="contained" size="full"/>
       </div>
     </CardBlock>
-
-    <StartRemedyTaskModal ref="StartRemedyTaskModal" :task_id="task_id" :task_site_id="task_site_id"/>
-    <DoneRemedyTaskModal ref="DoneRemedyTaskModal" :task_id="task_id" :task_site_id="task_site_id"/>
+    
+    <ChangeRemedyTaskStatusModal ref="ChangeRemedyTaskStatusModal" v-bind="changeStatusProps"/>
 
     <CardBlock v-if="siteNode">
       <title-main :text="shortAddress" class="margin-top-8px">
@@ -2804,10 +1878,10 @@ Vue.component('RemedyTaskContentMain',{
       
       <link-block icon="du" :text="siteNode.name||site_id" :search="siteNode.node||site_id" type="medium"/>
       <RemedyTaskEntrancesLine v-bind="{entrances}" class="margin-left-16px margin-right-16px"/>
-      <link-block icon="home" text="Инфо по площадке и доступу" @block-click="open_modal_site_info" actionIcon="expand" type="medium"/>
+      <link-block icon="home" text="Инфо по площадке и доступу" @block-click="$refs.SiteNodeDetailsModal.open()" actionIcon="expand" type="medium"/>
     </CardBlock>
 
-    <modal-container ref="modal_site_info">
+    <modal-container ref="SiteNodeDetailsModal">
       <SiteNodeDetails :siteNode="siteNode"/>
     </modal-container>
   </div>`,
@@ -2828,9 +1902,9 @@ Vue.component('RemedyTaskContentMain',{
       getTaskById:'remedy/getTaskById',
     }),
     task(){return this.getTaskById(atok(this.task_id,this.task_site_id))},
-    status(){return REMEDY_TASK_STATUSES.find(({name})=>name===this.task.status)||{}},
+    statusIcon(){return REMEDY_TASK_STATUSES.find(({name})=>name===this.task.status)?.icon||''},
     workDescriptionRows(){return [this.task.classificatorcause,this.task.work,this.task.work_description]},
-    fio(){return this.task.persname2||''},
+    persname2(){return this.task.persname2||''},
     site_id(){return this.siteNode?.id||this.task.site_id},
     siteNode(){return this.resps.siteNode},
     shortAddress(){return truncateSiteAddress(this.resps.siteNode?.address||this.task.location||'')},
@@ -2838,7 +1912,7 @@ Vue.component('RemedyTaskContentMain',{
     countAbons(){return this.task.count_cp||0},
     entrances(){return this.task.entrances||[]},//нет данных по подъездам [1,2,3,5,6,8]
     time(){return getRemedyTimeStartEndByTask(this.task)},
-    remedyWorkIsStarted(){return !!this.task.started_at},
+    //remedyWorkIsStarted(){return !!this.task.started_at},
     startMs(){return this.task.startMs},
     deadlineMs(){return this.task.deadlineMs},
     isOver(){return this.task.countdownMs<=0},
@@ -2846,7 +1920,31 @@ Vue.component('RemedyTaskContentMain',{
     startTime(){return new Date(this.startMs).toLocaleTimeString()},
     countdownRunning(){return this.task.countdownRunning},
     countdownMs(){return this.task.countdownMs},
-    remedyWorkIsProgress(){return this.task.status==REMEDY_TASK_STATUS_4},
+    remedyWorkIsCreated(){return this.task.status==REMEDY_TASK_STATUS_0},
+    remedyWorkIsStarted(){return this.task.status==REMEDY_TASK_STATUS_4},
+    changeStatusProps(){
+      const {remedyWorkIsCreated,remedyWorkIsStarted,task_id,task_site_id}=this;
+      if(remedyWorkIsCreated){
+        return {
+          task_id,task_site_id,nextStatus:REMEDY_TASK_STATUS_1,
+          centerText:'Вы хотите изменить статус',
+          buttonText:'Перевести в Назначен',
+        }
+      }else if(!remedyWorkIsStarted){
+        return {
+          task_id,task_site_id,nextStatus:REMEDY_TASK_STATUS_4,
+          centerText:'Вы хотите взять в работу',
+          buttonText:'Взять в работу',
+        }
+      }else{
+        return {
+          task_id,task_site_id,nextStatus:REMEDY_TASK_STATUS_5,
+          centerText:'Вы хотите завершить работу',
+          buttonText:'Завершить работу',
+        }
+      }
+      
+    }
   },
   created(){
     this.getSite();
@@ -2873,7 +1971,7 @@ Vue.component('RemedyTaskContentMain',{
       if(!site_id){return};
       let cache=this.$cache.getItem(`search_ma/${site_id}`);
       if(cache){
-        this.resps.site=selectNodeDuAsSite(cache);
+        this.resps.siteNode=selectNodeDuAsSite(cache);
         return;
       };
       try{
@@ -2887,15 +1985,6 @@ Vue.component('RemedyTaskContentMain',{
     },
     copy(text){
       copyToBuffer(text,()=>console.log('Copied:',text));
-    },
-    open_modal_site_info(){
-      this.$refs.modal_site_info.open();
-    },
-    openStartRemedyTaskModal(){
-      this.$refs.StartRemedyTaskModal.open();
-    },
-    openDoneRemedyTaskModal(){
-      this.$refs.DoneRemedyTaskModal.open();
     },
     toMap(){
       const coordinates=this.siteNode?.coordinates||this.task.coordinates
