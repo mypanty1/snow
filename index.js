@@ -153,9 +153,9 @@ Vue.component('SessionItem',{
   computed:{
     titleProps(){
       const {serverid,agentid,vgid,login,descr}=this.params;
-      const service_id=atok(...[agentid,serverid,vgid].filter(v=>v));
-      if(!login){return {text:service_id}};
-      return {text:login,text2:service_id}
+      const service_hash=atok(...[serverid,vgid,agentid].filter(v=>v));
+      if(!login){return {text:service_hash}};
+      return {text:login,text2:service_hash}
     },
     loading(){return Object.values(this.loads).some(v=>v)},
     session(){return this.resps.get_online_sessions?.data?.[0]||this.resps.get_online_sessions},
