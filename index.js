@@ -20,36 +20,109 @@
   }):null,1000);
 }())*/
 
-//в FF and SF неработает startLocal GMT+0300 ?
+//params.descr 2000000721940
+Vue.component('sessions', {
+  template:`<CardBlock name="sessions" class="padding-bottom-8px bg-white">
+    <title-main text="Сессия">
+      <button-sq icon="refresh" @click="refreshSessions"/>
+    </title-main>
+    <SessionHelpModal ref="SessionHelpModal"/>
+    <div class="display-flex flex-direction-column">
+      <template v-for="(params,index) of servicesParams">
+        <devider-line v-if="index"/>
+        <SessionItem :params="params" ref="SessionItem" :key="params.vgid"/>
+      </template> 
+    </div>
+  </CardBlock>`,
+  props: {
+    lbsvServices: { type: Array, default: () => [] },
+    forisInternetServices: { type: Array, default: () => [] },
+    forisAccount: { type: Object, default: () => ({}) },
+    billingType: {
+      type: String, 
+      default: 'lbsv', // lbsv foris
+      validator: (val) => ['lbsv', 'foris'].includes(val)
+    }
+  },
+  computed: {
+    servicesParams() {
+      const paramsFn = {
+        'lbsv': this.getLbsvParams,
+        'foris': this.getForisParams
+      }
+      return paramsFn[this.billingType]
+    },
+    getLbsvParams() {
+      if(this.billingType != 'lbsv') return []
+      //if(this.lbsvServices.length>2){return []}
+      return this.lbsvServices
+        .filter(service => service.isSession && service.status != 10)
+        .map(service => ({
+          login: service.login,
+          serverid: service.serverid,
+          vgid: service.vgid,
+          agentid: service.agentid,
+          descr: service.descr,
+        }))
+    },
+    getForisParams() {
+      if(this.billingType != 'foris') return []
+      return this.forisInternetServices
+        .filter(service => service.login && service.login.login)
+        .map(service => ({
+          login: service.login.login,
+          serverid: this.forisAccount.serverid,
+          vgid: service.msisdn,
+          descr: 'xrad'
+        }))
+    }
+  },
+  methods: {
+    sessionHelp() { 
+      this.$refs.SessionHelpModal.open() 
+    },
+    async refreshSessions() {
+      if (!this.$refs.SessionItem) return;
+      for(let component of this.$refs.SessionItem){
+        component.getOnlineSession();
+        await new Promise(r=>setTimeout(r,2222))
+      }
+      //this.$refs.sessions.forEach(component => component.getOnlineSession() )
+    },
+  }
+});
 Vue.component('SessionItem',{
   template:`<section name="SessionItem">
+    <title-main v-bind="titleProps" textClass="font--13-500" class="margin-top-bottom--8px"/>
     <loader-bootstrap v-if="loads.get_online_sessions" text="получение сессии абонента"/>
     <loader-bootstrap v-else-if="loads.stop_session_radius" text="сброс сессии абонента"/>
     <div v-else-if="session" class="margin-left-16px margin-right-16px display-flex flex-direction-column gap-4px">
-      
-      <message-el :text="!start?'Оффлайн':('Онлайн c '+(startLocal||start))" :type="!start?'warn':'success'" box/>
-      <div v-if="sessionid" class="display-flex align-items-center justify-content-center">
-        <span class="font-size-12px">{{sessionid}}</span>
-      </div>
-      
-      <div class="display-flex flex-direction-column">
-        <info-value v-if="ip" label="IP" :value="ip" withLine class="padding-unset" data-ic-test="session_ip"/>
-        <info-value v-if="macIsValid" label="MAC" :value="mac" withLine class="padding-unset" data-ic-test="session_mac"/>
-        <info-text-sec v-if="macVendor" :text="macVendor" class="padding-unset text-align-right"/>
-        <info-value v-if="port" label="Порт" :value="agent_circuit_id" withLine class="padding-unset"/>
-        <info-value v-if="device" label="Коммутатор" :value="agent_remote_id" withLine class="padding-unset"/>
-        <info-text-sec v-if="deviceMacVendor" :text="deviceMacVendor" class="padding-unset text-align-right"/>
-        <info-value v-if="nas" label="BRAS" :value="nas" withLine class="padding-unset" data-ic-test="session_nas"/>
-      </div>
+      <message-el v-if="isError" text="Error" type="warn" box/>
+      <template v-else>
+        <message-el :text="!start?'Оффлайн':('Онлайн c '+(startLocal||start))" :type="!start?'warn':'success'" box/>
+        <div v-if="sessionid" class="display-flex align-items-center justify-content-center">
+          <span class="font-size-12px">{{sessionid}}</span>
+        </div>
+        
+        <div class="display-flex flex-direction-column">
+          <info-value v-if="ip" label="IP" :value="ip" withLine class="padding-unset" data-ic-test="session_ip"/>
+          <info-value v-if="macIsValid" label="MAC" :value="mac" withLine class="padding-unset" data-ic-test="session_mac"/>
+          <info-text-sec v-if="macVendor" :text="macVendor" class="padding-unset text-align-right"/>
+          <info-value v-if="port" label="Порт" :value="agent_circuit_id" withLine class="padding-unset"/>
+          <info-value v-if="device" label="Коммутатор" :value="agent_remote_id" withLine class="padding-unset"/>
+          <info-text-sec v-if="deviceMacVendor" :text="deviceMacVendor" class="padding-unset text-align-right"/>
+          <info-value v-if="nas" label="BRAS" :value="nas" withLine class="padding-unset" data-ic-test="session_nas"/>
+        </div>
 
-      <div class="display-flex justify-content-space-between gap-4px margin-bottom-8px">
-        <button-main @click="$refs.SessionHistoryModal.open()" button-style="outlined" :disabled="false" icon="history" label="История" loading-text="" size="large" data-ic-test="session_history_btn" />
-        <button-main @click="stop_session_radius" button-style="outlined" :disabled="!start" icon="refresh" label="Сброс" loading-text="" size="large" data-ic-test="session_reset_btn" />
-        <button-main @click="$refs.SessionLogsModal.open()" button-style="outlined" :disabled="false" icon="log" label="Логи" loading-text="" size="large" data-ic-test="session_logs_btn" />
-      </div>
-      
-      <SessionHistoryModal ref="SessionHistoryModal" :session="session" :params="params"/>
-      <SessionLogsModal ref="SessionLogsModal" :session="session" :params="params"/>
+        <div class="display-flex justify-content-space-between gap-4px margin-bottom-8px">
+          <button-main @click="$refs.SessionHistoryModal.open()" button-style="outlined" :disabled="false" icon="history" label="История" loading-text="" size="large" data-ic-test="session_history_btn" />
+          <button-main @click="stop_session_radius" button-style="outlined" :disabled="!start" icon="refresh" label="Сброс" loading-text="" size="large" data-ic-test="session_reset_btn" />
+          <button-main @click="$refs.SessionLogsModal.open()" button-style="outlined" :disabled="false" icon="log" label="Логи" loading-text="" size="large" data-ic-test="session_logs_btn" />
+        </div>
+        
+        <SessionHistoryModal ref="SessionHistoryModal" :session="session" :params="params"/>
+        <SessionLogsModal ref="SessionLogsModal" :session="session" :params="params"/>
+      </template>
     </div>
   </section>`,
   props:{
@@ -78,8 +151,15 @@ Vue.component('SessionItem',{
     this.get_online_sessions() 
   },
   computed:{
+    titleProps(){
+      const {serverid,agentid,vgid,login,descr}=this.params;
+      const service_id=atok(...[agentid,serverid,vgid].filter(v=>v));
+      if(!login){return {text:service_id}};
+      return {text:login,text2:service_id}
+    },
     loading(){return Object.values(this.loads).some(v=>v)},
     session(){return this.resps.get_online_sessions?.data?.[0]||this.resps.get_online_sessions},
+    isError(){return this.session?.isError},
     device(){return this.session?.device||''},
     deviceStr(){return `${this.device||''}`},
     deviceMac(){return ((this.deviceStr.match(/^[a-f0-9]{12}$/gi)?.[0]||'').match(/.{4}/gi)||[]).join('.')},
@@ -108,10 +188,7 @@ Vue.component('SessionItem',{
     agent_circuit_id(){return `${this.port||''}`},//40206334997
     sessionid(){return this.session?.sessionid||''},
     start(){return this.session?.start||''},
-		//startLocal(){return (!this.start||!Date.prototype.toDateTimeString)?'':new Date(Date.parse(`${this.start} GMT+0300`)).toDateTimeString()},
-    //startLocal(){const local=new Date(Date.parse(`${this.start} GMT+0300`)).toLocaleString();return local!=='Invalid Date'?local:''},
-    //startLocal(){return new Date(Date.parse(this.start)).toLocaleString()},
-    startLocal(){return this.start},
+    startLocal(){return this.start;return (!this.start||!Date.prototype.toDateTimeString)?'':new Date(Date.parse(`${this.start} GMT+0300`)).toDateTimeString()},
     macIsValid(){return this.mac&&this.mac!=='0000.0000.0000'},
     macVendor(){return this.ouis[this.mac]},
     deviceMacVendor(){return this.ouis[this.deviceMac]},
@@ -120,12 +197,13 @@ Vue.component('SessionItem',{
     async get_online_sessions(){
       this.resps.get_online_sessions=null;
       this.loads.get_online_sessions=true;
-      const {params}=this;
+      const {serverid,agentid,vgid,login,descr}=this.params;
       try{
-        const response=await httpGet(buildUrl('get_online_sessions',params,'/call/aaa/'))
+        const response=await httpGet(buildUrl('get_online_sessions',{serverid,agentid,vgid,login,descr:/xrad/i.test(descr)?'xrad':''},'/call/aaa/'))
         this.resps.get_online_sessions=response;
       }catch(error){
         console.warn("get_online_sessions.error",error);
+        this.resps.get_online_sessions={data:[{isError:true}]};
       };
       this.loads.get_online_sessions=false;
     },
@@ -135,9 +213,9 @@ Vue.component('SessionItem',{
       const {serverid,agentid,vgid,login,descr}=this.params;
       const {sessionid,dbsessid,nas}=this.session;
       try{
-        const response=await httpGet(buildUrl('stop_session_radius',{serverid,agentid,vgid,login,descr,sessionid,dbsessid,nasip:nas},'/call/aaa/'));
+        const response=await httpGet(buildUrl('stop_session_radius',{serverid,agentid,vgid,login,descr:/xrad/i.test(descr)?'xrad':'',sessionid,dbsessid,nasip:nas},'/call/aaa/'));
         if(response.message=='OK'){
-          this.session=null;
+          this.resps.get_online_sessions=null;
           setTimeout(this.get_online_sessions,10000);
         };
         this.resps.stop_session_radius=response;
