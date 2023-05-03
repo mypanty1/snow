@@ -1140,20 +1140,20 @@ Vue.component('CpeSetLanModal',{
 
 
 
-//далее временные правки для тестирования замены КД
+//далее временные правки для тестирования замены КД RKD_test_path
 
 //заглушки в логике выбора СЭ
-Vue.component('SiteNetworkElements',{
-  template:`<CardBlock name="SiteNetworkElements" class="display-flex flex-direction-column gap-8px">
+Vue.component('SiteNetworkElements2',{
+  template:`<CardBlock name="SiteNetworkElements2" class="display-flex flex-direction-column gap-8px">
     <template v-if="countRacksWithNetworkElements">
       <title-main icon="server" text="ШДУ с оборудованием" text2Class="tone-500" :text2="countRacksWithNetworkElements||''"/>
       <div v-for="({props:rackProps,networkElementsProps},rack_id) in racksProps" class="display-flex flex-direction-column gap-8px padding-left-right-16px">
-        <rack-box :key="rack_id" v-bind="rackProps">
+        <RackBox2 :key="rack_id" v-bind="rackProps">
           <template v-for="({props,listeners},ne_id,i) in networkElementsProps">
             <devider-line v-if="i"/>
             <NetworkElementCard :key="ne_id" v-bind="props" v-on="listeners"/>
           </template>
-        </rack-box>
+        </RackBox2>
       </div>
     </template>
     <template v-if="countNetworkElementsNotInRack">
@@ -1173,7 +1173,7 @@ Vue.component('SiteNetworkElements',{
   }),
   async created(){
     const {site_id,task_id}=this;
-    //this.getRemedyWorkStages({task_id});
+    //this.getRemedyWorkStages({task_id});//RKD_test_path
     this.getSiteNodes({site_id});
     this.getSiteEntrances({site_id});
     await this.getSiteRacks({site_id});
@@ -1199,7 +1199,7 @@ Vue.component('SiteNetworkElements',{
     networkElementsFiltered(){
       return select(this.networkElements,{
         ne_name:testByName.neIsETH,
-        //node_name:testByName.nodeIsDu
+        //node_name:testByName.nodeIsDu//RKD_test_path
       })
     },
     stagesLoading(){return this.getRemedyWorkStagesLoadingById(this.task_id)},
@@ -1305,7 +1305,7 @@ Vue.component('SiteNetworkElements',{
     isIpoe(){return /IPoE/i.test(this.auth_type||'')}
   },
   methods:{
-    neIsAvailToStage(name){return true
+    neIsAvailToStage(name){return true//RKD_test_path
       if(!this.stages){return};
       return !neInStage(this.stages,name);
     },
@@ -1393,10 +1393,8 @@ Vue.component('SiteNetworkElements',{
     }
   },
 });
-
-//заглушки в логике выбора СЭ
-Vue.component('SiteNetworkElementsPlanned',{
-  template:`<CardBlock name="SiteNetworkElementsPlanned">
+Vue.component('SiteNetworkElementsPlanned2',{
+  template:`<CardBlock name="SiteNetworkElementsPlanned2">
     <title-main icon="server" text="Заменить на новый коммутатор" text2Class="tone-500" :text2="countNetworkElementsPlanned||''" @open="opened=!opened"/>
     <div v-show="opened" class="display-flex flex-direction-column gap-8px padding-left-right-16px-">
       <message-el v-if="!notSelectableTargetNetworkElements" type="info" text="Выберите новый коммутатор" box @click="unselect"/>
@@ -1404,12 +1402,12 @@ Vue.component('SiteNetworkElementsPlanned',{
       <template v-if="countRacksWithNetworkElements">
         <title-main icon="server" text="ШДУ с оборудованием" text2Class="tone-500" :text2="countRacksWithNetworkElements||''"/>
         <div v-for="({props:rackProps,networkElementsProps},rack_id) in racksProps" class="display-flex flex-direction-column gap-8px padding-left-right-16px">
-          <rack-box :key="rack_id" v-bind="rackProps">
+          <RackBox2 :key="rack_id" v-bind="rackProps">
             <template v-for="({props,listeners},ne_id,i) in networkElementsProps">
               <devider-line v-if="i"/>
               <NetworkElementCard :key="ne_id" v-bind="props" v-on="listeners"/>
             </template>
-          </rack-box>
+          </RackBox2>
         </div>
       </template>
       <template v-if="countNetworkElementsNotInRack">
@@ -1441,7 +1439,7 @@ Vue.component('SiteNetworkElementsPlanned',{
     this.selected_ne_id=this.next_ne_id||this.selected_ne_id;//9154819735513194600
     const {site_id,stages,task_id}=this;
     if(!stages?.length){
-      //this.getRemedyWorkStages({task_id});
+      //this.getRemedyWorkStages({task_id});//RKD_test_path
     };
     this.getSiteNodes({site_id});
     this.getSiteEntrances({site_id});
@@ -1467,13 +1465,13 @@ Vue.component('SiteNetworkElementsPlanned',{
     networkElementsFiltered(){
       return select(this.networkElements,{
         ne_name:testByName.neIsETH,
-        //node_name:testByName.nodeIsDu,
-        //ne_status:testByName.statusIsP
+        //node_name:testByName.nodeIsDu,//RKD_test_path
+        //ne_status:testByName.statusIsP//RKD_test_path
       })
     },
     stagesLoading(){return this.getRemedyWorkStagesLoadingById(this.task_id)},
     stages(){return !this.stagesLoading?this.getRemedyWorkStagesResultById(this.task_id):null},
-    next_stage_id(){return 1/*||Array.isArray(this.stages)?this.stages.length:-1*/},
+    next_stage_id(){return 1/*||Array.isArray(this.stages)?this.stages.length:-1*/},//RKD_test_path
     networkElementsProps(){
       return Object.values(this.networkElementsFiltered).reduce((networkElements,ne)=>{
         const {ne_id,site_id,rack_id,ne_name}=ne;
@@ -1543,7 +1541,7 @@ Vue.component('SiteNetworkElementsPlanned',{
     countNetworkElementsNotInRack(){return Object.keys(this.networkElementsProps).length},
   },
   methods:{
-    neIsAvailToStage(name){return true
+    neIsAvailToStage(name){return true//RKD_test_path
       if(!this.stages){return};
       return !neInStage(this.stages,name);
     },
@@ -1552,7 +1550,7 @@ Vue.component('SiteNetworkElementsPlanned',{
       getSiteEntrances:'site/getSiteEntrances',
       getSiteRacks:'site/getSiteRacks',
       getSiteNetworkElements:'site/getSiteNetworkElements',
-      getSiteNetworkElementsPlanned:'site/getSiteNetworkElementsPlanned',
+      //getSiteNetworkElementsPlanned:'site/getSiteNetworkElementsPlanned',
       getRemedyWorkStages:'remedy/getRemedyWorkStages',
     }),
     unselect(){this.selected_ne_id=''},
