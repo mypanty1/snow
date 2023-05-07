@@ -20,6 +20,8 @@
   }):null,1000);
 }())*/
 
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/menu-sidebar2.js',type:'text/javascript'}));
+
 //fix block reboot
 Vue.component("PortUserActions",{
   template:`<div name="PortUserActions" class="display-contents">
