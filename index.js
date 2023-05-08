@@ -20,10 +20,10 @@
   }):null,1000);
 }())*/
 
-document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/menu-sidebar2.js',type:'text/javascript'}));
+//GreetingCard
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/GreetingCard.js',type:'text/javascript'}));
 
 //add error text
-
 Vue.component('SessionItem',{
   template:`<section name="SessionItem">
     <title-main v-bind="titleProps" textClass="font--13-500" class="margin-top-bottom--8px"/>
