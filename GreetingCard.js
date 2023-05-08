@@ -1,4 +1,9 @@
-
+Vue.component('GreetingCard',{
+  template:`<img :src="src" style="width:100%;border-radius:10px;">`,
+  data:()=>({
+    src:'https://mypanty1.github.io/snow/day_of_radio_7_may.jpg',
+  }),
+});
 Vue.component('menu-sidebar',{
   template:`<div>
     <transition name="menu-fade">
@@ -19,7 +24,7 @@ Vue.component('menu-sidebar',{
           </div>
 
           <div class="menu-sidebar-body">
-            <img src="https://mypanty1.github.io/snow/day_of_radio_7_may.jpg" style="width:100%">
+            <GreetingCard/>
             <div class="menu-block">
               <ul class="display-flex flex-direction-column gap-30px">
                 <li @click="toRoute('WFM')" class="display-flex align-items-center gap-8px">
