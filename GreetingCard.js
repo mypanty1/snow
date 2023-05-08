@@ -16,7 +16,7 @@ Vue.component('GreetingCard',{
     if(!this.list.length){return}
     this.setNext();
     if(this.list.length==1){return}
-    this.timerNext=setInterval(this.setNext,11111);
+    this.timerNext=setInterval(this.setNext,22222);
   },
   methods:{
     getMinutesToNextDay(){
