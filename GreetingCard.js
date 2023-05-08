@@ -1,9 +1,62 @@
 Vue.component('GreetingCard',{
-  template:`<img :src="src" style="width:100%;border-radius:10px;">`,
+  template:`<div v-if="list.length">
+    <loader-bootstrap v-if="!src" :height="height"/>
+    <img v-else :src="src" style="width:100%;border-radius:10px;" :style="{height:height+'px'}">
+  </div>`,
   data:()=>({
-    src:'https://mypanty1.github.io/snow/day_of_radio_7_may.jpg',
+    height:128,
+    url:'',
+    src:'',
+    list:[],
+    timerNext:null,
+    timerLoad:null,
   }),
+  async mounted(){
+    await this.setList();
+    if(!this.list.length){return}
+    this.setNext();
+    if(this.list.length==1){return}
+    this.timerNext=setInterval(this.setNext,11111);
+  },
+  methods:{
+    getMinutesToNextDay(){
+      const date=new Date();
+      date.setDate(date.getDate()+1);
+      date.setHours(0,0,0,0);
+      return (date-Date.now())/1000/60;
+    },
+    async setList(){
+      const today=new Date()
+      const yyyymmdd=atok(today.getFullYear(),`${today.getMonth()+1}`.padStart(2,0),`${today.getDate()}`.padStart(2,0));
+      this.url=`https://mypanty1.github.io/snow/img/${yyyymmdd}.json`;
+      const cache=this.$cache.getItem(this.url);
+      if(cache){
+        this.list=cache;
+        return;
+      };
+      try{
+        const resp=await fetch(this.url);
+        this.list=resp?.status==200?await resp.json():[];
+        this.$cache.setItem(this.url,this.list,this.getMinutesToNextDay());
+      }catch(error){
+        console.warn(this.url,error);
+      };
+    },
+    setNext(){
+      this.src='';
+      this.timerLoad=setTimeout(()=>{
+        this.src=this.list.pop();
+        this.list=[this.src,...this.list];
+        this.$cache.setItem(this.url,this.list,this.getMinutesToNextDay());
+      },1111)
+    },
+  },
+  beforeDestroy(){
+    clearInterval(this.timerNext);
+    clearTimeout(this.timerLoad);
+  },
 });
+
 Vue.component('menu-sidebar',{
   template:`<div>
     <transition name="menu-fade">
