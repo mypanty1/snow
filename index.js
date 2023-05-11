@@ -20,6 +20,254 @@
   }):null,1000);
 }())*/
 
+//fix get_params 1365
+Vue.component("LbsvService",{
+  template:`<section name="LbsvService">
+    <title-main textClass="font--13-500" :text="typeService" :text2="service.statusname" :text2Class="stateClass" :textSub="service.agentdescr" textSubClass="tone-500 font--12-400">
+      <span slot="icon" class="ic-20" :class="['ic-'+icon,stateClass]"></span>
+      <button-sq v-if="service.type=='internet'" :icon="loading.get_user_rate?'loading rotating':(user_rate&&user_rate.length&&!user_rate[0].isError)?'info':'warning tone-300'" type="large" @click="testAndOpenModalOrLoadInfo"/>
+    </title-main>
+    <billing-info-modal ref="billing_info_modal" :billing-info="[user_rate||[]]" :loading="loading.get_user_rate"/>
+    
+    <title-main textClass="tone-500 font--12-400" :text="service.tarif||service.tardescr" textSubClass="font--13-500" textSub1Class="tone-500" :textSub="auth_type||rate" :textSub2="auth_type?rate:''" :style="(auth_type||rate)?'':'margin:-10px 0px;'">
+      <button-sq :icon="(loading.get_auth_type||loading.get_user_rate)?'loading rotating':''" type="medium"/>
+    </title-main>
+    
+    <div class="margin-left-right-16px" style="display:grid;gap:4px;grid-template-columns:1fr 1fr 1fr 1fr;">
+      <lbsv-login-pass v-if="serviceHasPassword" :service="service" :billingid="account.billingid" style="grid-area: 1/1/2/5;"/>
+      <title-main v-else textClass="font--16-500" :text1Class="[1,4,5,6].includes(service.billing_type)?'':'tone-500'" :text2Class="[2,3].includes(service.billing_type)?'':'tone-500'" :text="service.login||service.vgid" :text2="service.login?service.vgid:''" style="grid-area: 1/1/2/5;"/>
+      <template v-if="service.available_for_activation">
+        <button-main style="grid-area: 2/1/3/3;" label="Активировать(old)" @click="activate" button-style="outlined" size="full"/>
+        <button-main style="grid-area: 2/3/3/5;" label="Активировать" @click="openModal('service_activation_modal')" :loading="loading.get_params" button-style="outlined" size="full"/>
+      </template>
+      <template>
+        <button-main style="grid-area: 3/1/4/3;" label="Заменить AO" @click="openModal('equipment_replace_modal')" :loading="loading.get_params" button-style="outlined" size="full"/>
+        <button-main style="grid-area: 3/3/4/5;" label="Привязать AO" @click="openModal('equipment_add_modal')" :loading="loading.get_params" button-style="outlined" size="full"/>
+      </template>
+      <account-iptv-code v-if="serviceType==='IPTV'" :account="accountNumber" :service="service" style="grid-area: 4/1/5/5;"/>
+      
+      <EquipmentCredentials v-for="(credentials,hardnumber,i) in credentialsByEquipments" :credentials="credentials" :hardnumber="hardnumber" :key="i" :style="{'grid-area': (5+i)+'/1/'+(6+i)+'/5'}"/>
+    </div>
+    <info-text-sec v-if="service.descr" :text="service.descr" rowClass="font--12-400" rowStyle="color:#918f8f;"/>
+    <!--если есть оборудование которое смапилось с услугой в lbsv-account-content-->
+    <title-main v-if="service.equipments&&service.equipments.length" @open="open_eq=!open_eq" text="Оборудование" :text2="service.equipments.length" textClass="font--13-500"/>
+    <template v-if="open_eq">
+      <template v-for="(equipment,i) of service.equipments">
+        <devider-line style="margin:0px 16px;"/>
+        <equipment :key="i" :equipment="equipment" :account="accountNumber" :mr_id="mr_id" :services="[service]"/>
+      </template>
+    </template>
+    
+    <modal-container ref="modal">
+      <activation-modal :service="service" :account="accountNumber"/>
+    </modal-container>
+    <modal-container-custom v-if="serviceParams" ref="service_activation_modal" :footer="false" :wrapperStyle="{'min-height':'auto'}">
+      <service-activation-modal @close="closeModal('service_activation_modal')" :service="service" :account="accountNumber" :serviceType="serviceType" :serviceName="typeService"/>
+    </modal-container-custom>
+    <modal-container-custom v-if="serviceParams" ref="equipment_replace_modal" :footer="false">
+      <equipment-replace-modal @close="closeModal('equipment_replace_modal')" :service="service" :account="accountNumber" :serviceType="serviceType" :serviceParams="serviceParams"/>
+    </modal-container-custom>
+    <modal-container-custom v-if="serviceParams" ref="equipment_add_modal" :footer="false">
+      <equipment-add-modal @close="closeModal('equipment_add_modal')" :service="service" :account="accountNumber" :serviceType="serviceType" :serviceParams="serviceParams"/>
+    </modal-container-custom>
+  </section>`,
+  props: {
+    account: { type: Object, required: true },
+    accountNumber: { type: String, required: true },
+    service: { type: Object, required: true },
+    mr_id: { type: Number },
+    isB2b: Boolean,
+    isTooManyInternetServices: Boolean,
+  },
+  data: () => ({
+    auth_type: "",
+    user_rate: null,
+    rate: "",
+    loading: {
+      get_auth_type: false,
+      get_user_rate: false,
+      get_params: false,
+    },
+    serviceParams: null,
+    open_eq: true,
+  }),
+  computed: {
+    isInernet() {
+      return this.service.type == "internet" && this.service.isSession;
+    },
+    typeService() {
+      return {
+        "internet":"Интернет",
+        "tv":"Телевидение",
+        "analogtv":"Аналоговое ТВ",
+        "digittv":"Цифровое ТВ",
+        "phone":"Телефония",
+        "hybrid":"ИТВ",
+        "iptv":"IPTV",
+        "other":"Другое",
+      }[this.service.type]||this.service.serviceclassname;
+    },
+    serviceType() {
+      switch (this.service.type) {
+        case "phone":
+          return "VOIP";
+        case "digittv":
+          return "CTV";
+        case "internet":
+        case "ott":
+          return "SPD";
+        case "iptv":
+          return "IPTV";
+        case "hybrid":
+          return "ITV";
+        case "analogtv":
+        case "other":
+        default:
+          return;
+      }
+    },
+    icon() {
+      switch (this.service.type) {
+        case "internet":
+          return "eth";
+        case "tv":
+        case "analogtv":
+        case "digittv":
+        case "hybrid":
+          return "tv";
+        case "phone":
+          return "phone-1";
+        case "other":
+        default:
+          return "amount";
+      }
+    },
+    serviceHasPassword() {
+      const {type,billing_type,agenttype}=this.service;
+      const isWrongPasswordService=billing_type==5&&agenttype==1;//40206469306
+      return ["internet","phone"].includes(type) && !isWrongPasswordService;
+    },
+    stateClass() {
+      return this.service.status == "0" ||
+        (this.service.billing_type == 4 && this.service.status == "12")
+        ? "main-green"
+        : "main-red";
+    },
+    authAndSpeed() {
+      const fields = [this.auth_type, this.rate];
+      if (fields.length == 1) {
+        return fields[0];
+      }
+      return fields.filter((field) => field).join(" • ");
+    },
+    credentialsByEquipments(){
+      const {equipments}=this.service;
+      return equipments.reduce((credentialsBySerial,equipment)=>{
+        const {credentials,service_equipment:{hardnumber=''}}=equipment;
+        if(credentials&&hardnumber){
+          credentialsBySerial[hardnumber]=credentials
+        };
+        return credentialsBySerial
+      },{});
+    },
+  },
+  created() {
+    if (this.isInernet && !this.isB2b && !this.isTooManyInternetServices) {
+      this.getAuthAndSpeed();
+      this.getParams();
+    }
+  },
+  methods: {
+    testAndOpenModalOrLoadInfo() {
+      if (this.loading.get_user_rate) {
+        return;
+      }
+      if (!this.user_rate && this.isInernet) {
+        this.getAuthAndSpeed();
+      } else {
+        this.openModal("billing_info_modal");
+      }
+    },
+    getAuthAndSpeed() {
+      let params = {
+        login: this.service.login,
+        vgid: this.service.vgid,
+        serverid: this.service.serverid,
+      };
+
+      this.loading.get_auth_type = true;
+      httpGet(buildUrl("get_auth_type", params, "/call/aaa/"), true)
+        .then((response) => {
+          this.loading.get_auth_type = false;
+          if (
+            response.code == "200" &&
+            response.data &&
+            response.data.length &&
+            response.data[0].auth_type
+          ) {
+            this.auth_type = response.data[0].auth_type;
+          }
+        })
+        .catch((error) => {
+          console.warn("get_auth_type:error", error);
+          this.loading.get_auth_type = false;
+        });
+
+      this.loading.get_user_rate = true;
+      httpGet(buildUrl("get_user_rate", params, "/call/aaa/"), true)
+        .then((response) => {
+          this.loading.get_user_rate = false;
+          if (
+            response.code == "200" &&
+            response.data &&
+            response.data.length &&
+            (response.data[0].rate || response.data[0].rate == 0)
+          ) {
+            this.rate = response.data[0].rate + " Мбит/c";
+            this.user_rate = response.data;
+          } else {
+            this.user_rate = [response]; //временный костыль чтобы показать ошибку
+          }
+        })
+        .catch((error) => {
+          console.warn("get_user_rate:error", error);
+          this.loading.get_user_rate = false;
+        });
+    },
+    async getParams() {
+      if (!this.accountNumber || !this.serviceType) return;
+      this.loading.get_params = true;
+      try {
+        const response=await httpGet(buildUrl("get_params",{account:this.accountNumber,service_type:this.serviceType},"/call/sms_gateway/"));
+        if(!response.isError&&response.result_code === "OK"&&Array.isArray(response.parameters)){
+          this.serviceParams = response.parameters;
+        }
+      }catch(error){
+        console.warn('get_params',error)
+      }
+      this.loading.get_params = false;
+      return this.serviceParams;
+    },
+    activate() {
+      this.$refs.modal.open();
+    },
+    async openModal(ref=""){
+      if(!this.serviceParams){
+        await this.getParams();
+      };
+      if(!this.serviceParams){return};
+      if(ref&&this.$refs[ref]){
+        this.$refs[ref].open();
+      }
+    },
+    closeModal(ref = "") {
+      if (ref && this.$refs[ref]) {
+        this.$refs[ref].close();
+      }
+    },
+  },
+});
+
 //GreetingCard
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/GreetingCard.js',type:'text/javascript'}));
 
