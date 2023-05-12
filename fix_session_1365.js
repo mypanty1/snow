@@ -1,3 +1,636 @@
+Vue.component("traffic-light-ma", {
+  //template: "#traffic-light-ma-template",
+  template:`<div class="display-contents">
+    <message-el v-if="isB2b||isTooManyInternetServices" text="Данный ЛС принадлежит клиенту B2B. Диагностика не осуществляется." type="info" box class="padding-left-right-16px"/>
+    <div v-else class="align-items-center display-flex justify-content-around traffic-light" :class="[test ? 'loading' : status]">
+      <div class="align-items-center display-flex margin-left-16px width-100-100" @click="showCheckList()">
+          <div v-if="test">Идет диагностика...</div>
+          <div v-else :class="{'width-75-100' : count}"><span>{{message}}</span></div>
+          <div v-if="count && !test" class="align-items-center count display-flex justify-content-center margin-left-4px">{{count}}</div>
+      </div>
+      <div v-if="!test" @click="startTest" class="margin-left-auto margin-right-16px" style="font-size: .9rem"> <i class="fas fa-sync-alt"></i> </div>
+      <modal-container ref='modal'>
+        <traffic-light-modal 
+          :checkList='checkList' 
+          :billingType='billingType'
+          :forisAccount='forisAccount'
+          :forisResources='forisResources'
+          :lbsvAccount='lbsvAccount'
+          :accountId='accountId'
+          :equipments='equipments'
+          @restart='startTest'
+          @update:online-session='$emit("update:online-session")'
+        />
+      </modal-container>
+    </div>
+  </div>`,
+  props: {
+    accountDevice: { type: Object, default: () => null },
+    billingType: { type: String, default: "lbsv" }, // lbsv,foris
+    forisAccount: { type: Object, default: () => null },
+    forisResources: { type: Object, default: () => null },
+    lbsvAccount: { type: Object, default: () => null },
+    accountId: { type: String, default: "" },
+    equipments: { type: Array, default: () => [] },
+    isB2b:Boolean,
+    isTooManyInternetServices:Boolean
+  },
+  data() {
+    return {
+      status: "", // green-light orange-light red-light error
+      message: "Идет диагностика...",
+      count: 0,
+      portStatus: null,
+      lastMac: "",
+      attachedMac: "",
+      macs: {
+        last: Array,
+        attached: Array,
+      },
+      checkList: [],
+      test: false,
+      sessions: [],
+    };
+  },
+  created() {
+    if(this.isB2b||this.isTooManyInternetServices){return};
+    this.startTest();
+  },
+  computed: {
+    hasInternet() {
+      const types = {
+        lbsv: () =>
+          this.lbsvAccount.vgroups.some(
+            (s) => s.userid == this.lbsvAccount.userid && s.type == "internet"
+          ),
+        foris: () =>
+          this.forisResources.internet.filter(
+            (service) => service.login && service.login.login
+          ).length > 0,
+      };
+      return types[this.billingType]();
+    },
+    isBlocked() {
+      const types = {
+        lbsv: () => {
+          return !this.lbsvAccount.vgroups.some((s) => {
+            return (
+              s.userid == this.lbsvAccount.userid &&
+              s.isSession &&
+              (s.status == "0" || (s.billing_type == 4 && s.status == "12"))
+            );
+          });
+        },
+        foris: () =>
+          this.forisResources.internet.every(
+            (service) => service.blocks_status
+          ),
+      };
+      return types[this.billingType]();
+    },
+    activeSessions() {
+      if (!Array.isArray(this.sessions)) return [];
+      return this.sessions.filter((el) => {
+        const hasInfo = Boolean(el.data && el.data.length);
+        if (!hasInfo) return false;
+        return !!el.data[0].start;
+      });
+    },
+    deviceRequestParams() {
+      return {
+        MR_ID: this.accountDevice.region.mr_id,
+        DEVICE_IP_ADDRESS: this.accountDevice.device.ip,
+        DEVICE_SYSTEM_OBJECT_ID: this.accountDevice.device.system_object_id,
+        DEVICE_VENDOR: this.accountDevice.device.vendor,
+        DEVICE_FIRMWARE: this.accountDevice.device.firmware,
+        DEVICE_FIRMWARE_REVISION: this.accountDevice.device.firmware_revision,
+        DEVICE_PATCH_VERSION: this.accountDevice.device.patch_version,
+        SNMP_PORT_NAME: this.accountDevice.port.snmp_name,
+      };
+    },
+  },
+  methods: {
+    startTest() {
+      if(this.isB2b||this.isTooManyInternetServices){return};
+      if (this.test) return;
+      this.test = true;
+      this.status = "loading";
+      this.count = 0;
+      this.message = "Идет диагностика...";
+      this.checkList = [];
+      this.portStatus = null;
+      this.lastMac = "";
+      this.macs.last = [];
+      if (!this.accountDevice || !this.accountDevice.port.snmp_number) {
+        this.result(
+          "Не удалось продиагностировать, не найден порт подключения",
+          "error"
+        );
+        return;
+      }
+      if (!this.hasInternet) {
+        this.result("Не удалось продиагностировать, нет услуг ШПД", "error");
+        return;
+      }
+      if (this.isBlocked) {
+        this.result("Услуги ШПД заблокированы", "error");
+        return;
+      }
+      this.pingDevice();
+    },
+    async pingDevice() {
+      const params = {
+        MR_ID: this.accountDevice.region.mr_id,
+        IP_ADDRESS: this.accountDevice.device.ip,
+        SYSTEM_OBJECT_ID:null,
+        VENDOR:null
+      };
+      const response = await httpPost(
+        "/call/hdm/device_ping",
+        { device: params },
+        true
+      );
+      if (response.code != "200") {
+        this.result("Коммутатор недоступен", "red-light");
+        return;
+      }
+      this.result("Коммутатор доступен");
+      this.getPortStatus();
+    },
+    async getPortStatus() {
+      const params = {
+        device: this.accountDevice.port.device_name,
+        //ipaddress:this.accountDevice.device.ip,
+        //mr_id:this.accountDevice.region.mr_id,
+        //snmp_version:'',
+        //snmp_community:'',
+        port_ifindex: this.accountDevice.port.snmp_number,
+      };
+      const response = await httpGet(
+        buildUrl("port_status_by_ifindex", params, "/call/hdm/"),
+        false
+      );
+      if (response.type === "error") {
+        this.result(response.text, "red-light");
+        return;
+      }
+      this.portStatus = response;
+      if (!response.IF_ADMIN_STATUS) {
+        this.result('Административный статус порта "Отключен"', "orange-light");
+      } else {
+        this.result('Административный статус порта "Включен"');
+      }
+      this.getLoopback();
+    },
+    async getLoopback() {
+      const params = this.deviceRequestParams;
+      const response = await httpPost(
+        "/call/hdm/port_info_loopback",
+        params,
+        true
+      );
+      if (response.type === "error") {
+        this.result(response.text, "orange-light");
+        this.checkErrors();
+        return;
+      }
+      if (response.detected) {
+        this.result(response.description, "red-light");
+        if (!this.portStatus.IF_OPER_STATUS) {
+          this.result("Нет линка", "orange-light");
+        }
+        return;
+      }
+      this.result(response.description);
+      
+      /*if (this.isB2b||this.isTooManyInternetServices) {
+        this.result("Не удалось продиагностировать, слишком много услуг", "error");
+        return;
+      }*/
+      this.checkSessionAndLink();
+    },
+    async checkSessionAndLink() {
+      await this.getAllOnlineSessions();
+
+      if (!this.portStatus.IF_OPER_STATUS) {
+        this.result("Нет линка", "orange-light");
+
+        if (!this.activeSessions.length) {
+          this.result("Нет сессии");
+          this.testCable();
+          return;
+        }
+
+        if (this.activeSessions.length > 1) {
+          this.result("Обнаружено больше одной активной сессии", "red-light");
+          return;
+        } else if (this.activeSessions[0].data.length === 1) {
+          const success = await this.resetSession(this.activeSessions[0]);
+          if (!success) return;
+        }
+      } else if (!this.activeSessions.find((s) => s.data.length > 0)) {
+        this.result("Линк есть, нет сессии ", "orange-light");
+        this.checkLoginPass();
+      }
+      this.checkErrors();
+    },
+    async resetSession(session) {
+      session.params.sessionid = session.data[0].sessionid;
+      session.params.nasip = session.data[0].nas;
+      session.params.dbsessid = session.data[0].dbsessid;
+      session.params.descr = session.data[0].descr;
+      await httpPost("/call/aaa/stop_session_radius", session.params, true);
+      const response = await this.getOnlineSession(session.params, session);
+      if (response && response.data.length !== 0) {
+        this.result("Сессия не сбросилась", "red-light");
+        return false;
+      } else {
+        this.result("Сброс сессии прошел успешно");
+        this.testCable();
+        return true;
+      }
+    },
+    async getAllOnlineSessions() {
+      this.sessions = [];
+      const types = {
+        lbsv: () => {
+          const sessionParams = [];
+          const parseAccount = (account) => String(account).replace(/-/g, "");
+          const agreement = this.lbsvAccount.agreements.find(
+            (a) => parseAccount(a.account) == parseAccount(this.accountId)
+          );
+          if (!agreement) return [];
+          if (
+            this.lbsvAccount.type == 1 &&
+            agreement.services.internet.vgroups > 1
+          )
+            return [];
+          agreement.services.internet.vgroups.forEach((service) => {
+            if (!service.isSession || service.status == 10) return;
+            sessionParams.push({
+              login: service.login,
+              serverid: service.serverid,
+              vgid: service.vgid,
+              agentid: service.agentid,
+              descr: service.descr,
+            });
+          });
+          return sessionParams;
+        },
+        foris: () => {
+          return this.forisResources.internet
+            .filter((service) => service.login && service.login.login)
+            .map((service) => ({
+              login: service.login.login,
+              serverid: this.forisAccount.serverid,
+              vgid: service.msisdn,
+              descr: "xrad",
+            }));
+        },
+      };
+      const currentParams = types[this.billingType]();
+      const requests = currentParams.map((params) => {
+        const url = buildUrl("get_online_sessions", params, "/call/aaa/");
+        return new Promise((resolve) => {
+          const session = { params };
+          CustomRequest.get(url)
+            .then((response) => {
+              if (response.code == 200) {
+                Object.assign(session, response);
+                resolve(session);
+              } else {
+                console.error("Get online sessions: ", response);
+              }
+              resolve(session);
+            })
+            .catch((error) => {
+              console.error("Get online sessions: ", error);
+              resolve(session);
+            });
+        });
+      });
+      if (this.lbsvAccount && this.lbsvAccount.type == 1) return; // FIXME временное решение для b2b клиентов
+      this.sessions = await Promise.all(requests);
+    },
+    async getOnlineSession(params, session) {
+      const response = await httpPost(
+        "/call/aaa/get_online_sessions",
+        params,
+        true
+      );
+      if (response.code == "200") {
+        session = response.data;
+        session.params = params;
+        return response;
+      } else {
+        console.error("Get online sessions: ", response);
+        return null;
+      }
+    },
+    async checkLoginPass() {
+      const authType = await this.getAuthType();
+      if (authType && authType.toLowerCase() === "pppoe") {
+        const errorMessage = await this.loadAuthLog();
+        if (errorMessage)
+          this.result(errorMessage, "orange-light", this.lbsvAccount);
+        else this.result("Логин и пароль верны");
+      }
+    },
+    async loadAuthLog() {
+      const session = this.activeSessions[0] || this.sessions[0];
+      if (!session) return;
+      const { login, serverid, vgid, descr } = session.params;
+      const formatDate = (date) =>
+        date.toLocaleDateString().split(".").reverse().join("-");
+      const params = {
+        login,
+        serverid,
+        vgid,
+        descr,
+        date: formatDate(new Date()),
+      };
+      try {
+        const response = await httpGet(
+          buildUrl("get_radius_log", params, "/call/aaa/")
+        );
+        if (response.rows.length == 0) return null;
+        const errorMessages = {
+          10: "неверный логин или пароль",
+          11: "неверный логин",
+          14: "неверный пароль",
+        };
+        const lastLogType = response.rows[0].authlog_type;
+        return errorMessages[lastLogType] || null;
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    async getAuthType() {
+      const params = this.getParams();
+      if (!params) return;
+      const exisdData = (response) =>
+        response.code == "200" && response.data && response.data.length > 0;
+
+      try {
+        const response = await httpGet(
+          buildUrl("get_auth_type", params, "/call/aaa/"),
+          true
+        );
+        if (exisdData(response) && response.data[0].auth_type) {
+          return response.data[0].auth_type;
+        }
+      } catch (error) {
+        console.error("getAuthType", error);
+      }
+    },
+    getParams() {
+      const parseAccount = (account) => String(account).replace(/-/g, "");
+      const agreement = this.lbsvAccount.agreements.find(
+        (a) => parseAccount(a.account) == parseAccount(this.accountId)
+      );
+      const types = {
+        lbsv: () => {
+          if (!agreement) return;
+          const service = agreement.services.internet.vgroups.find(
+            (service) =>
+              service.agrmid === agreement.agrmid &&
+              service.isSession &&
+              [2, 4, 6].includes(Number(service.agenttype))
+          );
+          if (!service) return;
+          const { login, serverid, vgid } = service;
+          return { login, serverid, vgid };
+        },
+        foris: () => {
+          const service = this.forisResources.internet.find(
+            (service) => service.login && service.login.login
+          );
+          return {
+            login: service.login.login,
+            vgid: service.msisdn,
+            serverid: account.serverid,
+          };
+        },
+      };
+      return types[this.billingType]();
+    },
+    testCable() {
+      const params = this.deviceRequestParams;
+      httpPost("/call/hdm/port_cable_test", params, true).then((data) => {
+        const cableLen = [];
+        data.text.forEach((t) => {
+          /\d+/.test(t) ? cableLen.push(+t.match(/\d+/)) : null;
+        });
+        cableLen.sort();
+        if (cableLen[cableLen.length - 1] - cableLen[0] > 5) {
+          this.result(
+            "Расхождение в длине пар кабеля, превышающее 5 метров",
+            "red-light"
+          );
+          return;
+        }
+        if (cableLen[cableLen.length - 1] == 0) {
+          this.result("Кабель не обнаружен", "red-light");
+          return;
+        }
+        if (
+          !this.portStatus.IF_OPER_STATUS &&
+          this.activeSessions[0] &&
+          this.activeSessions[0].data.length == 0
+        ) {
+          this.result(
+            "Линка нет, сессии нет, кабель-тест пройден успешно",
+            "red-light"
+          );
+        }
+        this.result("Кабель-тест пройден успешно");
+        this.checkErrors();
+      });
+    },
+    checkErrors() {
+      const errors = parseInt(this.portStatus.IF_IN_ERRORS, 10);
+      if (errors > 1000) {
+        this.result(`Входящих ошибок на порту ${errors}`, "red-light");
+        return;
+      } else if (errors > 100) {
+        this.result(`Входящих ошибок на порту ${errors}`, "orange-light");
+      } else {
+        this.result(`Входящих ошибок на порту ${errors}`);
+      }
+      this.checkSpeed();
+    },
+    checkSpeed() {
+      if (this.portStatus.IF_OPER_STATUS) {
+        if (parseInt(this.portStatus.IF_SPEED) == 10) {
+          this.result(
+            `Скорость порта ${this.portStatus.IF_SPEED}`,
+            "orange-light"
+          );
+        } else {
+          this.result(`Скорость порта ${this.portStatus.IF_SPEED}`);
+        }
+      }
+      this.getMac();
+      this.loadLastMac();
+    },
+    getMac() {
+      let service =
+        this.lbsvAccount &&
+        this.lbsvAccount.vgroups.find((s) =>
+          [2, 5, 7, 9].includes(s.type_of_bind)
+        );
+      if (!service) {
+        if (this.activeSessions.length > 0 && this.activeSessions[0].data[0]) {
+          this.attachedMac =
+            this.activeSessions[0].data[0].mac || "0000.0000.0000";
+          if (this.activeSessions[0].data[0].mac)
+            this.macs.attached = [this.activeSessions[0].data[0].mac];
+          this.compareMac();
+        } else {
+          this.loadHistorySession();
+        }
+        return;
+      }
+      if (service.type_of_bind == 7) {
+        let mac = service.login.split(":")[0];
+        const success = mac.match(/[0-9a-fA-F\.]{14}/g);
+        if (success) this.macs.attached = [mac];
+        this.attachedMac = success ? mac : "Не удалось получить MAC";
+      }
+      let params = {
+        serverid: service.serverid,
+        vgid: service.vgid,
+      };
+      httpGet(buildUrl("get_mac", params, "/call/service_mix/"), true).then(
+        (data) => {
+          this.macs.attached = [];
+          if (data.isError) {
+            this.result(data.message, "orange-light");
+            this.attachedMac = "error";
+          } else {
+            this.macs.attached = data.Data;
+            this.attachedMac = (data.Data && data.Data[0]) || "0000.0000.0000";
+          }
+          this.compareMac();
+        }
+      );
+    },
+    async loadHistorySession() {
+      if (!this.activeSessions[0] && !this.sessions[0])
+        await this.getAllOnlineSessions();
+      let session = this.activeSessions[0] || this.sessions[0];
+      const { login, serverid, vgid, descr } = session.params;
+      const params = {
+        login,
+        serverid,
+        vgid,
+        descr,
+        dtfrom: new Date(),
+        dtto: Dt.addDays(-30),
+      };
+      httpGet(buildUrl("get_sessions", params, "/call/aaa/"), true).then(
+        (data) => {
+          this.macs.attached = [];
+          if (data.type == "error" || data.type == "warning") {
+            this.attachedMac = "0000.0000.0000";
+          } else if (data.rows.length > 0) {
+            this.attachedMac = data.rows[0].mac;
+            data.rows.forEach((sessions) =>
+              this.macs.attached.push(sessions.mac)
+            );
+            this.compareMac();
+          } else {
+            this.attachedMac = "0000.0000.0000";
+          }
+          this.compareMac();
+        }
+      );
+    },
+    loadLastMac() {
+      let params = this.deviceRequestParams;
+      params.type = "array";
+      httpGet(buildUrl("port_mac_show", params, "/call/hdm/"), true).then(
+        (data) => {
+          if (data.type == "error") {
+            this.result(data.text, "red-light");
+            return;
+          }
+          if (data.text[0] == "Не удалось получить MAC из биллинга") {
+            this.result(data.text[0], "red-light");
+            return;
+          }
+          this.macs.last = data.text;
+          this.lastMac = data.text[0];
+          this.compareMac();
+        }
+      );
+    },
+    compareMac() {
+      if (!this.lastMac || !this.attachedMac) return;
+      if (this.attachedMac == "0000.0000.0000") {
+        this.result(`Последний MAC на порту: ${this.lastMac}`);
+        this.result("Проблем не обнаружено", "green-light");
+        this.test = false;
+        return;
+      }
+      if (this.attachedMac == "error") {
+        this.result(`Последний MAC на порту: ${this.lastMac}`);
+        this.test = false;
+        return;
+      }
+      this.macs.attached = this.macs.attached.map((a) => a.toLowerCase());
+      const last = this.macs.last[this.macs.last.length - 1];
+      const successEqual = this.macs.last.some((l) =>
+        this.macs.attached.includes(l.toLowerCase())
+      );
+      if (successEqual) {
+        this.result(
+          `Последний MAC на порту: ${last};\nMAC в биллинге: ${last}`
+        );
+        this.result("Проблем не обнаружено", "green-light");
+      } else {
+        this.result(
+          `Последний MAC на порту: ${this.lastMac};\nданный MAC не зарегистрирован в биллинге.`,
+          "orange-light",
+          {
+            last: this.LastMac,
+            attached: this.attachedMac,
+            account: this.account,
+          }
+        );
+      }
+      this.test = false;
+    },
+    showCheckList() {
+      this.$refs.modal.open();
+    },
+    result(text, status, data = null) {
+      if (status == "green-light" && this.status == "loading") {
+        this.message = text;
+        this.test = false;
+        this.status = status;
+        return;
+      }
+      if (status == "orange-light" || status == "red-light") {
+        this.status = status;
+        this.count++;
+        this.message = text;
+      }
+      if (status == "red-light" || status == "error") {
+        this.status = status;
+        this.message = text;
+        this.test = false;
+      }
+      if (status !== "green-light") {
+        this.checkList.push({
+          text: text,
+          status: status,
+          data: data,
+        });
+      }
+    },
+  },
+});
 Vue.component("lbsv-services",{
   //template:"#lbsv-services-template",
   template:`<div name="lbsv-services">
