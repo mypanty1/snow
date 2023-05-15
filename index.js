@@ -1004,11 +1004,11 @@ Vue.component('FindPort',{
       if (action === 'compare') this.actionCompare(response);
     },
     actionSave(response) {
-      this.saveData = {
-        time: new Date().toLocaleTimeString(),
-        cableTest: this.saveData.cableTest,
-        savedCount: this.countSavedPorts(response),
-      };
+
+      this.saveData.time=new Date().toLocaleTimeString();
+
+      this.saveData.savedCount=this.countSavedPorts(response);
+
       this.ports.savedPorts = response;
       this.saveCache();//add cache
     },
