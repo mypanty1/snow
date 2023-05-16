@@ -1,7 +1,8 @@
 Vue.component("traffic-light-ma", {
   //template: "#traffic-light-ma-template",
   template:`<div class="display-contents">
-    <message-el v-if="isB2b||isTooManyInternetServices" text="Данный ЛС принадлежит клиенту B2B. Диагностика не осуществляется." type="info" box class="padding-left-right-16px"/>
+    <message-el v-if="isB2b" text="Данный ЛС принадлежит клиенту B2B. Диагностика не осуществляется." type="info" box class="padding-left-right-16px"/>
+    <message-el v-else-if="isTooManyInternetServices" text="На данном ЛС несколько сервисов Интернет. Диагностика не осуществляется." type="info" box class="padding-left-right-16px"/>
     <div v-else class="align-items-center display-flex justify-content-around traffic-light" :class="[test ? 'loading' : status]">
       <div class="align-items-center display-flex margin-left-16px width-100-100" @click="showCheckList()">
           <div v-if="test">Идет диагностика...</div>
