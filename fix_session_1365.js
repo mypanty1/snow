@@ -3,7 +3,7 @@ Vue.component("traffic-light-modal", {
   //template: "#traffic-light-modal-template",
   template:`<CardBlock name="traffic-light-modal">
     <modal-title title="Результат диагностики" class="height-30px"/>
-    <div class="display-flex flex-direction-column margin-left-right-16px">
+    <div class="display-flex flex-direction-column">
       <div v-for="(item, index) of checkList" :key="index">
         <div class="display-flex justify-content-between padding-8px-16px">
           <span style="white-space: pre-wrap;">
