@@ -26,13 +26,13 @@ Vue.component("traffic-light-modal", {
               @update:online-session="$emit('update:online-session')"
             />
           </span>
-          <span v-if="item.status == 'orange-light' || item.status == 'red-light'" class="fas fa-times align-self-center text-danger"></span>
+          <span v-if="item.status == 'orange-light' || item.status == 'red-light'" class="fas fa-times width-16px align-self-center text-danger"></span>
           <span v-else class="fas fa-check align-self-center text-success"></span> 
         </div>
         <devider-line m="0"/>
       </div>
     </div>
-    <loader-bootstrap v-if="test" text="Диагностика..."/>
+    <loader-bootstrap v-if="test" text="диагностика..."/>
   </CardBlock>`,
   props: {
     checkList: Array,
