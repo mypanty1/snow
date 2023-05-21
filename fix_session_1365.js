@@ -1,28 +1,178 @@
-Vue.component("traffic-light-ma", {
+Vue.component("traffic-light-modal", {
+  //template: "#traffic-light-modal-template",
+  template:`<CardBlock name="traffic-light-modal">
+    <modal-title title="Результат диагностики" class="height-30px"/>
+    <div class="display-flex flex-direction-column gap-4px margin-left-right-16px">
+      <div v-for="(item, index) of checkList" :key="index">
+        <div class="display-flex justify-content-between padding-8px-16px">
+          <span style="white-space: pre-wrap;">
+            <span class="tone-900">{{ item.text }}</span>
+            <button-main 
+              v-if="showButtonBindMac(item.data)"
+              size="large" 
+              label="Привязать MAC" 
+              buttonStyle="contained" 
+              @click="bindMac(item.data)"
+              :loading="loading.bindMac === 'loading'"
+              loadingText="Привязка..."
+              class='margin-top-8px'
+            />
+            <traffic-light-fix-login-pass 
+              v-if="showButtonFixLoginPass(item)" 
+              v-bind="{billingType,forisAccount,forisResources,lbsvAccount,accountId,equipments}"
+              class="margin-top-8px"
+              @restart="restart"
+              @update:online-session="$emit('update:online-session')"
+            />
+          </span>
+          <span v-if="item.status == 'orange-light' || item.status == 'red-light'" class="fas fa-times align-self-center text-danger"></span>
+          <span v-else class="fas fa-check align-self-center text-success"></span> 
+        </div>
+        <devider-line m="0"/>
+      </div>
+    </div>
+    <loader-bootstrap v-if="test" text="Диагностика..."/>
+  </CardBlock>`,
+  props: {
+    checkList: Array,
+    billingType: { type: String, default: "lbsv" }, // lbsv,foris
+    forisAccount: { type: Object, default: () => null },
+    forisResources: { type: Object, default: () => null },
+    lbsvAccount: { type: Object, default: () => null },
+    accountId: { type: String, default: "" },
+    equipments: { type: Array, default: () => [] },
+    test:Boolean,
+  },
+  data: function () {
+    return {
+      loading: {
+        bindMac: "none",
+        fixLoginPass: "none",
+      },
+      message: "",
+      bindService: null,
+      mac: "",
+    };
+  },
+  methods: {
+    showButtonFixLoginPass(data) {
+      const errorMessages = [
+        "неверный логин или пароль",
+        "неверный логин",
+        "неверный пароль",
+      ];
+      return errorMessages.includes(data.text);
+    },
+    showButtonBindMac(data) {
+      if (!data || !data.data) return false;
+      if (data.data.account && data.data.account.vgroups) {
+        return data.data.account.vgroups.some((s) => {
+          return [2, 5, 7, 9].includes(s.type_of_bind);
+        });
+      }
+      return false;
+    },
+    bindMac(data) {
+      this.loading.bindMac = "loading";
+      this.message = "";
+      this.mac = data.last;
+      this.bindService = data.data.account.vgroups.find((s) =>
+        [2, 5, 7, 9, 0].includes(s.type_of_bind)
+      );
+      if (this.bindService.type_of_bind == 2) this.insMac(data.data);
+      if (this.bindService.type_of_bind == 5) this.insOnlyMac(data.data);
+      if (this.bindService.type_of_bind == 7) this.updateLogin(data.data);
+      if (this.bindService.type_of_bind == 9) this.setBind(data.data);
+    },
+    insMac(data) {
+      let params = {
+        agentid: this.bindService.agentid,
+        serverid: this.bindService.serverid,
+        vgid: this.bindService.vgid,
+        ip: data.DEVICE_IP_ADDRESS,
+        mac: this.mac,
+        account: data.ACCOUNT,
+      };
+      httpGet(buildUrl("ins_mac", params, "/call/service_mix/")).then(
+        (data) => {
+          if (data.type == "error") {
+            this.loading.bindMac = "error";
+            this.message = data.message;
+            return;
+          }
+          this.rebootPort(data);
+          this.loading.bindMac = "done";
+          this.message = data.InfoMessage;
+        }
+      );
+    },
+    insOnlyMac(data) {
+      let params = {
+        serverid: this.bindService.serverid,
+        vgid: this.bindService.vgid,
+        mac: this.mac,
+        account: data.ACCOUNT,
+      };
+      httpPost("/call/service_mix/ins_only_mac", params).then((data) => {
+        if (data.type == "error") {
+          this.loading.bindMac = "error";
+          this.message = data.message;
+          return;
+        }
+        this.rebootPort(data);
+        this.loading.bindMac = "done";
+        this.message = data.InfoMessage;
+      });
+    },
+    setBind(data) {
+      let params = {
+        serverid: this.bindService.serverid,
+        vgid: this.bindService.vgid,
+        mac: this.mac,
+        account: data.ACCOUNT,
+        type_of_bind: this.bindService.type_of_bind,
+        ip: data.DEVICE_IP_ADDRESS,
+        port: data.PORT_NUMBER,
+      };
+      httpPost("/call/service_mix/set_bind", params).then((data) => {
+        if (data.type == "error") {
+          this.loading.bindMac = "error";
+          this.message = data.message;
+          return;
+        }
+        this.rebootPort(data);
+        this.loading.bindMac = "done";
+        this.message = "Привязка абонента выполнена успешно."; //TODO data.InfoMessage; Нужно чтобы ServiceMix присылал стандартные ответы для всех методов!!!
+      });
+    },
+    rebootPort(port) {
+      httpPost(buildUrl("port_reboot", "", "/call/hdm/"), port).then((data) => {
+        // if (data.message === 'OK') self.account.portRebootStatus = 'success';
+        // if (data.message === 'error') self.account.portRebootStatus = 'error';
+      });
+    },
+    restart() {
+      this.$emit("restart");
+    },
+  },
+});
+Vue.component("traffic-light-ma", {//60700001928
   //template: "#traffic-light-ma-template",
-  template:`<div class="display-contents">
-    <message-el v-if="isB2b" text="Данный ЛС принадлежит клиенту B2B. Диагностика не осуществляется." type="info" box class="padding-left-right-16px"/>
-    <message-el v-else-if="isTooManyInternetServices" text="На данном ЛС более двух услуг Интернет. Диагностика не осуществляется." type="info" box class="padding-left-right-16px"/>
+  template:`<div class="display-contents" name="traffic-light-ma">
+    <message-el v-if="false&&isB2b" text="Данный ЛС принадлежит клиенту B2B. Диагностика не осуществляется." type="info" box class="padding-left-right-16px"/>
+    <message-el v-else-if="false&&isTooManyInternetServices" text="На данном ЛС более двух услуг Интернет. Диагностика не осуществляется." type="info" box class="padding-left-right-16px"/>
     <div v-else class="align-items-center display-flex justify-content-around traffic-light" :class="[test ? 'loading' : status]">
       <div class="align-items-center display-flex margin-left-16px width-100-100" @click="showCheckList()">
           <div v-if="test">Идет диагностика...</div>
           <div v-else :class="{'width-75-100' : count}"><span>{{message}}</span></div>
           <div v-if="count && !test" class="align-items-center count display-flex justify-content-center margin-left-4px">{{count}}</div>
       </div>
-      <div v-if="!test" @click="startTest" class="margin-left-auto margin-right-16px" style="font-size: .9rem"> <i class="fas fa-sync-alt"></i> </div>
-      <modal-container ref='modal'>
-        <traffic-light-modal 
-          :checkList='checkList' 
-          :billingType='billingType'
-          :forisAccount='forisAccount'
-          :forisResources='forisResources'
-          :lbsvAccount='lbsvAccount'
-          :accountId='accountId'
-          :equipments='equipments'
-          @restart='startTest'
-          @update:online-session='$emit("update:online-session")'
-        />
-      </modal-container>
+      <div v-if="!test" @click="startTest" class="margin-left-auto margin-right-16px" style="font-size: .9rem">
+        <span class="fas fa-sync-alt"></span>
+      </div>
+      <modal-container-custom ref="modal" :wrapperStyle="{'min-height':'auto','margin-top':'4px'}">
+        <traffic-light-modal v-bind="{checkList,billingType,forisAccount,forisResources,lbsvAccount,accountId,equipments,test}" @restart="startTest" @update:online-session="$emit('update:online-session')"/>
+      </modal-container-custom >
     </div>
   </div>`,
   props: {
@@ -54,7 +204,7 @@ Vue.component("traffic-light-ma", {
     };
   },
   created() {
-    if(this.isB2b||this.isTooManyInternetServices){return};
+    //if(this.isB2b||this.isTooManyInternetServices){return};
     this.startTest();
   },
   computed: {
@@ -112,7 +262,7 @@ Vue.component("traffic-light-ma", {
   },
   methods: {
     startTest() {
-      if(this.isB2b||this.isTooManyInternetServices){return};
+      //if(this.isB2b||this.isTooManyInternetServices){return};
       if (this.test) return;
       this.test = true;
       this.status = "loading";
@@ -123,18 +273,15 @@ Vue.component("traffic-light-ma", {
       this.lastMac = "";
       this.macs.last = [];
       if (!this.accountDevice || !this.accountDevice.port.snmp_number) {
-        this.result(
-          "Не удалось продиагностировать, не найден порт подключения",
-          "error"
-        );
+        this.result(`Не удалось продиагностировать, не найден порт подключения`, "error");
         return;
       }
       if (!this.hasInternet) {
-        this.result("Не удалось продиагностировать, нет услуг ШПД", "error");
+        this.result(`Не удалось продиагностировать, нет услуг ШПД`, "error");
         return;
       }
       if (this.isBlocked) {
-        this.result("Услуги ШПД заблокированы", "error");
+        this.result(`Услуги ШПД заблокированы`, "error");
         return;
       }
       this.pingDevice();
@@ -152,10 +299,10 @@ Vue.component("traffic-light-ma", {
         true
       );
       if (response.code != "200") {
-        this.result("Коммутатор недоступен", "red-light");
+        this.result(`Коммутатор недоступен`, "red-light");
         return;
       }
-      this.result("Коммутатор доступен");
+      this.result(`Коммутатор доступен`);
       this.getPortStatus();
     },
     async getPortStatus() {
@@ -177,9 +324,12 @@ Vue.component("traffic-light-ma", {
       }
       this.portStatus = response;
       if (!response.IF_ADMIN_STATUS) {
-        this.result('Административный статус порта "Отключен"', "orange-light");
+        this.result(`Порт выключен`, "orange-light");
+      } else if(!response.IF_OPER_STATUS){
+        //this.result(`Нет линка`, "orange-light");
+        //this.getLoopback();
       } else {
-        this.result('Административный статус порта "Включен"');
+        //this.result('Административный статус порта "Включен"');
       }
       this.getLoopback();
     },
@@ -198,7 +348,7 @@ Vue.component("traffic-light-ma", {
       if (response.detected) {
         this.result(response.description, "red-light");
         if (!this.portStatus.IF_OPER_STATUS) {
-          this.result("Нет линка", "orange-light");
+          this.result(`Нет линка`, "orange-light");
         }
         return;
       }
@@ -214,23 +364,23 @@ Vue.component("traffic-light-ma", {
       await this.getAllOnlineSessions();
 
       if (!this.portStatus.IF_OPER_STATUS) {
-        this.result("Нет линка", "orange-light");
+        this.result(`Нет линка`, "orange-light");
 
         if (!this.activeSessions.length) {
-          this.result("Нет сессии");
+          this.result(`Нет сессии`);
           this.testCable();
           return;
         }
 
         if (this.activeSessions.length > 1) {
-          this.result("Обнаружено больше одной активной сессии", "red-light");
+          this.result(`Обнаружено больше одной активной сессии`, "red-light");
           return;
         } else if (this.activeSessions[0].data.length === 1) {
           const success = await this.resetSession(this.activeSessions[0]);
           if (!success) return;
         }
       } else if (!this.activeSessions.find((s) => s.data.length > 0)) {
-        this.result("Линк есть, нет сессии ", "orange-light");
+        this.result(`Линк есть, нет сессии `, "orange-light");
         this.checkLoginPass();
       }
       this.checkErrors();
@@ -243,10 +393,10 @@ Vue.component("traffic-light-ma", {
       await httpPost("/call/aaa/stop_session_radius", session.params, true);
       const response = await this.getOnlineSession(session.params, session);
       if (response && response.data.length !== 0) {
-        this.result("Сессия не сбросилась", "red-light");
+        this.result(`Сессия не сбросилась`, "red-light");
         return false;
       } else {
-        this.result("Сброс сессии прошел успешно");
+        this.result(`Сброс сессии прошел успешно`);
         this.testCable();
         return true;
       }
@@ -261,11 +411,7 @@ Vue.component("traffic-light-ma", {
             (a) => parseAccount(a.account) == parseAccount(this.accountId)
           );
           if (!agreement) return [];
-          if (
-            this.lbsvAccount.type == 1 &&
-            agreement.services.internet.vgroups > 1
-          )
-            return [];
+          if ( this.lbsvAccount.type == 1 /*|| agreement.services.internet.vgroups > 1*/ ) return [];
           agreement.services.internet.vgroups.forEach((service) => {
             if (!service.isSession || service.status == 10) return;
             sessionParams.push({
@@ -276,7 +422,7 @@ Vue.component("traffic-light-ma", {
               descr: service.descr,
             });
           });
-          return sessionParams;
+          return sessionParams[0]?[sessionParams[0]]:[];//first only
         },
         foris: () => {
           return this.forisResources.internet
@@ -334,7 +480,7 @@ Vue.component("traffic-light-ma", {
         const errorMessage = await this.loadAuthLog();
         if (errorMessage)
           this.result(errorMessage, "orange-light", this.lbsvAccount);
-        else this.result("Логин и пароль верны");
+        else this.result(`Логин и пароль верны`);
       }
     },
     async loadAuthLog() {
@@ -424,14 +570,11 @@ Vue.component("traffic-light-ma", {
         });
         cableLen.sort();
         if (cableLen[cableLen.length - 1] - cableLen[0] > 5) {
-          this.result(
-            "Расхождение в длине пар кабеля, превышающее 5 метров",
-            "red-light"
-          );
+          this.result(`Расхождение в длине пар кабеля, превышающее 5 метров`, "red-light");
           return;
         }
         if (cableLen[cableLen.length - 1] == 0) {
-          this.result("Кабель не обнаружен", "red-light");
+          this.result(`Кабель не обнаружен`, "red-light");
           return;
         }
         if (
@@ -439,12 +582,9 @@ Vue.component("traffic-light-ma", {
           this.activeSessions[0] &&
           this.activeSessions[0].data.length == 0
         ) {
-          this.result(
-            "Линка нет, сессии нет, кабель-тест пройден успешно",
-            "red-light"
-          );
+          this.result(`Линка нет, сессии нет, кабель-тест пройден успешно`, "red-light");
         }
-        this.result("Кабель-тест пройден успешно");
+        this.result(`Кабель-тест пройден успешно`);
         this.checkErrors();
       });
     },
@@ -463,10 +603,7 @@ Vue.component("traffic-light-ma", {
     checkSpeed() {
       if (this.portStatus.IF_OPER_STATUS) {
         if (parseInt(this.portStatus.IF_SPEED) == 10) {
-          this.result(
-            `Скорость порта ${this.portStatus.IF_SPEED}`,
-            "orange-light"
-          );
+          this.result(`Скорость порта ${this.portStatus.IF_SPEED}`, "orange-light");
         } else {
           this.result(`Скорость порта ${this.portStatus.IF_SPEED}`);
         }
@@ -570,7 +707,7 @@ Vue.component("traffic-light-ma", {
       if (!this.lastMac || !this.attachedMac) return;
       if (this.attachedMac == "0000.0000.0000") {
         this.result(`Последний MAC на порту: ${this.lastMac}`);
-        this.result("Проблем не обнаружено", "green-light");
+        this.result(`Проблем не обнаружено`, "green-light");
         this.test = false;
         return;
       }
@@ -585,20 +722,14 @@ Vue.component("traffic-light-ma", {
         this.macs.attached.includes(l.toLowerCase())
       );
       if (successEqual) {
-        this.result(
-          `Последний MAC на порту: ${last};\nMAC в биллинге: ${last}`
-        );
-        this.result("Проблем не обнаружено", "green-light");
+        this.result(`Последний MAC на порту: ${last};\nMAC в биллинге: ${last}`);
+        this.result(`Проблем не обнаружено`, "green-light");
       } else {
-        this.result(
-          `Последний MAC на порту: ${this.lastMac};\nданный MAC не зарегистрирован в биллинге.`,
-          "orange-light",
-          {
-            last: this.LastMac,
-            attached: this.attachedMac,
-            account: this.account,
-          }
-        );
+        this.result(`Последний MAC на порту: ${this.lastMac};\nданный MAC не зарегистрирован в биллинге.`, "orange-light", {
+          last: this.LastMac,
+          attached: this.attachedMac,
+          account: this.account,
+        });
       }
       this.test = false;
     },
