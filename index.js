@@ -22,7 +22,8 @@
 
 //fix get_params 1365
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/fix_session_1365.js',type:'text/javascript'}));
-
+//fix msisdn 1430
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/fix_msisdn_1430.js',type:'text/javascript'}));
 //GreetingCard
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/GreetingCard.js',type:'text/javascript'}));
 
