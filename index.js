@@ -52,12 +52,10 @@ Vue.component('FavEditOrRemoveModal',{
               </button-sq>
             </div>
             <div v-if="descrIsOver512" class="display-flex align-items-center gap-4px">
-              <input-error text="Не более 512 симоволов" class="padding-unset"/>
-              <SectionBorder>
-                <button-sq @click="sliceDescr512" :disabled="sliceDescr512Loading" class="size-20px min-width-20px" title="обрезать до 512">
-                  <IcIcon :name="sliceDescr512Loading?'loading rotating':'left-link'" color="#5642BD" size="16"/>
-                </button-sq>
-              </SectionBorder>
+              <input-error text="Не более 512 символов" class="padding-unset"/>
+              <button-sq @click="sliceDescr512" :disabled="sliceDescr512Loading" class="size-20px min-width-20px border-solid-1px-c8c7c7 border-radius-4px" title="обрезать до 512">
+                <IcIcon :name="sliceDescr512Loading?'loading rotating':'left-link'" color="#5642BD" size="16"/>
+              </button-sq>
             </div>
           </div>
           <button-main :label="btnChangeLabel" @click="saveNewDescr" :disabled="sliceDescr512Loading||loadingChangeDescr||newDescr==descr||descrIsOver512" buttonStyle="contained" size="full"/>
