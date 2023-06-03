@@ -25,6 +25,66 @@
 //fix msisdn 1430
 //document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/fix_msisdn_1430.js',type:'text/javascript'}));
 
+//fix port
+Vue.component('FavCard',{
+  template:`<WhiteBoxRoundedShadow name="FavCard" v-if="fav" class="display-flex flex-direction-column gap-4px">
+    <div class="font--15-600">{{title}}</div>
+    <link-block :text="name" @block-click="click" textClass="font--13-500" actionIcon="right-link" type="medium" class="height-24px padding-left-0"/>
+    <div class="bg-main-f2f3f7 border-radius-4px display-flex align-items-start justify-content-space-between padding-4px">
+      <info-text-sec :text="descr" :rowsMax="expandDescr?0:1" class="padding-unset"/>
+      <button-sq @click="expandDescr=!expandDescr" class="size-20px min-width-20px">
+        <IcIcon :name="expandDescr?'fa fa-chevron-up':'fa fa-chevron-down'" color="#5642BD"/>
+      </button-sq>
+    </div>
+    <div class="display-flex align-items-center justify-content-space-between">
+      <span class="font--12-400 tone-500">Дата добавления: {{create_date_local}}</span>
+      <button-sq @click="$refs.FavEditOrRemoveModal?.open()" :disabled="disabled" class="size-20px min-width-20px">
+        <IcIcon name="Dots3" :color="!disabled?'#5642BD':'#969FA8'"/>
+      </button-sq>
+    </div>
+    <FavEditOrRemoveModal ref="FavEditOrRemoveModal" v-bind="{fav_id}"/>
+  </WhiteBoxRoundedShadow>`,
+  props:{
+    fav_id:{type:[String,Number],required:true},
+    disabled:{type:Boolean,default:false}
+  },
+  data:()=>({
+    expandDescr:false,
+  }),
+  computed:{
+    ...mapGetters({
+      getResp:'favs/getResp',
+    }),
+    fav(){return this.getResp('favs',this.fav_id)},
+    create_date(){return this.fav?.create_date||''},//"2023-05-23T12:26:26.000+03:00",
+    create_date_local(){return new Date(Date.parse(this.create_date)).toLocaleDateString()},
+    //clear_date(){return this.fav?.clear_date||''},//"2023-06-22T12:26:26.000+03:00",
+    //delete_date(){return this.fav?.delete_date||''},//null,
+    title(){return this.fav?.object_type||''},//"ne",
+    name(){return this.fav?.object_name||''},//"ETH_54KR_00340_14",
+    descr(){return this.fav?.description||''},//"network-element-ETH_54KR_00340_14",
+    object_id(){return this.fav?.object_id||''},//"9157470089313556000",
+    path(){return this.fav?.url||''},//"/network-element-ETH_54KR_00340_14",
+    //first_click_date(){return this.fav?.first_click_date||''},//"2023-05-23T14:45:11.000+03:00",
+    //last_click_date(){return this.fav?.last_click_date||''},//"2023-05-23T14:45:11.000+03:00",
+    //click_count(){return this.fav?.click_count||0},//1
+  },
+  methods:{
+    ...mapActions({
+      doFavClickLog:'favs/doFavClickLog',
+    }),
+    click(){
+      const {fav_id,path,object_id}=this;
+      this.doFavClickLog({fav_id})
+      if(path){
+        this.$router.push(/^PORT-/i.test(object_id)?`/${encodeURIComponent(object_id)}`:path);
+      }else{
+        this.$router.push({name:'search',params:{text:object_id}})
+      };
+    },
+  },
+});
+
 //add btn border
 Vue.component('FavEditOrRemoveModal',{
   template:`<modal-container-custom name="FavEditOrRemoveModal" ref="modal" :footer="false" @close="onClose" :wrapperStyle="{'min-height':'auto','margin-top':'4px'}">
