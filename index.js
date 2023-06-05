@@ -30,10 +30,12 @@ Vue.component('port-info-v1',{
   template:`<link-block :icon="icon" :text="ifName" :textSub="textSub" textSubClass="font--13-500 tone-500" @click="toPort" actionIcon="right-link" type="medium" class="padding-left-0">
     <button-sq slot="prefix"" @click="getPortStatus">
       <div class="display-flex flex-direction-column align-items-center justify-content-space-between gap-2px">
-        <span class="font--10-400 display-flex gap-2px tone-500">{{ifSpeedText}}</span>
+        <div class="font--10-400 display-flex gap-2px tone-500 min-height-13px">{{ifSpeedText}}</div>
         <div v-if="loading.port_status||loading_status" class="ic-20 ic-loading rotating"></div>
         <div v-else class="ic-20 border-radius-4px" :class="'ic-'+icon+' '+led"></div>
-        <span v-if="errors.value" class="font--10-400 display-flex gap-2px tone-500">Err:<span :class="errors.class">{{errors.value}}</span></span>
+        <div class="font--10-400 display-flex gap-2px tone-500 min-height-13px">
+          <template v-if="errors.value">Err:<span :class="errors.class">{{errors.value}}</span></template>
+        </div>
       </div>
     </button-sq>
     <span slot="postfix" class="tone-500 display-flex align-items-center gap-16px">
