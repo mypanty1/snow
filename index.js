@@ -22,9 +22,9 @@
 
 //fix get_params 1365
 //document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/fix_session_1365.js',type:'text/javascript'}));
-//fix msisdn 1430
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/fix_msisdn_1430.js',type:'text/javascript'}));
 
+//add speed
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/port-info-v1_add_speed.js',type:'text/javascript'}));
 //disable initial port status
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/free-ports-list_disable_initial.js',type:'text/javascript'}));
 
