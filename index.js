@@ -25,6 +25,9 @@
 //fix msisdn 1430
 //document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/fix_msisdn_1430.js',type:'text/javascript'}));
 
+//disable initial port status
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/free-ports-list_disable_initial.js',type:'text/javascript'}));
+
 //add speed
 Vue.component('port-info-v1',{
   template:`<link-block :icon="icon" :text="ifName" :textSub="textSub" textSubClass="font--13-500 tone-500" @click="toPort" actionIcon="right-link" type="medium" class="padding-left-0">
