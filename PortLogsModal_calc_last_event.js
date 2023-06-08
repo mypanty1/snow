@@ -81,7 +81,21 @@ Vue.component("PortLogsModal",{
             state:!!isLinkUp,
           });
         }else if(!index){
-          const last=rows.find(({logDate,portIsFinded,isLinkUp,isLinkDn})=>logDate&&portIsFinded&&(isLinkUp||isLinkDn))
+          const last=rows.find(({logDate,portIsFinded,isLinkUp,isLinkDn})=>logDate&&portIsFinded&&(isLinkUp||isLinkDn));
+          function now(){
+            const date=new Date();
+            const formatted=date?.toDateTimeString?date?.toDateTimeString():[
+              date.toLocaleDateString('ru',{year:'2-digit',month:'2-digit',day:'2-digit'}),
+              date.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit',second:'2-digit'})
+            ].join(' '); 
+            return {parsed:date.toISOString(),time:date.getTimeAlias(),date,formatted};
+          };
+          const {formatted:formatted0,time:time0}=now();
+          events.push({
+            time:time0,
+            date:formatted0,
+            state:!!last?.isLinkUp,
+          });
           events.push({
             time,
             date:formatted,
