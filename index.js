@@ -26,6 +26,8 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/port-info-v1_add_speed.js',type:'text/javascript'}));
 //disable initial port status
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/free-ports-list_disable_initial.js',type:'text/javascript'}));
+//calc last event
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/PortLogsModal_calc_last_event.js',type:'text/javascript'}));
 
 //add opt.28
 Vue.component('SessionItem',{
