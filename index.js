@@ -30,6 +30,8 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/PortLogsModal_calc_last_event.js',type:'text/javascript'}));
 //fix error
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/equipment-iptv_fix_error.js',type:'text/javascript'}));
+//fix date and other
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/billing-info-modal_fix.js',type:'text/javascript'}));
 
 //add opt.82
 Vue.component('SessionItem',{
