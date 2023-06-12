@@ -28,8 +28,10 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/free-ports-list_disable_initial.js',type:'text/javascript'}));
 //calc last event
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/PortLogsModal_calc_last_event.js',type:'text/javascript'}));
+//fix error
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/equipment-iptv_fix_error.js',type:'text/javascript'}));
 
-//add opt.28
+//add opt.82
 Vue.component('SessionItem',{
   template:`<section name="SessionItem">
     <title-main v-bind="titleProps" textClass="font--13-500" class="margin-top-bottom--8px"/>
