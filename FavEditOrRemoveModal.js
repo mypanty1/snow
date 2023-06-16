@@ -8,7 +8,7 @@ Vue.component('FavEditOrRemoveModal',{
           <button-main :label="btnModeLabel" @click="editDescrMode=!editDescrMode" :disabled="loadingDeleteFav" size="full" class="justify-content-start">
             <IcIcon slot="icon" name="Pen" color="#BBC1C7"/>
           </button-main>
-          <button-main label="Удалить зпаись" @click="deleteThisFav" :disabled="loadingDeleteFav" size="full" class="justify-content-start">
+          <button-main label="Удалить запись" @click="deleteThisFav" :disabled="loadingDeleteFav" size="full" class="justify-content-start">
             <IcIcon slot="icon" name="Trashcan" color="#F95721"/>
           </button-main>
         </template>
