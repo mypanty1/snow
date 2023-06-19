@@ -91,7 +91,7 @@ Vue.component('SessionItem',{
       return (deviceStr.match(/.{2}/gi)||[]).map(b=>{
         b=b.padStart(2,0);
         try{//60910533888 - custom format
-          return unescape('%'+b);
+          return decodeURIComponent('%'+b);
         }catch(error){
           return b
         };
