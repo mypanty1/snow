@@ -13,16 +13,7 @@ Vue.component('SessionItem',{
         </div>
         
         <div class="display-flex flex-direction-column">
-          <info-value v-if="ip" label="IP" :value="ip" withLine class="padding-unset" data-ic-test="session_ip"/>
-          <info-value v-if="macIsValid" label="MAC" :value="mac" withLine class="padding-unset" data-ic-test="session_mac"/>
-          <info-text-sec v-if="macVendor" :text="macVendor" class="padding-unset text-align-right"/>
-          <info-value v-if="service_info" label="Сервис" :value="service_info" withLine class="padding-unset"/>
-          <info-value v-if="inner_vlan" label="C-Vlan" :value="inner_vlan" withLine class="padding-unset"/>
-          <info-value v-if="outer_vlan" label="S-Vlan" :value="outer_vlan" withLine class="padding-unset"/>
-          <info-value v-if="agent_circuit_id" label="Opt.82 Порт" :value="agent_circuit_id" withLine class="padding-unset"/>
-          <info-value v-if="agent_remote_id" label="Opt.82 Коммутатор" :value="agent_remote_id" withLine class="padding-unset"/>
-          <info-text-sec v-if="deviceMacVendor" :text="deviceMacVendor" class="padding-unset text-align-right"/>
-          <info-value v-if="brasIpOrHostName" label="BRAS" :value="brasIpOrHostName" withLine class="padding-unset" data-ic-test="session_nas"/>
+          <component v-for="([is,props],key) of sessionInfo" :key="key" :is="is" v-bind="props" class="padding-unset"/>
         </div>
         <div class="display-flex justify-content-space-between gap-4px margin-bottom-8px">
           <button-main @click="$refs.SessionHistoryModal.open()" button-style="outlined" :disabled="false" icon="history" label="История" loading-text="" size="large" data-ic-test="session_history_btn" />
@@ -118,6 +109,22 @@ Vue.component('SessionItem',{
     macIsValid(){return this.mac&&this.mac!=='0000.0000.0000'},
     macVendor(){return this.ouis[this.mac]},
     deviceMacVendor(){return this.ouis[this.remote_id_mac]},
+    isGuest(){return this.session?.dbsessid&&!this.session?.u_id},
+    sessionInfo(){
+      const {ip,macIsValid,mac,macVendor,service_info,inner_vlan,outer_vlan,agent_circuit_id,agent_remote_id,deviceMacVendor,brasIpOrHostName}=this;
+      return [
+        ip                &&  ['info-value',    {label:'IP',                value:ip,               withLine:true}],
+        macIsValid        &&  ['info-value',    {label:'MAC',               value:mac,              withLine:true}],
+        macVendor         &&  ['info-text-sec', {text:macVendor,            class:'text-align-right'}],
+        service_info      &&  ['info-value',    {label:'IP',                value:service_info,     withLine:true}],
+        inner_vlan        &&  ['info-value',    {label:'C-Vlan',            value:inner_vlan,       withLine:true}],
+        outer_vlan        &&  ['info-value',    {label:'S-Vlan',            value:outer_vlan,       withLine:true}],
+        agent_circuit_id  &&  ['info-value',    {label:'Opt.82 Порт',       value:agent_circuit_id, withLine:true}],
+        agent_remote_id   &&  ['info-value',    {label:'Opt.82 Коммутатор', value:agent_remote_id,  withLine:true}],
+        deviceMacVendor   &&  ['info-text-sec', {text:deviceMacVendor,      class:'text-align-right'}],
+        brasIpOrHostName  &&  ['info-value',    {label:'BRAS',              value:brasIpOrHostName, withLine:true}],
+      ].filter(v=>v);
+    },
   },
   methods:{
     parseIp(value=''){
