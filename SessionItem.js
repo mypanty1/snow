@@ -7,7 +7,7 @@ Vue.component('SessionItem',{
     <div v-else-if="session" class="margin-left-16px margin-right-16px display-flex flex-direction-column gap-4px">
       <message-el v-if="isError" :text="errorText" type="warn" box/>
       <template v-else>
-        <message-el :text="!start?'Оффлайн':('Онлайн c '+(startLocal||start))" :type="!start?'warn':'success'" box/>
+        <message-el :text="!start?'Оффлайн':('Онлайн c '+startLocal)" :type="!start?'warn':'success'" box/>
         <div v-if="sessionid" class="display-flex align-items-center justify-content-center">
           <span class="font-size-12px">{{sessionid}}</span>
         </div>
@@ -100,10 +100,10 @@ Vue.component('SessionItem',{
     update_time(){return this.session?.update_time||''},
     startLocal(){
       const {start,update_time}=this;
-      const time=update_time||start;
-      if(!time){return};
-      const date=new Date(time);
-      if(date=='Invalid Date'){return time};
+      const session_date=/*update_time||*/start;
+      if(!session_date){return};
+      const date=new Date(session_date);
+      if(date=='Invalid Date'){return session_date};
       const offset=new Date().getTimezoneOffset()/-60;
       date.setHours(date.getHours()-3+offset);
       return Date.prototype.toDateTimeString?date.toDateTimeString():date.toLocaleString();
