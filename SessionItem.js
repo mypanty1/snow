@@ -97,11 +97,13 @@ Vue.component('SessionItem',{
     outer_vlan(){return this.session?.outer_vlan||''},
     service_info(){return this.session?.service_info||''},
     start(){return this.session?.start||''},
+    update_time(){return this.session?.update_time||''},
     startLocal(){
-      const {start}=this;
-      if(!start){return};
-      const date=new Date(start);
-      if(date=='Invalid Date'){return start};
+      const {start,update_time}=this;
+      const time=update_time||start;
+      if(!time){return};
+      const date=new Date(time);
+      if(date=='Invalid Date'){return time};
       const offset=new Date().getTimezoneOffset()/-60;
       date.setHours(date.getHours()-3+offset);
       return Date.prototype.toDateTimeString?date.toDateTimeString():date.toLocaleString();
