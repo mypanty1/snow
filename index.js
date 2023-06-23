@@ -24,8 +24,10 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/FavBtnLinkBlock_FavBtnDel.js',type:'text/javascript'}));
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SessionItem.js',type:'text/javascript'}));
 
-
-
+//hidde deprecated
+Vue.component('account-iptv-code',{
+  template:`<section name="account-iptv-code" hidden></section>`,
+});
 
 
 
