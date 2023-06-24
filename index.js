@@ -30,17 +30,8 @@ Vue.component("account-block-history", {
   template:`<CardBlock name="account-block-history">
     <title-main text="История блокировок" @open="open = !open" />
     <div v-if="open">
-      <div v-if="history.text">
-        <devider-line />
-        <info-list :text='history.text'/>
-      </div>
       <div v-else-if="history" class="list-group list-group-flush">
-        <template v-for="row in history.rows">
-          <devider-line />
-          <info-list v-if='row.timefrom || row.timeto' icon='error' :text='`${row.timefrom} - ${row.timeto}`'/>
-          <info-list v-if='row.vglogin || row.agrmnum' :text='row.vglogin' :comment='`(${row.agrmnum})`' style='margin-left: 30px'/>
-          <info-list :text='row.type' style='margin-left: 30px'/>
-        </template>
+        
       </div>
     </div>
   </CardBlock>`,
@@ -49,9 +40,7 @@ Vue.component("account-block-history", {
   },
   data: () => ({
     open: false,
-    history:{
-      rows:[],
-    },
+    history:{},
   }),
 });
 
