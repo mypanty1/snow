@@ -24,9 +24,35 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/FavBtnLinkBlock_FavBtnDel.js',type:'text/javascript'}));
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SessionItem.js',type:'text/javascript'}));
 
-//hidde deprecated
-Vue.component('account-iptv-code-dis',{
-  template:`<section name="account-iptv-code" hidden></section>`,
+
+//hide deprecated
+Vue.component("account-block-history", {
+  template:`<CardBlock name="account-block-history">
+    <title-main text="История блокировок" @open="open = !open" />
+    <div v-if="open">
+      <div v-if="history.text">
+        <devider-line />
+        <info-list :text='history.text'/>
+      </div>
+      <div v-else-if="history" class="list-group list-group-flush">
+        <template v-for="row in history.rows">
+          <devider-line />
+          <info-list v-if='row.timefrom || row.timeto' icon='error' :text='`${row.timefrom} - ${row.timeto}`'/>
+          <info-list v-if='row.vglogin || row.agrmnum' :text='row.vglogin' :comment='`(${row.agrmnum})`' style='margin-left: 30px'/>
+          <info-list :text='row.type' style='margin-left: 30px'/>
+        </template>
+      </div>
+    </div>
+  </CardBlock>`,
+  props: {
+    //history: { type: Object, required: true },
+  },
+  data: () => ({
+    open: false,
+    history:{
+      rows:[],
+    },
+  }),
 });
 
 
