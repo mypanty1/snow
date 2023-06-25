@@ -26,7 +26,7 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 
 
 //hide deprecated
-Vue.component("account-block-history", {
+Vue.component("account-block-history-dis", {
   template:`<CardBlock name="account-block-history">
     <title-main text="История блокировок" @open="open = !open" />
     <div v-if="open">
