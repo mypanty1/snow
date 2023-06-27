@@ -98,10 +98,12 @@ Vue.component('SessionItem',{
     service_info(){return this.session?.service_info||''},
     start(){return this.session?.start||''},
     update_time(){return this.session?.update_time||''},
+    is_xRad(){return !!this.session?.dbsessid},
     startLocal(){
-      const {start,update_time}=this;
+      const {is_xRad,start,update_time}=this;
       const session_date=/*update_time||*/start;
       if(!session_date){return};
+      if(!is_xRad){return session_date};
       const date=new Date(session_date);
       if(date=='Invalid Date'){return session_date};
       const offset=new Date().getTimezoneOffset()/-60;
