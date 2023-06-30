@@ -120,7 +120,7 @@ Vue.component('SessionItem',{
         ip                &&  ['info-value',    {label:'IP',                value:ip,               withLine:true}],
         macIsValid        &&  ['info-value',    {label:'MAC',               value:mac,              withLine:true}],
         macVendor         &&  ['info-text-sec', {text:macVendor,            class:'text-align-right'}],
-        service_info      &&  ['info-value',    {label:'IP',                value:service_info,     withLine:true}],
+        service_info      &&  ['info-value',    {label:'Сервис',                value:service_info,     withLine:true}],
         inner_vlan        &&  ['info-value',    {label:'C-Vlan',            value:inner_vlan,       withLine:true}],
         outer_vlan        &&  ['info-value',    {label:'S-Vlan',            value:outer_vlan,       withLine:true}],
         agent_circuit_id  &&  ['info-value',    {label:'Opt.82 Порт',       value:agent_circuit_id, withLine:true}],
