@@ -126,10 +126,10 @@ Vue.component('events-item',{
       const object_name=_object.replace(/---/g,'_');
       const isSubObject=object_name&&(element_name!=object_name);
       return [
-        ['СЭ',        element_name,!!element_name],
-        [object_type, object_name,!!isSubObject],
-        ['Событие',   object_event]
-      ]
+        !!element_name&&['СЭ',element_name,!!element_name],
+        isSubObject&&['Объект',object_name,!!object_name],
+        !!object_event&&[object_type||'Событие',object_event]
+      ].filter(v=>v);
     },
     details(){
       const {details:{siebel_id,service_type,subject,location}={}}=this.event;
