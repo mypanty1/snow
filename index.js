@@ -24,24 +24,7 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SessionItem.js',type:'text/javascript'}));
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/events-item.js',type:'text/javascript'}));
 
-//hide deprecated
-Vue.component("account-block-history-dis", {
-  template:`<CardBlock name="account-block-history">
-    <title-main text="История блокировок" @open="open = !open" />
-    <div v-if="open">
-      <div v-else-if="history" class="list-group list-group-flush">
-        
-      </div>
-    </div>
-  </CardBlock>`,
-  props: {
-    //history: { type: Object, required: true },
-  },
-  data: () => ({
-    open: false,
-    history:{},
-  }),
-});
+
 
 
 
