@@ -125,10 +125,9 @@ Vue.component('events-item',{
       const [n,object_type]=_n.split(/-/);
       const object_name=_object.replace(/---/g,'_');
       return [
-        ['СЭ',          element_name, 'action'],
-        ['Тип объекта', object_type           ],
-        ['Имя',         object_name,  'action'],
-        ['Событие',     object_event          ]
+        ['СЭ',        element_name,'action'],
+        [object_type, object_name,element_name!=object_name?'action':false],
+        ['Событие',   object_event]
       ]
     },
     details(){
