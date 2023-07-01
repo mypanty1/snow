@@ -24,8 +24,8 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SessionItem.js',type:'text/javascript'}));
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/events-item.js',type:'text/javascript'}));
 
-
-
+//SideBarExtModal
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SideBarExtModal.js',type:'text/javascript'}));
 
 
 
