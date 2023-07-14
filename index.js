@@ -20,7 +20,7 @@
   }):null,1000);
 }())*/
 
-document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/FavEditOrRemoveModal.js',type:'text/javascript'}));
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/Fav.js',type:'text/javascript'}));
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SessionItem.js',type:'text/javascript'}));
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/events-item.js',type:'text/javascript'}));
 
