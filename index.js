@@ -29,8 +29,8 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SideBarExtModal.js',type:'text/javascript'}));
 //percent
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/PortsMapLogsPortLinkEventsChart.js',type:'text/javascript'}));
-
-
+//ForisContent
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/ForisContent.js',type:'text/javascript'}));
 
 
 
