@@ -53,31 +53,31 @@ Vue.component('AppHeader3',{
   template:`<header name="AppHeader3" class="app-header">
      <label for="searchInput" class="app-header__search">
         <div @click="search" class="display-flex justify-content-center align-items-center">
-          <IcIcon name="ic-search" color="#676767" class="font-size-24px"/>
+          <IcIcon name="search" color="#676767" class="font-size-24px"/>
         </div>
-        <input id="searchInput" class="app-header__input" v-model="searchText" @keyup.self.enter="search" placeholder="Поиск"/>
-        <div v-if="!!searchText" @click="clear" class="display-flex justify-content-center align-items-center">
-          <IcIcon name="ic-close-1" color="#676767" class="font-size-24px"/>
+        <input id="searchInput" class="app-header__input" v-model="sample" @keyup.self.enter="search" placeholder="Поиск"/>
+        <div v-if="!!sample" @click="clear" class="display-flex justify-content-center align-items-center">
+          <IcIcon name="close-1" color="#676767" class="font-size-24px"/>
         </div>
      </label>
      <div class="app-header__buttons">
-        <button-sq @click="toMap">
-          <IcIcon name="ic-pin-1" color="#676767" class="font-size-24px"/>
+        <button-sq @click="$router.push({name:'map'})">
+          <IcIcon name="pin-1" color="#676767" class="font-size-24px"/>
         </button-sq>
-        <button-sq @click="toggleMenu">
-          <IcIcon name="ic-menu" color="#676767" class="font-size-24px"/>
+        <button-sq @click="$emit('toggle-menu')">
+          <IcIcon name="menu" color="#676767" class="font-size-24px"/>
         </button-sq>
-        <button-sq @click="toggleMenu">
-          <IcIcon name="far fa-question-circle" color="#676767" class="font-size-24px"/>
+        <button-sq @click="$router.push({name:'favs'})">
+          <IcIcon name="BookmarkAdd" color="#676767" class="font-size-24px"/>
         </button-sq>
      </div>
   </header>`,
   data:()=>({
-    searchText:'',
+    sample:'',
   }),
   methods:{
     search(){
-      const text=this.searchText.trim();
+      const text=this.sample.trim();
       if(!text){return};
       const route={name:'search',params:{text}};
       if(this.$route.name==='search') {
@@ -87,14 +87,8 @@ Vue.component('AppHeader3',{
       }
       this.clear();
     },
-    toggleMenu() {
-      this.$emit('toggle-menu');
-    },
-    toMap(){
-      this.$router.push({ name: 'map' });
-    },
     clear(){
-      this.searchText = '';
+      this.sample = '';
     },
   },
 });
