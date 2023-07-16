@@ -116,7 +116,7 @@ Vue.component('AppHeader3',{
         </div>
         <div class="position-relative">
           <input id="searchInput" class="app-header__input" v-model="sample" @keyup.self.enter="search" placeholder="Поиск"/>
-          <SearchSuggest @onSelect="onSelect" class="position-absolute" style="top:44px;left:24px;"/>
+          <SearchSuggest :sample="sample" @onSelect="onSelect" class="position-absolute" style="top:44px;left:24px;"/>
         </div>
         <div v-if="!!sample" @click="clear" class="display-flex justify-content-center align-items-center">
           <IcIcon name="close-1" color="#676767" class="font-size-24px"/>
