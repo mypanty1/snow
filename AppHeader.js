@@ -71,7 +71,7 @@ Vue.component('SearchSuggest',{
       ['MAC',/[0-9a-f]{4}[бю.,./][0-9a-f]{4}[бю.,./][0-9a-f]{4}/gi,(v)=>v.replace(/[бю.,./]/gi,'.')],
       ['ЛС',/\d(-|)\d{3}(-|)\d{7}/g],
       ['ЛС',/2\d{11}/g],
-      ['CPE',/(S|Q|F|T|3|Z)[0-9a-z]{11,14}/g,(v)=>v.toUpperCase()],
+      ['CPE',/(S|Q|F|T|3|Z)[0-9A-Z]{11,14}/gi,(v)=>v.toUpperCase()],
       //['ТЛФ',/(+|)(7|8)\d{10}/g,getPhoneWithPlus],
       //['ТЛФ',/(+|)(7|8)-\d{3}-\d{7}/g,getPhoneWithPlus],
       ['PL',/PL_\d{2}_\d{3,8}/gi,(v)=>v.toUpperCase()],//sample.match(/PL_(?<region_id>\d{1,2})_/i)
