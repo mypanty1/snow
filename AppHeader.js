@@ -151,3 +151,10 @@ Vue.component('AppHeader3',{
   },
 });
 
+if(app){
+  app.$forceUpdate();
+};
+
+
+
+
