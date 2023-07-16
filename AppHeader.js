@@ -65,9 +65,9 @@ Vue.component('SearchSuggest',{
   data:()=>({
     matchers:[
       ['СЗ',/1-\d{12}/g],
-      ['IP',/(\d{1,3}[бю.,./])(3)\d{1,3}/i,(v)=>v.replace(/[бю.,./]/gi,'.')],
+      ['IP',/(\d{1,3}[бю.,./])(3)\d{1,3}/gi,(v)=>v.replace(/[бю.,./]/gi,'.')],
       ['IP',/\d{1,3}[бю.,./]\d{1,3}[бю.,./]\d{1,3}[бю.,./]\d{1,3}/gi,(v)=>v.replace(/[бю.,./]/gi,'.')],
-      ['MAC',/[0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}/i,(v)=>v.replace(/[:-;_]/gi,':').match(/[0-9a-f]{2}/gi).join(':').toUpperCase()],
+      ['MAC',/[0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}/gi,(v)=>v.replace(/[:-;_]/gi,':').match(/[0-9a-f]{2}/gi).join(':').toUpperCase()],
       ['MAC',/[0-9a-f]{4}[бю.,./][0-9a-f]{4}[бю.,./][0-9a-f]{4}/gi,(v)=>v.replace(/[бю.,./]/gi,'.').match(/[0-9a-f]{2}/gi).join(':').toUpperCase()],
       ['ЛС',/\d-\d{3}-\d{7}/g],
       ['ЛС',/\d{11}/g],
@@ -81,16 +81,16 @@ Vue.component('SearchSuggest',{
       ['Порт',/PORT-([A-ZА]{1,4})(-|_)((\d{2}|\D{2})|(\d{2}\D{2}|\D{2}\d{2})|((\d{2}|\D{2})(-|_)(\d{2}|\D{2})))(-|_)\d{3,7}(-|_)\d{1,3}[/]\d+/gi,(v)=>v.toUpperCase()],
       ['СЭ',/[A-ZА]{1,4}(-|_)((\d{2}|\D{2})|(\d{2}\D{2}|\D{2}\d{2})|((\d{2}|\D{2})(-|_)(\d{2}|\D{2})))(-|_)(\d{3,7})(-|_)\d+/gi,(v)=>v.toUpperCase()],
       ['ШДУ',/(L|CU|ECU)(-|_)((\d{2}|\D{2})|(\d{2}\D{2}|\D{2}\d{2})|((\d{2}|\D{2})(-|_)(\d{2}|\D{2})))(-|_)(\d{3,7})(-|_)\d+/gi,(v)=>v.toUpperCase()],
-      ['lat/lon',/\d{1,3}\.\d{4,},\s?\d{1,3}\.\d{4,}/]
+      ['lat/lon',/\d{1,3}\.\d{4,},\s?\d{1,3}\.\d{4,}/g]
     ]
   }),
   computed:{
     items(){
       const {sample,matchers}=this;
       return matchers.reduce((items,[label,regexp,modifer=(v)=>(v)])=>{
-        const item=sample.match(regexp)?.[0];
-        if(item){
-          items.push([label,modifer(item)]);
+        const matches=sample.match(regexp);
+        if(matches?.length){
+          items.push(...matches.map(item=>[label,modifer(item)]));
         };
         return items
       },[]);
