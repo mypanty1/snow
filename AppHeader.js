@@ -1,11 +1,11 @@
 Vue.component('app-header',{
   template:`<div class="display-contents">
-    <AppHeader3 v-if="username=='mypanty1'" v-on="$listeners"/>
+    <AppHeader3 v-if="isApp" v-on="$listeners"/>
     <AppHeader2 v-else v-on="$listeners"/>
   </div>`,
   computed:{
     ...mapGetters({
-      username:'main/username',
+      isApp:'app/isApp',
     }),
   }
 });
