@@ -52,9 +52,9 @@ Vue.component('AppHeader2', {
 Vue.component('SearchSuggest',{
   template:`<div name="SearchSuggest" style="z-index:40000;">
     <div class="position-relative">
-      <div class="display-flex flex-direction-column ymaps-2-1-79-search__suggest">
-        <div v-for="([label,item,modifer],key) of items" :key="key" @click="select(item,modifer)" class="ymaps-2-1-79-suggest-item">
-          <span class="ymaps-2-1-79-search__suggest-item"><span class="ymaps-2-1-79-search__suggest-highlight">{{label}}: </span>{{item}}</span>
+      <div class="display-flex flex-direction-column gap-2px ymaps-2-1-79-search__suggest padding-4px border-radius-8px" style="background:#ffffffaa;">
+        <div v-for="([label,item,modifer],key) of items" :key="key" @click="select(item,modifer)" class="ymaps-2-1-79-suggest-item line-height-20px border-radius-4px padding-left-right-4px" style="border:1px solid #676767;">
+          <span class="ymaps-2-1-79-search__suggest-item font--13-500 white-space-pre"><span class="ymaps-2-1-79-search__suggest-highlight">{{label}}: </span>{{item}}</span>
         </div>
       </div>
     </div>
@@ -71,7 +71,7 @@ Vue.component('SearchSuggest',{
       ['MAC',/[0-9a-f]{4}[бю.,./][0-9a-f]{4}[бю.,./][0-9a-f]{4}/gi,(v)=>v.replace(/[бю.,./]/gi,'.')],
       ['ЛС',/\d(-|)\d{3}(-|)\d{7}/g],
       ['ЛС',/2\d{11}/g],
-      ['CPE',/(S|Q|F|T|3|Z)[\w|\d]{11,14}/g],
+      ['CPE',/(S|Q|F|T|3|Z)[0-9a-z]{11,14}/g,(v)=>v.toUpperCase()],
       //['ТЛФ',/(+|)(7|8)\d{10}/g,getPhoneWithPlus],
       //['ТЛФ',/(+|)(7|8)-\d{3}-\d{7}/g,getPhoneWithPlus],
       ['PL',/PL_\d{2}_\d{3,8}/gi,(v)=>v.toUpperCase()],//sample.match(/PL_(?<region_id>\d{1,2})_/i)
@@ -116,7 +116,7 @@ Vue.component('AppHeader3',{
         </div>
         <div class="position-relative">
           <input id="searchInput" class="app-header__input" v-model="sample" @keyup.self.enter="search" placeholder="Поиск"/>
-          <SearchSuggest :sample="sample" @onSelect="onSelect" class="position-absolute" style="top:44px;left:24px;"/>
+          <SearchSuggest :sample="sample" @onSelect="onSelect" class="position-absolute" style="top:36px;"/>
         </div>
         <div v-if="!!sample" @click="clear" class="display-flex justify-content-center align-items-center">
           <IcIcon name="close-1" color="#676767" class="font-size-24px"/>
@@ -155,6 +155,8 @@ Vue.component('AppHeader3',{
     }
   },
 });
+
+
 
 
 
