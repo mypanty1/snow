@@ -104,7 +104,7 @@ Vue.component('SearchSuggest',{
 });
 
 Vue.component('AppHeader3',{
-  template:`<header name="AppHeader3" class="app-header">
+  template:`<header name="AppHeader3" class="app-header" style="background:#dddddd;">
      <label for="searchInput" class="app-header__search">
         <div @click="search" class="display-flex justify-content-center align-items-center">
           <IcIcon name="search" color="#676767" class="font-size-24px"/>
