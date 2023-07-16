@@ -1,6 +1,5 @@
 
 app.$router.beforeEach((to,from,next)=>{
-  console.log('beforeEach',{to,from})
   if(to.name=='search'){
     to.matched[0].components.default=Vue.component("SearchPage",{
       template:`<SearchPageContent v-bind="$props"/>`,
