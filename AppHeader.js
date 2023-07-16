@@ -97,7 +97,7 @@ Vue.component('SearchSuggest',{
     }
   },
   methods:{
-    select(item)){
+    select(item){
       this.$emit('onSelect',item)
     }
   },
