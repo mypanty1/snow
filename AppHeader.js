@@ -1,7 +1,7 @@
 Vue.component('app-header',{
   template:`<div class="display-contents">
     <AppHeader3 v-if="username=='mypanty1'" v-on="$listeners"/>
-    <AppHeader2 v-else @toggle-menu="$emit('toggle-menu')"/>
+    <AppHeader2 v-else v-on="$listeners"/>
   </div>`,
   computed:{
     ...mapGetters({
@@ -61,14 +61,14 @@ Vue.component('AppHeader3',{
         </div>
      </label>
      <div class="app-header__buttons">
+        <!--<button-sq @click="$router.push({name:'favs'})">
+          <IcIcon name="BookmarkAdd" color="#676767" class="font-size-24px"/>
+        </button-sq>-->
         <button-sq @click="$router.push({name:'map'})">
           <IcIcon name="pin-1" color="#676767" class="font-size-24px"/>
         </button-sq>
         <button-sq @click="$emit('toggle-menu')">
-          <IcIcon name="menu" color="#676767" class="font-size-24px"/>
-        </button-sq>
-        <button-sq @click="$router.push({name:'favs'})">
-          <IcIcon name="BookmarkAdd" color="#676767" class="font-size-24px"/>
+          <IcIcon name="menu ic-menu" color="#676767" class="font-size-24px"/>
         </button-sq>
      </div>
   </header>`,
