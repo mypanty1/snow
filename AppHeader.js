@@ -1,7 +1,7 @@
 Vue.component('app-header',{
   template:`<div class="display-contents">
-    <AppHeader3 v-if="username=='mypanty1'"/>
-    <AppHeader2 v-else/>
+    <AppHeader3 v-if="username=='mypanty1'" v-on="$listeners"/>
+    <AppHeader2 v-else @toggle-menu="$emit('toggle-menu')"/>
   </div>`,
   computed:{
     ...mapGetters({
