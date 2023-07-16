@@ -53,7 +53,7 @@ Vue.component('SearchSuggest',{
   template:`<div name="SearchSuggest" style="z-index:40000;">
     <div class="position-relative">
       <div class="display-flex flex-direction-column gap-2px ymaps-2-1-79-search__suggest padding-4px border-radius-8px" style="background:#ffffffaa;">
-        <div v-for="([label,item,modifer],key) of items" :key="key" @click="select(item,modifer)" class="ymaps-2-1-79-suggest-item line-height-20px border-radius-4px padding-left-right-4px" style="border:1px solid #676767;">
+        <div v-for="([label,item,modifer],key) of items" :key="key" @click="select(item,modifer)" class="ymaps-2-1-79-suggest-item line-height-20px border-radius-4px padding-left-right-4px cursor-pointer" style="border:1px solid #676767;">
           <span class="ymaps-2-1-79-search__suggest-item font--13-500 white-space-pre"><span class="ymaps-2-1-79-search__suggest-highlight">{{label}}: </span>{{item}}</span>
         </div>
       </div>
