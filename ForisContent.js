@@ -15,7 +15,7 @@ Vue.component('ForisServiceProduct',{
 Vue.component('ForisService',{
   template:`<div name="ForisService">
     <link-block v-bind="titleProps" action-icon="" type="medium"/>
-    <info-subtitle :text="service.msisdn"/>
+    <info-subtitle :text="'MSISDN: '+service.msisdn"/>
     <info-subtitle :text="service.tariff"/>
     <template v-if="service.type=='internet'">
       <info-subtitle v-if="service.auth_type||service.rate" :text="authAndSpeed"/>
