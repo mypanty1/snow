@@ -28,6 +28,72 @@ Vue.component('ServicesTypeHeader', {
   },
 });
 
+Vue.component('TabSelector',{
+  template:`<div name="TabSelector" class="display-flex align-items-center">
+    <slot name="prefix"></slot>
+    <template v-for="(item,index) of list_of_items">
+      <component v-if="item.is" :is="item.is" :key="item._index" v-bind="item" @click="selectItem(item)"/>
+      <button-main v-else :key="item._index" @click="selectItem(item)" :label="item.name" :disabled="item.disabled" :buttonStyle="selected?._index===item._index||(!selected&&!index)?'contained':'outlined'" size="full" style="height:24px;border-radius:unset;" v-bind="item.props"/>
+    </template>
+    <slot name="postfix"></slot>
+  </div>`,
+  props:{
+    items:{type:[Object,Array],default:()=>([])},
+  },
+  data:()=>({
+    selected:null,
+  }),
+  mounted(){
+    this.selectItem(this.list_of_items.find(({disabled})=>!disabled));
+  },
+  watch:{
+    'list_of_items'(list_of_items){
+      this.selectItem(list_of_items.find(({disabled,name})=>!disabled&&name==this.selected?.name)||list_of_items.find(({disabled})=>!disabled));
+    }
+  },
+  computed:{
+    list_of_items(){
+      return Object.entries(this.items).map(([_index,item])=>({...item,_index}))
+    }
+  },
+  methods:{
+    selectItem(item=null){
+      if(item?.disabled||this.disabled){return};
+      this.selected=item;
+      this.$emit('onSelect',item);
+    },
+  }
+});
+
+Vue.component('ForisPackageProduct', {
+  template:`<CardBlock name="ForisPackageProduct">
+    <title-main :text="package.packageProductName" @open="opened=!opened" :open="opened"/>
+    <template v-for="(service,i) of package.services">
+      <devider-line v-if="i" v-show="opened"/>
+      <ForisService v-show="opened" :service="service" :key="service.id"/>
+    </template>
+  </CardBlock>`,
+  props:{
+    package:{type:Object,default:()=>({})},
+  },
+  data:()=>({
+    opened:true
+  })
+});
+
+Vue.component('ForisPackages', {
+  template:`<CardBlock name="ForisPackages" class="mini-card margin-top-0">
+    <template v-for="(package,packageProductId,i) in packages">
+      <devider-line v-if="i"/>
+      <ForisPackageProduct :package="package" :key="packageProductId"/>
+    </template>
+  </CardBlock>`,
+  props:{
+    packages:{type:Object,default:()=>({})},
+    account:{type:Object,required:true},
+  },
+});
+
 Vue.component('ForisServiceProduct',{
   template:`<div name="ForisServiceProduct" class="display-contents">
     <info-text-sec :title="product.code" :title2="product.name" :rows="rows"/>
@@ -210,7 +276,7 @@ Vue.component('ForisResources', {
 
 });
 
-Vue.component('ForisContent',{//254704317703,254704348007
+Vue.component('ForisContent',{//254704317703,254704348007,254310071197
   template: `<section name="ForisContent" class="account-page">
     <CardBlock>
       <title-main :text="account.personal_account_number" :text2="account.msisdn?'Конвергент':''" text2Class="lbsv-account__convergent">
@@ -233,10 +299,7 @@ Vue.component('ForisContent',{//254704317703,254704348007
       <devider-line />
       <info-value icon="purse" :value="balance" type="extra" label="Баланс"/>
       <info-value icon="clock" :value="lastPayment" type="extra" label="Платеж" />
-      <!--
-      <link-block @block-click="$refs.billingInfoModal.open()" text="Информация в биллинге" icon="server" action-icon="expand" />
-      <billing-info-modal ref="billingInfoModal" :billing-info="billingInfo" :loading="loads.getForisAccountResources" />
-      -->
+      
       <template v-if="favBtnProps">
         <devider-line/>
         <FavBtnLinkBlock v-bind="favBtnProps"/>
@@ -249,7 +312,15 @@ Vue.component('ForisContent',{//254704317703,254704348007
       </title-main>
     </CardBlock>
     
-    <ForisResources :account="account" :resources="resources" :loading="loads.getForisAccountResources" :accessPoint="resps.getAccountAccessPoint" :accessPointLoading="loads.getAccountAccessPoint"/>
+    <CardBlock class="padding-left-right-16px">
+      <TabSelector :items="items" @onSelect="selected=$event" class="width-100-100">
+        <div slot="prefix" class="font--13-500 margin-right-4px">Группировка</div>
+      </TabSelector>
+    </CardBlock>
+    
+    <ForisResources v-if="selected?.name=='Услуги'" :account="account" :resources="resources" :loading="loads.getForisAccountResources" :accessPoint="resps.getAccountAccessPoint" :accessPointLoading="loads.getAccountAccessPoint"/>
+    <ForisPackages v-else-if="selected?.name=='Пакеты'" :account="account" :packages="packages"/>
+    <ForisServices v-else-if="selected?.name=='Куча'" :account="account" :services="services"/>
     
     <foris-account-block-history :history="resps.getForisAccountBlockHistory||[]"/>
   </section>`,
@@ -271,6 +342,12 @@ Vue.component('ForisContent',{//254704317703,254704348007
     next();
   },
   data:()=>({
+    selected:null,
+    items:[
+      {name:'Услуги'},
+      {name:'Пакеты'},
+      {name:'Куча'},
+    ],
     loads:{
       getForisAccountResources:false,
       getForisAccountPayments:false,
@@ -332,6 +409,21 @@ Vue.component('ForisContent',{//254704317703,254704348007
     resources(){
       const {internet=[],...other}=this.resps.getForisAccountResources||{};
       return {internet,...other}
+    },
+    services(){
+      return Object.values(this.resources).flat();
+    },
+    packages(){
+      return this.services.reduce((packages,service)=>{
+        const packageProduct=service.products.find(({service_parameter})=>(service_parameter||[]).find(({name})=>name=="Идентификационный номер продукта"));
+        const packageProductId=packageProduct.service_parameter.find(({name})=>name=="Идентификационный номер продукта")?.value;
+        const packageProductName=packageProduct.service_parameter.find(({name})=>name=="Наименование продукта")?.value;
+        if(packageProductId){
+          if(!packages[packageProductId]){packages[packageProductId]={packageProductId,packageProductName,services:[]}};
+          packages[packageProductId].services.push(service)
+        }
+        return packages
+      },{})
     },
     payment(){return this.resps.getForisAccountPayment},
     events(){return this.resps.getAccountEvents},
