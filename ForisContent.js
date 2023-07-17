@@ -52,7 +52,7 @@ Vue.component('ForisService',{
       <info-subtitle v-if="service.auth_type||service.rate" :text="authAndSpeed"/>
       <foris-login-pass class="margin-left-16px" :login-password="service.login" />
     </template>
-    <DropdownBlock icon="info" text="Скидки и сервисы" :title="{text2:service.products.length?service.products.length:'',text1Class:'font--13-500',text2Class:'font--13-500 tone-500'}">
+    <DropdownBlock icon="info" text="Скидки, услуги, сервисы" :title="{text2:service.products.length?service.products.length:'',text1Class:'font--13-500',text2Class:'font--13-500 tone-500'}">
       <template v-for="(product,i) of service.products">
         <devider-line/>
         <ForisServiceProduct :product="product" :key="i"/>
