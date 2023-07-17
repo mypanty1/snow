@@ -105,14 +105,17 @@ Vue.component('SearchSuggest',{
     items(){
       const {text,matchers}=this;
       if(!text){return []};
-      return matchers.reduce((items,[label,regexp,modifer=(v)=>(v),options={}])=>{
+      return Object.values(matchers.reduce((items,[label,regexp,modifer=(v)=>(v),options={}])=>{
         const matches=text.match(regexp);
         if(matches?.length){
-          items.push(...matches.map(item=>[label,modifer(item),options]));
+          for(const match of matches){
+            const value=modifer(match);
+            items[value]=[label,value,options]
+          }
         };
         return items
-      },[]);
-    }
+      },{}));
+    },
   },
   methods:{
     onSelect(value=''){
