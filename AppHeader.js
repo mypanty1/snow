@@ -66,38 +66,52 @@ Vue.component('SearchSuggestItem',{
 });
 
 Vue.component('SearchSuggest',{
-  template:`<div name="SearchSuggest" style="z-index:40000;">
-    <div class="position-relative">
-      <div v-if="items?.length" class="display-flex flex-direction-column gap-2px padding-4px border-radius-8px" style="background:#ffffffaa;">
+  template:`<div name="SearchSuggest" class="position-absolute inset-0" style="z-index:100;" v-if="sample&&show&&items?.length" @click.self.stop="show=!true">
+    <div class="position-absolute padding-4px border-radius-8px" style="background:#ffffffaa;max-height:80vh;overflow-y:auto;" :style="{top,left}">
+      <div class="display-flex flex-direction-column gap-2px">
         <SearchSuggestItem v-for="([label,value,options],key) of items" :key="key" v-bind="{label,value,options}" @onSelect="onSelect"/>
       </div>
     </div>
   </div>`,
   props:{
     sample:{type:String,default:''},
+    selector:{type:String,default:''},
   },
-  data(){
-    return {
-      matchers:[
-        ['СЗ',/1-\d{12}/g],
-        //['IP',/(\d{1,3}[бю.,./])(3)\d{1,3}/gi,(v)=>v.replace(/[бю.,./]/gi,'.')],
-        ['IP',/\d{1,3}[бю.,./]\d{1,3}[бю.,./]\d{1,3}[бю.,./]\d{1,3}/gi,(v)=>v.replace(/[бю.,./]/gi,'.')],
-        ['MAC',/[0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}/gi,(v)=>v.replace(/[:-;_]/gi,':').match(/[0-9a-f]{2}/gi).join(':').toUpperCase()],
-        ['MAC',/[0-9a-f]{4}[бю.,./][0-9a-f]{4}[бю.,./][0-9a-f]{4}/gi,(v)=>v.replace(/[бю.,./]/gi,'.').match(/[0-9a-f]{2}/gi).join(':').toUpperCase()],
-        ['ЛС',/2\d{11}/g],
-        ['ЛС',/[1-6]-\d{3}-\d{7}/g],
-        ['ЛС',/[1-6]\d{10}/g],
-        ['CPE',/(S|Q|F|T|3|Z)[0-9A-Z]{11,14}/gi,(v)=>v.toUpperCase()],
-        ['ТЛФ',/(\+|)(7|8)\d{10}/g,,{is:'account-call',propName:'phone',props:{style:'margin:unset !important;'}}],
-        ['ТЛФ',/(\+|)(7|8)-\d{3}-\d{7}/g,,{is:'account-call',propName:'phone',props:{style:'margin:unset !important;'}}],
-        ['PL',/PL_\d{2}_\d{3,8}/gi,(v)=>v.toUpperCase()],//sample.match(/PL_(?<region_id>\d{1,2})_/i)
-        ['SiteID',/\d{19}/g],
-        ['УОС',/(гств|пмп|атс|влс|скд|удтс|абк|му|ду|тдчс)(1|0){2}\d{2,8}\D{2,3}(_\d{2})?(-|_)\d{3,5}/g],
-        ['Порт',/PORT-([A-ZА]{1,4})(-|_)((\d{2}|\D{2})|(\d{2}\D{2}|\D{2}\d{2})|((\d{2}|\D{2})(-|_)(\d{2}|\D{2})))(-|_)\d{3,7}(-|_)\d{1,3}[/]\d+/gi,(v)=>v.toUpperCase()],
-        ['СЭ',/[A-ZА]{1,4}(-|_)((\d{2}|\D{2})|(\d{2}\D{2}|\D{2}\d{2})|((\d{2}|\D{2})(-|_)(\d{2}|\D{2})))(-|_)(\d{3,7})(-|_)\d+/gi,(v)=>v.toUpperCase()],
-        ['ШДУ',/(L|CU|ECU)(-|_)((\d{2}|\D{2})|(\d{2}\D{2}|\D{2}\d{2})|((\d{2}|\D{2})(-|_)(\d{2}|\D{2})))(-|_)(\d{3,7})(-|_)\d+/gi,(v)=>v.toUpperCase()],
-        ['lat/lon',/\d{1,3}\.\d{4,},\s?\d{1,3}\.\d{4,}/g]
-      ]
+  data:()=>({
+    matchers:[
+      ['СЗ',/1-\d{12}/g],
+      //['IP',/(\d{1,3}[бю.,./])(3)\d{1,3}/gi,(v)=>v.replace(/[бю.,./]/gi,'.')],
+      ['IP',/\d{1,3}[бю.,./]\d{1,3}[бю.,./]\d{1,3}[бю.,./]\d{1,3}/gi,(v)=>v.replace(/[бю.,./]/gi,'.')],
+      ['MAC',/[0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}[:-;_][0-9a-f]{2}/gi,(v)=>v.replace(/[:-;_]/gi,':').match(/[0-9a-f]{2}/gi).join(':').toUpperCase()],
+      ['MAC',/[0-9a-f]{4}[бю.,./][0-9a-f]{4}[бю.,./][0-9a-f]{4}/gi,(v)=>v.replace(/[бю.,./]/gi,'.').match(/[0-9a-f]{2}/gi).join(':').toUpperCase()],
+      ['ЛС',/2\d{11}/g],
+      ['ЛС',/[1-6]-\d{3}-\d{7}/g],
+      ['ЛС',/[1-6]\d{10}/g],
+      ['CPE',/(S|Q|F|T|3|Z)[0-9A-Z]{11,14}/gi,(v)=>v.toUpperCase()],
+      ['ТЛФ',/(\+|)(7|8)\d{10}/g,,{is:'account-call',propName:'phone',props:{style:'margin:unset !important;'}}],
+      ['ТЛФ',/(\+|)(7|8)-\d{3}-\d{7}/g,,{is:'account-call',propName:'phone',props:{style:'margin:unset !important;'}}],
+      ['PL',/PL_\d{2}_\d{3,8}/gi,(v)=>v.toUpperCase()],//sample.match(/PL_(?<region_id>\d{1,2})_/i)
+      ['SiteID',/\d{19}/g],
+      ['УОС',/(гств|пмп|атс|влс|скд|удтс|абк|му|ду|тдчс)(1|0){2}\d{2,8}\D{2,3}(_\d{2})?(-|_)\d{3,5}/g],
+      ['Порт',/PORT-([A-ZА]{1,4})(-|_)((\d{2}|\D{2})|(\d{2}\D{2}|\D{2}\d{2})|((\d{2}|\D{2})(-|_)(\d{2}|\D{2})))(-|_)\d{3,7}(-|_)\d{1,3}[/]\d+/gi,(v)=>v.toUpperCase()],
+      ['СЭ',/[A-ZА]{1,4}(-|_)((\d{2}|\D{2})|(\d{2}\D{2}|\D{2}\d{2})|((\d{2}|\D{2})(-|_)(\d{2}|\D{2})))(-|_)(\d{3,7})(-|_)\d+/gi,(v)=>v.toUpperCase()],
+      ['ШДУ',/(L|CU|ECU)(-|_)((\d{2}|\D{2})|(\d{2}\D{2}|\D{2}\d{2})|((\d{2}|\D{2})(-|_)(\d{2}|\D{2})))(-|_)(\d{3,7})(-|_)\d+/gi,(v)=>v.toUpperCase()],
+      ['lat/lon',/\d{1,3}\.\d{4,},\s?\d{1,3}\.\d{4,}/g]
+    ],
+    show:true,
+    top:0,
+    left:0,
+  }),
+  mounted(){
+    this.setPosition();
+    window.addEventListener('resize',this.setPosition);
+  },
+  beforeDestroy(){
+    window.removeEventListener('resize',this.setPosition);
+  },
+  watch:{
+    'sample'(){
+      this.show=true
     }
   },
   computed:{
@@ -118,6 +132,20 @@ Vue.component('SearchSuggest',{
     },
   },
   methods:{
+    setPosition(){
+      const input=document.querySelector(this.selector);
+      const inputLabel=document.querySelector(this.selector)?.parentElement;
+      if(input&&inputLabel){
+        const {left}=input.getBoundingClientRect();
+        this.left=left;
+        const {top}=inputLabel.getBoundingClientRect();
+        this.top=top;
+      }else{
+        this.top=0;
+        this.left=0;
+        this.show=!true;
+      }
+    },
     onSelect(value=''){
       this.$emit('onSelect',value)
     }
@@ -128,10 +156,8 @@ Vue.component('AppHeader3',{
   template:`<header name="AppHeader3" class="app-header" style="background:#dddddd;">
      <label for="searchInput" class="app-header__search">
         <IcIcon @click="search" name="search" color="#676767" class="font-size-24px"/>
-        <div class="position-relative">
-          <input id="searchInput" class="app-header__input" v-model="sample" @keyup.self.enter="search" placeholder="Поиск"/>
-          <SearchSuggest :sample="sample" @onSelect="onSelect" class="position-absolute" style="top:36px;"/>
-        </div>
+        <input id="searchInput" class="app-header__input" v-model="sample" @keyup.self.enter="search" placeholder="Поиск"/>
+        <SearchSuggest :sample="sample" @onSelect="onSelect" selector="#searchInput"/>
         <IcIcon v-if="!!sample" @click="clear" name="close-1" color="#676767" class="font-size-24px margin-left-auto"/>
      </label>
      <div class="app-header__buttons">
