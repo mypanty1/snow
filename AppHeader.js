@@ -128,7 +128,7 @@ Vue.component('AppHeader3',{
   template:`<header name="AppHeader3" class="app-header" style="background:#dddddd;">
      <label for="searchInput" class="app-header__search">
         <IcIcon @click="search" name="search" color="#676767" class="font-size-24px"/>
-        <SearchSuggest :sample="sample" @onSelect="onSelect" :pos="{top:'36px'}">
+        <SearchSuggest :sample="sample" @onSelect="onSelect" :pos="{top:'36px'}" class="width-100-100">
           <input id="searchInput" class="app-header__input" v-model="sample" @keyup.self.enter="search" placeholder="Поиск"/>
         </SearchSuggest>
         <IcIcon v-if="!!sample" @click="clear" name="close-1" color="#676767" class="font-size-24px margin-left-auto"/>
