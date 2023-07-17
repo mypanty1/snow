@@ -68,7 +68,7 @@ Vue.component('SearchSuggestItem',{
 Vue.component('SearchSuggest',{
   template:`<div name="SearchSuggest" class="position-relative" style="z-index:100;">
     <slot></slot>
-    <div class="position-absolute padding-4px border-radius-8px" style="background:#ffffffaa;max-height:80vh;overflow-y:auto;" :style="pos">
+    <div v-if="items?.length" class="position-absolute padding-4px border-radius-8px" style="background:#ffffffaa;max-height:80vh;overflow-y:auto;" :style="pos">
       <div class="display-flex flex-direction-column gap-2px">
         <SearchSuggestItem v-for="([label,value,options],key) of items" :key="key" v-bind="{label,value,options}" @onSelect="onSelect"/>
       </div>
