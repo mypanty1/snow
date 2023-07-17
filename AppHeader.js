@@ -66,8 +66,9 @@ Vue.component('SearchSuggestItem',{
 });
 
 Vue.component('SearchSuggest',{
-  template:`<div name="SearchSuggest" class="position-absolute inset-0" style="z-index:100;" v-if="sample&&show&&items?.length" @click.self.stop="show=!true">
-    <div class="position-absolute padding-4px border-radius-8px" style="background:#ffffffaa;max-height:80vh;overflow-y:auto;" :style="{top,left}">
+  template:`<div name="SearchSuggest" class="position-relative" style="z-index:100;">
+    <slot></slot>
+    <div class="position-absolute padding-4px border-radius-8px" style="background:#ffffffaa;max-height:80vh;overflow-y:auto;" :style="pos">
       <div class="display-flex flex-direction-column gap-2px">
         <SearchSuggestItem v-for="([label,value,options],key) of items" :key="key" v-bind="{label,value,options}" @onSelect="onSelect"/>
       </div>
@@ -75,7 +76,7 @@ Vue.component('SearchSuggest',{
   </div>`,
   props:{
     sample:{type:String,default:''},
-    selector:{type:String,default:''},
+    pos:{type:Object,default:null},
   },
   data:()=>({
     matchers:[
@@ -98,22 +99,7 @@ Vue.component('SearchSuggest',{
       ['ШДУ',/(L|CU|ECU)(-|_)((\d{2}|\D{2})|(\d{2}\D{2}|\D{2}\d{2})|((\d{2}|\D{2})(-|_)(\d{2}|\D{2})))(-|_)(\d{3,7})(-|_)\d+/gi,(v)=>v.toUpperCase()],
       ['lat/lon',/\d{1,3}\.\d{4,},\s?\d{1,3}\.\d{4,}/g]
     ],
-    show:true,
-    top:0,
-    left:0,
   }),
-  mounted(){
-    this.setPosition();
-    window.addEventListener('resize',this.setPosition);
-  },
-  beforeDestroy(){
-    window.removeEventListener('resize',this.setPosition);
-  },
-  watch:{
-    'sample'(){
-      this.show=true
-    }
-  },
   computed:{
     text(){return this.sample.trim()},
     items(){
@@ -132,20 +118,6 @@ Vue.component('SearchSuggest',{
     },
   },
   methods:{
-    setPosition(){
-      const input=document.querySelector(this.selector);
-      const inputLabel=document.querySelector(this.selector)?.parentElement;
-      if(input&&inputLabel){
-        const {left}=input.getBoundingClientRect();
-        this.left=left;
-        const {top}=inputLabel.getBoundingClientRect();
-        this.top=top;
-      }else{
-        this.top=0;
-        this.left=0;
-        this.show=!true;
-      }
-    },
     onSelect(value=''){
       this.$emit('onSelect',value)
     }
@@ -156,8 +128,9 @@ Vue.component('AppHeader3',{
   template:`<header name="AppHeader3" class="app-header" style="background:#dddddd;">
      <label for="searchInput" class="app-header__search">
         <IcIcon @click="search" name="search" color="#676767" class="font-size-24px"/>
-        <input id="searchInput" class="app-header__input" v-model="sample" @keyup.self.enter="search" placeholder="Поиск"/>
-        <SearchSuggest :sample="sample" @onSelect="onSelect" selector="#searchInput"/>
+        <SearchSuggest :sample="sample" @onSelect="onSelect" :pos="{top:'36px'}">
+          <input id="searchInput" class="app-header__input" v-model="sample" @keyup.self.enter="search" placeholder="Поиск"/>
+        </SearchSuggest>
         <IcIcon v-if="!!sample" @click="clear" name="close-1" color="#676767" class="font-size-24px margin-left-auto"/>
      </label>
      <div class="app-header__buttons">
