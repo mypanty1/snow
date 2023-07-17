@@ -1,3 +1,33 @@
+Vue.component('ServicesTypeHeader', {
+  template:`<div name="ServicesTypeHeader" class="display-contents">
+    <title-main v-bind="titleProps" @open="$emit('open')" :class="[open&&'margin-bottom-8px']"/>
+  </div>`,
+  props:{
+    type:{type:String,required:true},
+    open:{type:Boolean,default:false},
+  },
+  data:()=>({
+    types:[
+      ['internet','eth',    'Интернет'],
+      ['tv',      'tv',     'Телевидение'],//Foris
+      ['analogtv','tv',     'Аналоговые ТВ'],
+      ['digittv', 'tv',     'Цифровые ТВ'],
+      ['iptv',    'tv',     'IPTV'],
+      ['phone',   'phone-1','Телефония'],
+      ['hybrid',  'tv',     'Гибридные ТВ'],
+      ['mobile',  'phone',  'Мобильные'],
+      ['package', 'amount', 'Пакеты'],//Foris
+      ['other',   'amount', 'Другие'],
+    ].map(([type,icon,text])=>({type,icon,text}))
+  }),
+  computed:{
+    titleProps(){
+      const {type,types}=this;
+      return types[type]?types[type]:types['other']
+    }
+  },
+});
+
 Vue.component('ForisServiceProduct',{
   template:`<div name="ForisServiceProduct" class="display-contents">
     <info-text-sec :title="product.code" :title2="product.name" :rows="rows"/>
@@ -49,7 +79,7 @@ Vue.component('ForisService',{
           internet:'Интернет',
           tv:'Телевидение',
           phone:'Телефония',
-          hybrid:'ИТВ',
+          hybrid:'Гибридное ТВ',
           iptv:'IPTV',
           mobile:'Мобильное',
           package:'Пакет',
@@ -80,7 +110,7 @@ Vue.component('ForisResources', {
   template:`<section name="ForisResources">
     <loader-bootstrap v-if="loading" text="получение данных по услугам"/>
     <CardBlock v-for="(services, key) in resources" :key="key" v-if="services.length" class="mini-card margin-top-0">
-      <services-header @open="$set(opened,key,!opened[key])" :open="opened[key]" :type="key"/>
+      <ServicesTypeHeader @open="$set(opened,key,!opened[key])" :open="opened[key]" :type="key"/>
       <div v-show="opened[key]">
         <CardBlock v-if="key==='internet'">
           <traffic-light-ma v-if="account && accessPoint && !accessPointLoading" :account-device="accessPoint" :account-id="account.personal_account_number" :foris-account="account" :foris-resources="resources" billing-type="foris" @update:online-session="refreshOnlineSessions"/>
