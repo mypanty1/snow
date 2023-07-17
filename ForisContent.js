@@ -18,7 +18,7 @@ Vue.component('ServicesTypeHeader', {
       ['mobile',  'phone',  'Мобильные'],
       ['package', 'amount', 'Пакеты'],//Foris
       ['other',   'amount', 'Другие'],
-    ].map(([type,icon,text])=>({type,icon,text}))
+    ].reduce((types,[type,icon,text])=>({...types,[type]:{type,icon,text}}),{})
   }),
   computed:{
     titleProps(){
