@@ -89,8 +89,8 @@ Vue.component('SearchSuggest',{
       ['ЛС',/[1-6]-\d{3}-\d{7}/g],
       ['ЛС',/[1-6]\d{10}/g],
       ['CPE',/(S|Q|F|T|3|Z)[0-9A-Z]{11,14}/gi,(v)=>v.toUpperCase()],
-      ['ТЛФ',/(\+|)(7|8)\d{10}/g,,{is:'account-call',propName:'phone',props:{style:'margin:unset !important;'}}],
-      ['ТЛФ',/(\+|)(7|8)-\d{3}-\d{7}/g,,{is:'account-call',propName:'phone',props:{style:'margin:unset !important;'}}],
+      ['ТЛФ',/(\+|)(7|8)\d{10}/g,,{is:'account-call',propName:'phone',props:{style:'margin:unset !important;opacity:0.667;'}}],
+      ['ТЛФ',/(\+|)(7|8)-\d{3}-\d{7}/g,,{is:'account-call',propName:'phone',props:{style:'margin:unset !important;opacity:0.667;'}}],
       ['PL',/PL_\d{2}_\d{3,8}/gi,(v)=>v.toUpperCase()],//sample.match(/PL_(?<region_id>\d{1,2})_/i)
       ['SiteID',/\d{19}/g],
       ['УОС',/(гств|пмп|атс|влс|скд|удтс|абк|му|ду|тдчс)(1|0){2}\d{2,8}\D{2,3}(_\d{2})?(-|_)\d{3,5}/g],
