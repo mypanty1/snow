@@ -16,8 +16,8 @@ Vue.component('ForisService',{
   template:`<div name="ForisService">
     <link-block v-bind="titleProps" action-icon="" type="medium"/>
     <info-subtitle :text="'MSISDN: '+service.msisdn"/>
-    <account-call v-if="service.type=='mobile' && service.msisdn" :phone="service.msisdn" class="margin-bottom-16px" showSendSms/>
     <info-subtitle :text="service.tariff"/>
+    <account-call v-if="service.type=='mobile' && service.msisdn" :phone="service.msisdn" class="margin-bottom-16px" showSendSms/>
     <template v-if="service.type=='internet'">
       <info-subtitle v-if="service.auth_type||service.rate" :text="authAndSpeed"/>
       <foris-login-pass class="margin-left-16px" :login-password="service.login" />
