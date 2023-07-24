@@ -416,6 +416,7 @@ Vue.component('ForisContent',{//254704317703,254704348007,254310071197
     packages(){
       return this.services.reduce((packages,service)=>{
         const packageProduct=service.products.find(({service_parameter})=>(service_parameter||[]).find(({name})=>name=="Идентификационный номер продукта"));
+        if(!packageProduct){return packages};
         const packageProductId=packageProduct.service_parameter.find(({name})=>name=="Идентификационный номер продукта")?.value;
         const packageProductName=packageProduct.service_parameter.find(({name})=>name=="Наименование продукта")?.value;
         if(packageProductId){
