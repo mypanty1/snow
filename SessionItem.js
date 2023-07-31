@@ -144,7 +144,7 @@ Vue.component('SessionItem',{
       this.resps.get_online_session=null;
       this.loads.get_online_session=true;
       const {serverid,agentid,vgid,login,descr}=this.params;//descr 2000000721940
-      class AAA_GetOnlineSession_Params {
+      const AAA_GetOnlineSession_Params = class AAA_GetOnlineSession_Params {
         constructor(serverid,agentid,vgid,login,descr){
           this.serverid=serverid
           this.agentid=agentid
