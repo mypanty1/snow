@@ -1,8 +1,8 @@
-//fix time zone and ip
+//fix 1958
 Vue.component('SessionItem',{
   template:`<section name="SessionItem">
     <title-main v-bind="titleProps" textClass="font--13-500" class="margin-top-bottom--8px"/>
-    <loader-bootstrap v-if="loads.get_online_sessions" text="получение сессии абонента"/>
+    <loader-bootstrap v-if="loads.get_online_session" text="получение сессии абонента"/>
     <loader-bootstrap v-else-if="loads.stop_session_radius" text="сброс сессии абонента"/>
     <div v-else-if="session" class="margin-left-16px margin-right-16px display-flex flex-direction-column gap-4px">
       <message-el v-if="isError" :text="errorText" type="warn" box/>
@@ -35,11 +35,11 @@ Vue.component('SessionItem',{
   },
   data:()=>({
     resps:{
-      get_online_sessions:null,
+      get_online_session:null,
       stop_session_radius:null
     },
     loads:{
-      get_online_sessions:false,
+      get_online_session:false,
       stop_session_radius:false
     },
     ouis:{},
@@ -54,7 +54,7 @@ Vue.component('SessionItem',{
   },
   created(){ 
     if(this.isTooManyInternetServices){return };
-    this.get_online_sessions() 
+    this.get_online_session() 
   },
   computed:{
     titleProps(){
@@ -64,7 +64,7 @@ Vue.component('SessionItem',{
       return {text:login,text2:service_hash}
     },
     loading(){return Object.values(this.loads).some(v=>v)},
-    session(){return this.resps.get_online_sessions?.data?.[0]||this.resps.get_online_sessions},
+    session(){return this.resps.get_online_session?.data?.[0]||this.resps.get_online_session},
     isError(){return this.session?.isError},
     errorText(){return this.session?.message||'Error: unknown'},
     remote_id(){return this.session?.remote_id||this.session?.device||''},
@@ -120,7 +120,7 @@ Vue.component('SessionItem',{
         ip                &&  ['info-value',    {label:'IP',                value:ip,               withLine:true}],
         macIsValid        &&  ['info-value',    {label:'MAC',               value:mac,              withLine:true}],
         macVendor         &&  ['info-text-sec', {text:macVendor,            class:'text-align-right'}],
-        service_info      &&  ['info-value',    {label:'Сервис',                value:service_info,     withLine:true}],
+        service_info      &&  ['info-value',    {label:'Сервис',            value:service_info,     withLine:true}],
         inner_vlan        &&  ['info-value',    {label:'C-Vlan',            value:inner_vlan,       withLine:true}],
         outer_vlan        &&  ['info-value',    {label:'S-Vlan',            value:outer_vlan,       withLine:true}],
         agent_circuit_id  &&  ['info-value',    {label:'Opt.82 Порт',       value:agent_circuit_id, withLine:true}],
@@ -139,19 +139,35 @@ Vue.component('SessionItem',{
       if(!octs||octs?.length!==4){return value};
       return octs.map(h=>parseInt(h,16)).join('.');
     },
-    async get_online_sessions(){
-      if(this.loads.get_online_sessions){return};
-      this.resps.get_online_sessions=null;
-      this.loads.get_online_sessions=true;
+    async get_online_session(){
+      if(this.loads.get_online_session){return};
+      this.resps.get_online_session=null;
+      this.loads.get_online_session=true;
       const {serverid,agentid,vgid,login,descr}=this.params;//descr 2000000721940
+      class AAA_GetOnlineSession_Params {
+        constructor(serverid,agentid,vgid,login,descr){
+          this.serverid=serverid
+          this.agentid=agentid
+          this.vgid=vgid
+          this.login=login
+          this.descr=/xrad/i.test(`${descr}`)?'xrad':''
+          console.log(this)
+        }
+      }
+      class AAA_GetOnlineSession_ResponseError {
+        constructor(error){
+          this.isError=true
+          this.message='Error: unexpected'
+        }
+      }
       try{
-        const response=await httpGet(buildUrl('get_online_sessions',{serverid,agentid,vgid,login,descr:/xrad/i.test(descr)?'xrad':''},'/call/aaa/'))
-        this.resps.get_online_sessions=response;
+        const response=await httpGet(buildUrl('get_online_session',new AAA_GetOnlineSession_Params(serverid,agentid,vgid,login,descr),'/call/aaa/'))
+        this.resps.get_online_session=response;
       }catch(error){
-        console.warn("get_online_sessions.error",error);
-        this.resps.get_online_sessions={data:[{isError:true,message:'Error: unexpected'}]};
+        console.warn("get_online_session.error",error);
+        this.resps.get_online_session=new AAA_GetOnlineSession_ResponseError(error);
       };
-      this.loads.get_online_sessions=false;
+      this.loads.get_online_session=false;
     },
     async stop_session_radius(){
       if(this.loads.stop_session_radius){return};
@@ -159,11 +175,24 @@ Vue.component('SessionItem',{
       this.loads.stop_session_radius=true;
       const {serverid,agentid,vgid,login,descr}=this.params;//descr 2000000721940
       const {sessionid,dbsessid,nas}=this.session;
+      class AAA_StopSessionRadius_Params {
+        constructor(serverid,agentid,vgid,login,descr,sessionid,dbsessid,nas){
+          this.serverid=serverid
+          this.agentid=agentid
+          this.vgid=vgid
+          this.login=login
+          this.descr=/xrad/i.test(`${descr}`)?'xrad':''
+          this.sessionid=sessionid||''
+          this.dbsessid=dbsessid||''
+          this.nasip=nas
+          console.log(this)
+        }
+      }
       try{
-        const response=await httpGet(buildUrl('stop_session_radius',{serverid,agentid,vgid,login,descr:/xrad/i.test(descr)?'xrad':'',sessionid,dbsessid,nasip:nas},'/call/aaa/'));
+        const response=await httpGet(buildUrl('stop_session_radius',new AAA_StopSessionRadius_Params(serverid,agentid,vgid,login,descr,sessionid,dbsessid,nas),'/call/aaa/'));
         if(response.message=='OK'){
-          this.resps.get_online_sessions=null;
-          setTimeout(this.get_online_sessions,10000);
+          this.resps.get_online_session=null;
+          setTimeout(this.get_online_session,10000);
         };
         this.resps.stop_session_radius=response;
       }catch(error){
@@ -172,7 +201,7 @@ Vue.component('SessionItem',{
       this.loads.stop_session_radius=false;
     },
     async getOnlineSession(){//public
-      return await this.get_online_sessions()
+      return await this.get_online_session()
     },
     async getMacVendorLookup(mac=''){
       if(!mac){return};
