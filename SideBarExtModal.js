@@ -1,8 +1,19 @@
 
 //add SideBarExtModal
-
 Vue.component('SideBarExtModal',{
-  template:`<modal-container-custom name="SideBarExtModal" ref="modal" :footer="false" :wrapperStyle="{'min-height':'auto','margin-top':'4px'}">
+  template:`<SideBarExtModal2 ref="SideBarExtModal2"/>`,
+  methods:{
+    open(){//public
+      this.$refs.SideBarExtModal2.open();
+    },
+    close(){//public
+      this.$refs.SideBarExtModal2.close();
+    },
+  },
+});
+
+Vue.component('SideBarExtModal2',{
+  template:`<modal-container-custom name="SideBarExtModal2" ref="modal" :footer="false" :wrapperStyle="{'min-height':'auto','margin-top':'4px'}">
     <div class="padding-left-right-16px">
       <div class="display-flex flex-direction-column gap-8px">
         <div class="font--15-600 text-align-center">Дополнительно</div>
