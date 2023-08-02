@@ -1,3 +1,94 @@
+app.$router.beforeEach((to,from,next)=>{
+  if(to.name=='favs'){
+    to.matched[0].components.default=Vue.component('FavsPage',{
+      template:`<CardBlock name="FavsPage">
+        <div class="display-flex align-items-center justify-content-space-between gap-8px margin-left-right-12px height-32px">
+          <div slot="prefix">
+            <button-sq v-if="deleteMode" @click="turnOffDeleteMode" class="size-20px min-width-20px">
+              <IcIcon name="CloseSq" color="#5642BD"/>
+            </button-sq>
+          </div>
+          <div slot="content">
+            <span v-if="!deleteMode" @click="getFavs" class="font--15-600">Избранное<span v-if="favsCount"> • {{favsCount}} из 10</span></span>
+          </div>
+          <div slot="postfix">
+            <button-sq v-if="!deleteMode" @click="toggleDeleteMode" :disabled="!favsCount" class="size-20px min-width-20px">
+              <IcIcon name="Trashcan" :color="favsCount?'#5642BD':'#969FA8'"/>
+            </button-sq>
+            <div v-else class="display-flex align-items-center gap-4px">
+              <span :style="{color:selectedCount?'#FF0032':'#969FA8'}" class="font--13-500 font-weight-700">Удалить</span>
+              <button-sq @click="$refs.FavsDeleteConfirmModal?.open()" :disabled="!selectedCount" class="size-20px min-width-20px">
+                <IcIcon name="Trashcan" :color="selectedCount?'#FF0032':'#969FA8'"/>
+              </button-sq>
+              <FavsDeleteConfirmModal ref="FavsDeleteConfirmModal" v-bind="{selected_fav_ids}"/>
+            </div>
+          </div>
+        </div>
+        <devider-line/>
+    
+        <loader-bootstrap v-if="favsLoading" text="получение избранного"/>
+        <div v-else-if="favsCount" class="display-flex flex-direction-column-reverse gap-8px margin-left-right-8px" :class="[deleteMode&&'padding-left-32px']">
+          <template v-for="({fav_id},key) of favs">
+            <FavCard v-if="!deleteMode" :key="key" v-bind="{fav_id,disabled:deleteMode}"/>
+            <CardCheckboxLeft v-else :key="key" :checked="selected[fav_id]" @change="$set(selected,fav_id,$event)">
+              <FavCard v-bind="{fav_id,disabled:deleteMode}"/>
+            </CardCheckboxLeft>
+          </template>
+        </div>
+        <div v-else class="font--16-500 tone-300 text-align-center height-100px display-flex flex-direction-column justify-content-center">
+          Избранные объекты отсутствуют
+        </div>
+      </CardBlock>`,
+      data:()=>({
+        deleteMode:false,
+        selected:{},
+      }),
+      created(){
+        if(!this.favsCount){
+          this.getFavs();
+        };
+      },
+      watch:{
+        'favsLoading'(favsLoading){
+          if(!favsLoading){
+            this.deleteMode=false;
+          }
+        }
+      },
+      computed:{
+        ...mapGetters({
+          //username:'main/username',
+          favsLoading:'favs/favsLoading',
+          favsCount:'favs/favsCount',
+          getLoad:'favs/getLoad',
+          getResp:'favs/getResp',
+        }),
+        favs(){return this.getResp('favs')||{}},
+        selectedCount(){return Object.values(this.selected).filter(v=>v).length},
+        selected_fav_ids(){
+          return Object.entries(this.selected).reduce((ids,[fav_id,isSelected])=>{
+            if(isSelected){ids.push(fav_id)};
+            return ids;
+          },[]);
+        }
+      },
+      methods:{
+        ...mapActions({
+          getFavs:'favs/getFavs',
+        }),
+        turnOffDeleteMode(){
+          this.deleteMode=false;
+          this.selected={};
+        },
+        toggleDeleteMode(){
+          this.deleteMode=!this.deleteMode;
+        },
+      },
+    });
+  };
+  next()
+});
+
 Vue.component('FavBtn',{
   template:`<div name="FavBtn" class="display-contents">
     <button-sq @click="click" :disabled="disabled||loading||favsLoading" class="size-20px min-width-20px">
