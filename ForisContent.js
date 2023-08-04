@@ -320,7 +320,7 @@ Vue.component('ForisContent',{//254704317703,254704348007,254310071197
     
     <ForisResources v-if="selected?.name=='Услуги'" :account="account" :resources="resources" :loading="loads.getForisAccountResources" :accessPoint="resps.getAccountAccessPoint" :accessPointLoading="loads.getAccountAccessPoint"/>
     <ForisPackages v-else-if="selected?.name=='Пакеты'" :account="account" :packages="packages"/>
-    <ForisServices v-else-if="selected?.name=='Куча'" :account="account" :services="services"/>
+    <ForisServices v-else-if="selected?.name=='Список'" :account="account" :services="services"/>
     
     <foris-account-block-history :history="resps.getForisAccountBlockHistory||[]"/>
   </section>`,
@@ -346,7 +346,7 @@ Vue.component('ForisContent',{//254704317703,254704348007,254310071197
     items:[
       {name:'Услуги'},
       {name:'Пакеты'},
-      {name:'Куча'},
+      {name:'Список'},
     ],
     loads:{
       getForisAccountResources:false,
