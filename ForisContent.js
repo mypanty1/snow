@@ -108,6 +108,46 @@ Vue.component('ForisServiceProduct',{
   }
 });
 
+Vue.component('ForisInternetAccessCreds',{
+  template:`<div name="ForisInternetAccessCreds">
+    <div class="font--13-500">
+      <span class="tone-500">Логин • </span><span>{{creds?.login||'Нет логина'}}</span>
+    </div>
+    <div class="width-75-100 margin-top-8px">
+      <button-main @click="show=!show" v-bind="btnProps" button-style="outlined" size="full"/>
+    </div>
+  </div>`,
+  props:{
+    service:{type:Object,default:()=>({})},
+  },
+  data:()=>({
+    show: false,
+  }),
+  computed:{
+    creds(){
+      const product=this.service.products.find(({name,service_parameter})=>{
+        return /Интернет/i.test(name)&&(service_parameter||[]).find(({name})=>name=="Пароль")
+      });
+      if(!product){return};
+      const login=product.service_parameter.find(({name})=>name=="Login")?.value;
+      const password=product.service_parameter.find(({name})=>name=="Пароль")?.value;
+      if(!login){return};
+      return new function(){
+        this.login=login||''
+        this.password=password || ''
+      }
+    },
+    btnProps(){
+      const {show,creds}=this;
+      return {
+        class:[show&&'password'],
+        icon:!show?'unlock':'',
+        label:show?creds?.password:'Показать пароль',
+      }
+    }
+  },
+});
+
 Vue.component('ForisService',{
   template:`<div name="ForisService">
     <link-block v-bind="titleProps" action-icon="" type="medium"/>
@@ -116,7 +156,7 @@ Vue.component('ForisService',{
     <account-call v-if="service.type=='mobile' && service.msisdn" :phone="service.msisdn" class="margin-bottom-16px" showSendSms/>
     <template v-if="service.type=='internet'">
       <info-subtitle v-if="service.auth_type||service.rate" :text="authAndSpeed"/>
-      <foris-login-pass class="margin-left-16px" :login-password="service.login" />
+      <ForisInternetAccessCreds :service="service" class="margin-left-16px"/>
     </template>
     <DropdownBlock icon="info" text="Скидки, услуги, сервисы" :title="{text2:service.products.length?service.products.length:'',text1Class:'font--13-500',text2Class:'font--13-500 tone-500'}">
       <template v-for="(product,i) of service.products">
