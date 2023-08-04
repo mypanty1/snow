@@ -36,7 +36,7 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 //AppHeader
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/AppHeader.js',type:'text/javascript'}));
 
-
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/task-main-account.js',type:'text/javascript'}));
 
 
 
