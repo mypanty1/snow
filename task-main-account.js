@@ -22,6 +22,11 @@ Vue.component('task-main-account',{
       </div>
       <devider-line/>
 
+      <div class="margin-left-right-16px">
+        <link-block :text="'СЗ/ЕИ '+task.Number_EIorNumberOrder" @click="copy(task.Number_EIorNumberOrder)" type="medium" actionIcon="copy" class="padding-unset"/>
+      </div>
+      <devider-line/>
+
       <info-text-sec title="Описание работ" :rows="[task.ProductOffering]" :text="task.description||'нет описания работ'"/>
       <devider-line/>
 
