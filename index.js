@@ -19,22 +19,15 @@
     retina_detect:true
   }):null,1000);
 }())*/
-//name
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/Fav.js',type:'text/javascript'}));
-
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SessionItem.js',type:'text/javascript'}));
 
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/events-item.js',type:'text/javascript'}));
-//SideBarExtModal
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SideBarExtModal.js',type:'text/javascript'}));
+
 //percent
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/PortsMapLogsPortLinkEventsChart.js',type:'text/javascript'}));
-//ForisContent
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/ForisContent.js',type:'text/javascript'}));
-//SearchPageContent
+
+//SearchPageContent for SR
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SearchPageContent.js',type:'text/javascript'}));
-//AppHeader
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/AppHeader.js',type:'text/javascript'}));
+
 //WFM EDO
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/task-main-account.js',type:'text/javascript'}));
 
