@@ -479,6 +479,225 @@ Vue.component("account-header", {
   },
 });
 
+//fix Appointment and Assignment
+Vue.component('WfmTaskItem',{
+  template:`<li name="WfmTaskItem" :class="itemClass">
+    <title-main :icon="taskIconClass" @open="opened=!opened" :text="taskType.title" :text2="task.Assignment" :text2Class="redTime">
+      <button-sq icon="right-link" @click="goToTask"/>
+    </title-main>
+    <div class="font--13-500 padding-left-16px">{{task.AddressSiebel}}</div>
+    <devider-line/>
 
+    <transition v-if="opened" name="slide-down" mode="out-in" appear>
+      <div>
+        <div class="padding-left-16px">
+          <span class="font--13-500 tone-500">{{task.NumberOrder}}</span>
+          <span v-if="operationIcons.any" class="font--13-500 tone-500"> • </span>
+          <span v-if="operationIcons.tv" class="ic-16 ic-tv tone-500"></span>
+          <span v-if="operationIcons.internet" class="ic-16 ic-eth tone-500"></span>
+          <span v-if="operationIcons.phone" class="ic-16 ic-sim tone-500"></span>
+        </div>
+        <div class="padding-left-16px">
+          <span class="font--13-500 tone-500">{{task.Number_EIorNumberOrder}}</span>
+        </div>
+        <devider-line/>
+
+        <LocalNotes :id="task.NumberOrder" class="margin-left-right-16px"/>
+        <devider-line m="2px 0px 8px 0px"/>
+      </div>
+    </transition>
+
+    <link-block :icon="taskStatus.icon" :text="task.status" :text2="task.Appointment" textClass="white-space-pre" :actionIcon="hasBf?' ic-20 ic-warning main-orange':''" type="medium">
+      <div slot="postfix" v-if="hasBf" class="font--13-500 main-orange">Блок-фактор</div>
+    </link-block>
+  </li>`,
+  props:{
+    task:{type:Object,required:true},
+  },
+  data:()=>({
+    opened:false,
+    detailIncident:null,
+    entrance:null,
+  }),
+  computed: {
+    taskType() {
+      return WFM_TASK_TYPES_BY_ID.find(el => el.name === this.task.tasktype) || {};
+    },
+    taskStatus() {
+      return WFM_TASK_STATUSES.find(el => el.name === this.task.status) || {};
+    },
+    taskIconClass() {
+      if (!this.taskType) return null;
+      const ICONS = ['incident', 'warning'];
+      const index = this.checkTypeGroups();
+      const icon = ICONS[index] || this.taskType.icon;
+      return `${icon} ${{0:'main-red',1:'main-orange'}[index]} ${index}`;
+    },
+    operationIcons() {
+      const { service } = this.task;
+      if (!Array.isArray(service)) return {};
+      const hasInternet = service.includes('internet');
+      const hasTv = service.includes('tv');
+      const hasPhone = service.includes('phone');
+      return {
+        any: hasInternet || hasTv || hasPhone,
+        internet: hasInternet,
+        tv: hasTv,
+        phone: hasPhone
+      }
+    },
+    times() {
+      const { Assignment, Appointment } = this.task;
+      const dateAssignment = new Date(this.task.dateAssignment);
+      const now = new Date().getTime();
+      const now10min = new Date().setMinutes(new Date().getMinutes() + 10);
+      const parseTime = (timeRange) => {
+        const [start = '', end = ''] = timeRange.split('-');
+        const [startHours, startMinutes] = start.split(':');
+        const [endHours, endMinutes] = end.split(':');
+        return {
+          start: new Date(dateAssignment).setHours(startHours, startMinutes),
+          end: new Date(dateAssignment).setHours(endHours, endMinutes)
+        }
+      }
+      return {
+        assignment: parseTime(Appointment),
+        appointment: parseTime(Assignment),
+        now,
+        now10min
+      }
+    },
+    redTime() {
+      const validStatusIds = ['sent', 'preSent'];
+      const validStatus = this.taskStatus && validStatusIds.includes(this.taskStatus.id);
+      const now = new Date().getTime();
+      const timeOut = now >= this.times.assignment.start;
+      return validStatus && timeOut ? 'main-red' : null;
+    },
+    itemClass() {
+      const validStatusIds = ['done', 'resolved'];
+      const validStatus = this.taskStatus && validStatusIds.includes(this.taskStatus.id);
+      return {
+        'tasks-list__item': true,
+        'tasks-list__item--closed': validStatus,
+      }
+    },
+    site_id(){return this.task.siteid},
+    flat() {
+      let i = this.task.AddressSiebel.search(/кв\./gi);
+      if (i == -1) return 0;
+      let flat = this.task.AddressSiebel.substring(i + 4).replace(/\D/g, '');
+      return Number(flat);
+    },
+    hasBf(){
+      if(!this.entrance){return};//return true
+      return getHasBfByEntrance(this.entrance);
+    },
+  },
+  created() {
+    //this.getBfBySiteId();
+    this.getEntrances();
+  },
+  methods:{
+    async getEntrances(){
+      const {site_id}=this;
+      if(!site_id){return}
+      let cache=this.$cache.getItem(`site_entrance_list/${site_id}`);
+      if(cache){
+        this.getEntrance(cache);
+        return;
+      };
+      try {
+        let response=await httpGet(buildUrl('site_entrance_list',{site_id},'/call/v1/device/'));
+        if(response.type==='error'){throw new Error(response.message)};
+        if(!response.length){response=[]};
+        this.$cache.setItem(`site_entrance_list/${site_id}`,response);
+        this.getEntrance(response)
+      }catch(error){
+        console.warn('site_entrance_list.error',error);
+      }
+    },
+    getEntrance(response=[]){
+      this.entrance=response.find(entrance=>this.flat>=entrance.flats.from&&this.flat<=entrance.flats.to);
+    },
+    goToTask(){
+      this.$router.push({
+        name:'wfm-task',
+        params:{
+          id:this.task.NumberOrder
+        }
+      })
+    },
+    async loadDetailIncident(){
+      const incidentId=this.task.Number_EIorNumberOrder;
+      if(!incidentId||!this.taskType||!this.taskType.identity){return};
+      let response=this.$cache.getItem(`incident_detail/${incidentId}`);
+      if(response){this.detailIncident=response;return};
+      try{
+        response=await httpGet(buildUrl('get_detail_incident',{
+          incident_id:incidentId,
+          incident_type:this.taskType.identity,
+        },'/call/device/'));
+        if(response.type==='error'){throw new Error(response.message)};
+        this.$cache.setItem(`incident_detail/${incidentId}`,response);
+        this.detailIncident=response;
+      }catch(error){
+        console.error('Load defails incident:',error);
+      }
+    },
+    checkTypeGroups() {
+      const idGroup1 = ['accident', 'incident', 'work', 'ppr'];
+      const idGroup2 = ['connection', 'service'];
+      const taskTypeId = this.taskType.id;
+      if (idGroup1.includes(taskTypeId)) {
+        return this.checkTypeGroup1();
+      }
+      if (idGroup2.includes(taskTypeId)) {
+        return this.checkTypeGroup2();
+      }
+      return null;
+    },
+    checkTypeGroup1() {
+      if (!this.detailIncident) return;
+      let index;
+      let deadline;
+      if (this.detailIncident.hasOwnProperty('deadline')) {
+        deadline = this.detailIncident.deadline;
+      }
+      if (this.detailIncident.hasOwnProperty('deadlinesla')) {
+        deadline = this.detailIncident.deadlinesla;
+      }
+      if (!deadline) return;
+      const isWarn = this.times.now >= new Date(deadline).getTime();
+      if (isWarn) index = 0;
+      const isFire = this.times.now10min >= deadline;
+      if (isFire) index = 1;
+      return index;
+    },
+    checkTypeGroup2() {
+      let index;
+      const { assignment, appointment, now, now10min } = this.times;
+      // #INFO: время начала Assignment > время окончания Appointment - выполнение начато с опозданием, есть риск для следующего наряда
+      const lateTime = assignment.start > appointment.end;
+      // #INFO: или время начала Appointment > время начала Assignment - в большинстве случаев это значит что наряд назначен руками(ему можно понизить приоритет выполнения если это не МИ)
+      const lateTime2 = appointment.start > assignment.start;
+      // #INFO: или если текущее время > время окончания Assignment - выполнение затянулось, есть риск для следующего наряда
+      const lateTime3 = now > assignment.end;
+      const isWarn = lateTime || lateTime2 || lateTime3;
+      if (isWarn) index = 0;
+
+      if (!this.taskStatus) return index;
+      const validIdStatuses = ['sent', 'preSent'];
+      const isValidStatus = validIdStatuses.includes(this.taskStatus.id);
+      if (!isValidStatus) return;
+      const isFire = now10min >= appointment.start;
+      if (isFire) index = 1;
+      return index;
+    }
+  },
+  mounted(){
+    this.loadDetailIncident();
+  }
+});
 
 
