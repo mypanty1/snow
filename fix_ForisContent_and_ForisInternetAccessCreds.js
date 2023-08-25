@@ -481,7 +481,7 @@ Vue.component("account-header", {
 
 //fix Appointment and Assignment
 Vue.component('WfmTaskItem',{
-  template:`<li name="WfmTaskItem" :class="itemClass">
+  template:`<div name="WfmTaskItem" :class="itemClass">
     <title-main :icon="taskIconClass" @open="opened=!opened" :text="taskType.title" :text2="task.Assignment" :text2Class="redTime">
       <button-sq icon="right-link" @click="goToTask"/>
     </title-main>
@@ -510,7 +510,7 @@ Vue.component('WfmTaskItem',{
     <link-block :icon="taskStatus.icon" :text="task.status" :text2="task.Appointment" textClass="white-space-pre" :actionIcon="hasBf?' ic-20 ic-warning main-orange':''" type="medium">
       <div slot="postfix" v-if="hasBf" class="font--13-500 main-orange">Блок-фактор</div>
     </link-block>
-  </li>`,
+  </div>`,
   props:{
     task:{type:Object,required:true},
   },
