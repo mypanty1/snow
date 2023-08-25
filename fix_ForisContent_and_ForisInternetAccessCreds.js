@@ -374,23 +374,21 @@ Vue.component('ForisInternetAccessCreds',{
   computed:{
     creds(){
       const {products=[],login}=this.service;
-      const ServiceParameter=class {
-        constructor(name,value){
-          this.name=name||''
-          this.value=value||''
-        }
-      };
-      const product=products.find(({name,service_parameter})=>{
-        return /Интернет/i.test(name)&&(service_parameter||[]).find(({name})=>name=="Пароль")
-      })||{service_parameter:[new ServiceParameter("Login",login?.login),new ServiceParameter("Пароль",login?.password)]};
+      const product=products.find(({name,service_parameter})=>/Интернет/i.test(name)&&(service_parameter||[]).find(({name})=>name=="Пароль"));
       const Creds=class {
-        constructor(product_service_parameter){
+        constructor(product_service_parameter=[]){
           this.login=product_service_parameter.find(({name})=>name=="Login")?.value||''
           this.password=product_service_parameter.find(({name})=>name=="Пароль")?.value||''
           console.log(this)
         }
       };
-      return new Creds(product.service_parameter);
+      const SerPar=class {
+        constructor(name,value){
+          this.name=name||''
+          this.value=value||''
+        }
+      };
+      return new Creds(product?.service_parameter||[new SerPar("Login",login?.login),new SerPar("Пароль",login?.password)]);
     },
     btnProps(){
       const {show,creds}=this;
