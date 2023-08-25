@@ -20,17 +20,7 @@
   }):null,1000);
 }())*/
 
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/events-item.js',type:'text/javascript'}));
-
-//percent
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/PortsMapLogsPortLinkEventsChart.js',type:'text/javascript'}));
-
-//SearchPageContent for SR
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SearchPageContent.js',type:'text/javascript'}));
-
-//WFM EDO
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/task-main-account.js',type:'text/javascript'}));
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/task-find-port.js',type:'text/javascript'}));
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/task-find-port.js',type:'text/javascript'}));
 
 
 
