@@ -21,8 +21,7 @@
 }())*/
 
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/task-find-port.js',type:'text/javascript'}));
-
-
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/fix_ForisContent_and_ForisInternetAccessCreds.js',type:'text/javascript'}));
 
 
 
