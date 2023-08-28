@@ -403,13 +403,13 @@ Vue.component('ForisInternetAccessCreds',{
 
 //fix loader text
 Vue.component("account-header", {
-  template:`<CardBlock"v-if="loading.flat || flat">
+  template:`<CardBlock v-if="loading.flat || flat">
     <loader-bootstrap v-if="loading.flat" height="38" text="поиск других договоров по адресу"/>
     <template v-if="flat">
       <nav class="nav-slider" >
         <div v-for="item of navItems" :key="item.name" class="nav-slider__item">
           <router-link :to="item.to" class="nav-slider__link" :class="item.class">
-            <i :class="'ic-20 ic-'+item.icon"></i>
+            <span :class="'ic-20 ic-'+item.icon"></span>
             <span>{{ item.title }}</span>
             <account-flat-services v-if="item.to.name!=='account-flat'" :client="item.client"/>
           </router-link>
