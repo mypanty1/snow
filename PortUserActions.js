@@ -80,7 +80,7 @@ Vue.component("PortUserActions",{
 
 Vue.component("PortActionMac", {
   template:`<section name="PortActionMac">
-    <link-block icon="mac" :text="'MAC-адрес__'+testId" @block-click="loadMacs" :disabled="disabledBtn" :loading="loading" actionIcon="down" data-ic-test="load_mac_btn"/>
+    <link-block icon="mac" text="MAC-адрес_2" @block-click="loadMacs" :disabled="disabledBtn" :loading="loading" actionIcon="down" data-ic-test="load_mac_btn"/>
     <template v-if="!loading&&rows.length">
       <PortEntitiesByMac v-for="({text,mac},key) of rows" :key="key" v-bind="{text,mac}" :oui="ouis[mac]" :mr_id="networkElement.region.mr_id" :region_id="networkElement.region.id" :noSession="rows.length>2"/>
     </template>
@@ -120,7 +120,6 @@ Vue.component("PortActionMac", {
     disabledBtn() {
       return this.disabled || this.loading || this.loading_clear;
     },
-    testId(){return randcode(10)},
   },
   methods: {
     async parse(rows){
