@@ -80,7 +80,7 @@ Vue.component("PortUserActions",{
 
 Vue.component("PortActionMac", {
   template:`<section name="PortActionMac">
-    <link-block icon="mac" text="MAC-адрес_2" @block-click="loadMacs" :disabled="disabledBtn" :loading="loading" actionIcon="down" data-ic-test="load_mac_btn"/>
+    <link-block icon="mac" text="MAC-адрес_3" @block-click="loadMacs" :disabled="disabledBtn" :loading="loading" actionIcon="down" data-ic-test="load_mac_btn"/>
     <template v-if="!loading&&rows.length">
       <PortEntitiesByMac v-for="({text,mac},key) of rows" :key="key" v-bind="{text,mac}" :oui="ouis[mac]" :mr_id="networkElement.region.mr_id" :region_id="networkElement.region.id" :noSession="rows.length>2"/>
     </template>
@@ -123,7 +123,7 @@ Vue.component("PortActionMac", {
   },
   methods: {
     async parse(rows){
-      const {items,macs}=rows.reduce((result,_row)=>{//ffff.ffff.ffff,ff:ff:ff:ff:ff:ff
+      const {items,macs}=rows.reduce((result,_row)=>{//ffff.ffff.ffff,ff:ff:ff:ff:ff:ff,xxxx.ffff.ffff,
         const row=String(_row);
         const mac=row.match(/(([0-9A-Fa-f]{4}[.-]){2}([0-9A-Fa-f]{4}))|(([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2}))/gi)?.[0]||'';
         const text=(mac?row.replace(mac,''):row).split(' ').filter(v=>v).join(' • ')
@@ -132,7 +132,7 @@ Vue.component("PortActionMac", {
         return result
       },{items:[],macs:[]});
       this.rows=items;
-      this.ouis=await this.test_getMacVendorLookup(macs);
+      this.ouis=await this.test_getMacVendorLookup(macs)||{};
     },
     eventLoadStatus() {
       this.$emit("load:status");
