@@ -78,9 +78,10 @@ Vue.component("PortUserActions",{
   },
 });
 
-Vue.component("PortActionMac", {
+//fix mac xxxx
+Vue.component("PortActionMac",{
   template:`<section name="PortActionMac">
-    <link-block icon="mac" text="MAC-адрес_3" @block-click="loadMacs" :disabled="disabledBtn" :loading="loading" actionIcon="down" data-ic-test="load_mac_btn"/>
+    <link-block icon="mac" text="MAC-адрес" :text2="(macs?.length?macs.length:'')" text2Class="tone-500" @block-click="loadMacs" :disabled="disabledBtn" :loading="loading" actionIcon="down" data-ic-test="load_mac_btn"/>
     <template v-if="!loading&&rows.length">
       <PortEntitiesByMac v-for="({text,mac},key) of rows" :key="key" v-bind="{text,mac}" :oui="ouis[mac]" :mr_id="networkElement.region.mr_id" :region_id="networkElement.region.id" :noSession="rows.length>2"/>
     </template>
@@ -92,36 +93,37 @@ Vue.component("PortActionMac", {
       <button-main @click="clearMac" label="Очистить MAC " icon="" :loading="loading_clear" :disabled="disabledBtn" buttonStyle="outlined" size="full" data-ic-test="clear_mac_btn"/>
     </div>
   </section>`,
-  props: {
+  props:{
     port:{type:Object,required:true},
     networkElement:{type:Object,required:true},
     disabled:{type:Boolean,default:false},
   },
-  data: () => ({
-    loading: false,
-    loading_clear: false,
-    rows: [],//ETH_KR_54_89153_10
-    text: "",
-    ouis: {},
-    clear_success: false,
+  data:()=>({
+    loading:false,
+    loading_clear:false,
+    rows:[],//ETH_KR_54_89153_10
+    macs:[],
+    text:"",
+    ouis:{},
+    clear_success:false,
   }),
-  created() {
-    this.clear_success = false;
+  created(){
+    this.clear_success=false;
   },
   watch:{
     'loading'(loading){
-      this.$emit('loading',loading)
+      this.$emit('loading',loading);
     },
     'loading_clear'(loading_clear){
-      this.$emit('loading',loading_clear)
+      this.$emit('loading',loading_clear);
     }
   },
-  computed: {
-    disabledBtn() {
-      return this.disabled || this.loading || this.loading_clear;
+  computed:{
+    disabledBtn(){
+      return this.disabled||this.loading||this.loading_clear;
     },
   },
-  methods: {
+  methods:{
     async parse(rows){
       const {items,macs}=rows.reduce((result,_row)=>{//ffff.ffff.ffff,ff:ff:ff:ff:ff:ff,xxxx.ffff.ffff,
         const row=String(_row);
@@ -132,18 +134,20 @@ Vue.component("PortActionMac", {
         return result
       },{items:[],macs:[]});
       this.rows=items;
+      this.macs=macs;
       this.ouis=await this.test_getMacVendorLookup(macs)||{};
     },
-    eventLoadStatus() {
+    eventLoadStatus(){
       this.$emit("load:status");
     },
-    async loadMacs() {
-      this.loading = true;
-      this.rows = [];
-      this.text = "";
-      try {
-        const response = await httpGet(buildUrl("port_mac_show",{
-          MR_ID: this.networkElement.region.mr_id,
+    async loadMacs(){
+      this.loading=!0;
+      this.rows=[];
+      this.macs=[];
+      this.text="";
+      try{
+        const response=await httpGet(buildUrl('port_mac_show',{
+          MR_ID:this.networkElement.region.mr_id,
           DEVICE_IP_ADDRESS:this.networkElement.ip,
           DEVICE_SYSTEM_OBJECT_ID:this.networkElement.system_object_id,
           DEVICE_VENDOR:this.networkElement.vendor,
@@ -152,23 +156,22 @@ Vue.component("PortActionMac", {
           DEVICE_PATCH_VERSION:this.networkElement.patch_version,
           SNMP_PORT_NAME:this.port.snmp_name,
         },"/call/hdm/"));
-        if (Array.isArray(response?.text)) {
+        if(Array.isArray(response?.text)){
           this.parse(response.text);
-        }
-        if (typeof response?.text === "string") {
+        }else if(typeof response?.text === "string"){
           this.text = response.text;
-        }
-      } catch (error) {
-        console.warn("port_mac_show.error", error);
+        };
+      }catch(error){
+        console.warn("port_mac_show.error",error);
       }
-      this.loading = false;
+      this.loading=!1;
     },
-    async clearMac() {
-      this.clear_success = false;
-      this.loading_clear = true;
+    async clearMac(){
+      this.clear_success=false;
+      this.loading_clear=true;
       try {
-        // const response = await Promise.resolve({ message: "OK" });
-        const response = await httpPost("/call/hdm/clear_macs_on_port", {
+        // const response=await Promise.resolve({message:"OK"});
+        const response=await httpPost("/call/hdm/clear_macs_on_port",{
           port:{
             SNMP_PORT_NAME:this.port.snmp_name,
             PORT_NUMBER:this.port.number,
@@ -184,15 +187,15 @@ Vue.component("PortActionMac", {
             PATCH_VERSION:this.networkElement.patch_version,
           },
         });
-        if (response.message === "OK") {
-          this.clear_success = true;
+        if(response.message ==="OK"){
+          this.clear_success=true;
           this.eventLoadStatus();
           this.loadMacs();
-        }
-      } catch (error) {
-        console.warn("clear_macs_on_port.error", error);
-      }
-      this.loading_clear = false;
+        };
+      }catch(error){
+        console.warn("clear_macs_on_port.error",error);
+      };
+      this.loading_clear=false;
     },
   },
 });
