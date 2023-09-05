@@ -24,7 +24,29 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/fix_ForisContent_and_ForisInternetAccessCreds.js',type:'text/javascript'}));
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/PortUserActions.js',type:'text/javascript'}));
 
-
+//fix date parse for two dates in log row
+PORT_LINK_LOGS.getLogRowDate=function(_row=''){
+  const row=_row.slice(0,48);
+  let parsed='';
+  for(const regexp of [
+    /\d{4}(-|\/)\d{1,2}(-|\/)\d{1,2}\s{1,2}\d{2}:\d{2}:\d{2}/,//2023-3-8 10:53:09 (D-Link 3200, FiberHome, Huawei 3328)
+    /\w{3}\s{1,2}\d{1,2}\s\d{2}:\d{2}:\d{2}/,                 //Mar  8 10:21:17 (D-Link 1210, Huawei 5300)
+    /\w{3}\s{1,2}\d{1,2}\s\d{4}\s\d{2}:\d{2}:\d{2}/,          //Mar  8 2023 10:56:41+07:00 (Huawei 2328)
+    /\d{2}:\d{2}:\d{2}\s{1,2}\d{4}(-|\/)\d{1,2}(-|\/)\d{1,2}/,//10:27:39 2023-03-08 (Edge-Core)
+    /\w{3}\s{1,2}\d{1,2}\s\d{2}:\d{2}:\d{2}:\d{3}\s\d{4}/,    //%Mar  8 09:08:55:598 2013 (H3C, HP)
+  ]){
+    parsed=row.match(regexp)?.[0];
+    if(parsed){break};
+  };
+  const time=Date.parse(parsed)
+  const date=new Date(time);
+  if(!date||date=='Invalid Date'){return}
+  const formatted=date?.toDateTimeString?date?.toDateTimeString():[
+    date.toLocaleDateString('ru',{year:'2-digit',month:'2-digit',day:'2-digit'}),
+    date.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit',second:'2-digit'})
+  ].join(' '); 
+  return {parsed,time,date,formatted};
+}
 
 
 
