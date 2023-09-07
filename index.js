@@ -22,7 +22,9 @@
 
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/task-find-port.js',type:'text/javascript'}));
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/fix_ForisContent_and_ForisInternetAccessCreds.js',type:'text/javascript'}));
-document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/PortUserActions.js',type:'text/javascript'}));
+if(/(:\/\/fx.mts.ru|:\/\/inetcore.mts.ru)/.test(window.location.origin)){
+  document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/PortUserActions.js',type:'text/javascript'}));
+};
 
 //fix date parse for two dates in log row
 PORT_LINK_LOGS.getLogRowDate=function(_row=''){
