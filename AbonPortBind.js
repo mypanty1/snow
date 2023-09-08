@@ -205,7 +205,7 @@ Vue.component('AbonPortBindModal',{
     },
   },
 });
-/
+//fix inputmode numeric for iphone
 Vue.component('AbonPortBindForm',{
   template:`<div name="AbonPortBindForm">
     <div class="display-flex flex-direction-column gap-8px">
