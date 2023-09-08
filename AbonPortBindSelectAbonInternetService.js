@@ -205,3 +205,244 @@ Vue.component('AbonPortBindModal',{
     },
   },
 });
+
+Vue.component('AbonPortBindForm',{
+  template:`<div name="AbonPortBindForm">
+    <div class="display-flex flex-direction-column gap-8px">
+
+      
+      <message-el v-if="!fields.length" text="Привязка этой УЗ не предусмотрена" :subText="'type_of_bind: '+typeOfBind" type="info" box/>
+      <component v-for="({is,props,listeners,slots={}},index) of fields" :key="index" :is="is" v-bind="props" v-on="listeners">
+        <component v-for="({is,props,listeners},slot) in slots" :key="slot" :slot="slot" :is="is" v-bind="props" v-on="listeners">
+          
+        </component>
+      </component>
+
+      <loader-bootstrap v-if="setBindLoading" text="бронирование ресурсов сети"/>
+      <template v-else-if="setBindResult">
+        <message-el v-if="setBindResult.type==='error'" :text="setBindResult.text.slice(0,120)" box type="warn"/>
+        <template v-else-if="setBindResult.type!=='error'">
+          <message-el v-if="setBindResult.InfoMessage" :text="setBindResult.InfoMessage" box type="success"/>
+          <template v-if="setBindResult.cfg">
+            <template v-for="(value,label,index) in setBindResult.cfg">
+              <info-value v-if="value" :key="index" v-bind="{value,label}" type="medium" withLine/>
+            </template>
+          </template>
+          <link-block icon="person" v-if="setBindResult.code==200||setBindResult.InfoMessage||setBindResult.Data" :text="account" :search="account" class="padding-unset"/>
+        </template>
+      </template>
+
+      <template v-if="false">
+        <message-el v-if="true" text="text" box type="success"/>
+        <message-el v-else text="text" box type="warn"/>
+      </template>
+      
+    </div>
+  </div>`,
+  props:{
+    port:{type:Object,required:true},
+    networkElement:{type:Object,required:true},
+    account:{type:String,required:true,default:''},
+    vg:{type:Object,required:true},
+    macs:{type:Array,required:true,default:()=>[]},
+    disabled:{type:Boolean,default:false},
+    loading:{type:Boolean,default:false},
+    macsLoading:{type:Boolean,default:false},
+  },
+  data:()=>({
+    mac:'',
+    clientIp:'',
+    setBindLoading:false,
+    setBindResult:null,
+  }),
+  watch:{
+    'setBindLoading'(setBindLoading){
+      this.$emit('loading',setBindLoading)
+    },
+    'setBindResult'(setBindResult){
+      this.$emit('result',setBindResult)
+    },
+    'mac'(mac){
+      this.$emit('mac',mac)
+    }
+  },
+  computed:{
+    vgData(){return filterKeys(this.vg,'vgid,login,serverid,type_of_bind,agentid')},
+    typeOfBind(){return this.vg?.type_of_bind},
+    deviceIp(){return this.networkElement?.ip||''},
+    deviceName(){return this.networkElement?.name||''},
+    portNumber(){return this.port?.number||0},
+    fields(){
+      const {disabled,loading,clientIp,mac,macs,macsLoading}=this;
+      class ButtonSetBind {
+        constructor(label='label',props={},listeners={},slots={}){
+          this.is='button-main'
+          this.props={
+            label,
+            buttonStyle:'contained',
+            size:'full',
+            loading:props.loading,
+            disabled:props.disabled,
+          }
+          this.listeners=listeners||{}
+          this.slots=slots||{}
+        }
+      };
+      class InputIp {
+        constructor(label='label',props={},listeners={},slots={}){
+          this.is='input-el'
+          this.props={
+            label,
+            value:props.value,
+            maxlength:23,
+            filter:'[0-9\.]',
+            inputmode:'decimal',
+            loading:props.loading,
+            disabled:props.disabled,
+            clearable:true,
+          }
+          this.listeners=listeners||{}
+          this.slots=slots||{}
+        }
+      }
+      class InputMac {
+        constructor(label='label',props={},listeners={},slots={}){
+          this.is='input-el'
+          this.props={
+            label,
+            value:props.value,
+            items:props.items||[],
+            maxlength:23,
+            filter:'[0-9a-fA-F\:\.]',
+            loading:props.loading,
+            disabled:props.disabled,
+            clearable:true,
+          }
+          this.listeners=listeners||{}
+          this.slots=slots||{}
+        }
+      }
+      class ButtonGetMacs {
+        constructor(props={},listeners={}){
+          this.is='button-sq'
+          this.props={
+            icon:props.icon,
+            disabled:props.disabled,
+          }
+          this.listeners=listeners||{}
+        }
+      };
+      const inputMac=new InputMac('MAC',{value:mac,items:macs,disabled,loading},{input:value=>this.mac=value},{
+        postfix2:new ButtonGetMacs({disabled:disabled||loading||macsLoading,icon:macsLoading?'loading rotating':'sync'},{click:()=>this.$emit('callParent',['getMacs'])})
+      });
+      const btnSetBindPort_3=new ButtonSetBind('Привязать порт к УЗ',{disabled,loading},{click:()=>this.setBind(3)});
+      return {
+        0:[],//not_available
+        1:[],//vgid_aaa_manager
+        2:[//ins_mac
+          inputMac,
+          new ButtonSetBind('Привязать MAC к УЗ',{disabled,loading},{click:this.insMac}),
+        ],
+        3:[//ins_port_pair_vlan_vgId
+          btnSetBindPort_3,
+        ],
+        4:[],//ins_only_mac
+        5:[//ins_only_mac_and_ins_port
+          btnSetBindPort_3,
+          inputMac,
+          new ButtonSetBind('Привязать MAC к УЗ',{disabled,loading},{click:this.insOnlyMac}),
+        ],
+        6:[//ins_port_with_ip
+          new InputIp('IP',{value:clientIp,disabled,loading},{input:(value)=>this.clientIp=value.replace(/[^\d|\.]/g,'')}),
+          new ButtonSetBind('Привязать IP к УЗ',{disabled,loading},{click:()=>this.setBind(3)}),
+        ],
+        7:[//update_login_lbsv
+          inputMac,
+          new ButtonSetBind('Перепривязать MAC',{disabled,loading},{click:()=>this.setBind(7)}),
+        ],
+        8:[//AddStatPubIP_Penza
+          btnSetBindPort_3,
+          new ButtonSetBind('Выделить IP',{disabled,loading},{click:()=>this.setBind(8)}),
+        ],
+        9:[//InsAll2Spb_Piter
+          inputMac,
+          new ButtonSetBind('Привязать ресурсы к УЗ',{disabled,loading},{click:()=>this.setBind(9)}),
+        ],
+        10:[//InsPort_with_mac_Omsk
+          inputMac,
+          new ButtonSetBind('Привязать порт и MAC к УЗ',{disabled,loading},{click:()=>this.setBind(3)}),
+        ]
+      }[this.typeOfBind]||[]
+    }
+  },
+  methods:{
+    insMac(){
+      const {vgData}=this;
+      this.serviceMixQuery('ins_mac',{
+        ...vgData,
+        ...filterKeys(this,{
+          account:    'account',
+          mac:        'mac',
+          portNumber: 'port',
+          deviceIp:   'ip',
+          deviceName: 'deviceName',
+        })
+      })
+    },
+    insOnlyMac(){
+      const {vgData}=this;
+      this.serviceMixQuery('ins_only_mac',{
+        ...vgData,
+        ...filterKeys(this,{
+          account:    'account',
+          mac:        'mac',
+          portNumber: 'port',
+          deviceName: 'deviceName',
+        })
+      });
+    },
+    setBind(typeOfBind){
+      const {vgData}=this;
+      this.serviceMixQuery('set_bind',{
+        ...vgData,
+        type_of_bind:(this.typeOfBind&&vgData.type_of_bind!=10)?typeOfBind:vgData.type_of_bind,
+        ...this.typeOfBind==6?{
+          client_ip:this.clientIp
+        }:null,
+        ...[5,7,9,10].includes(this.typeOfBind)?{
+          mac:this.mac
+        }:null,
+        ...filterKeys(this,{
+          account:    'account',
+          deviceIp:   'ip',
+          portNumber: 'port',
+          deviceName: 'deviceName',
+        })
+      });
+    },
+    async serviceMixQuery(method,params){
+      if(params.mac&&/x/.test(String(params.mac))){//for priv NetworkScrt
+        params.get_mac=new DNM.DevicePortParams(this.networkElement,this.port);
+      };
+      this.setBindLoading=!0;
+      this.setBindResult=null;
+      const path=`/call/service_mix/${method}`;
+      try{
+        const response=await CustomRequest.post(path,params);
+        this.setBindResult=response
+        if(response&&typeof response.Data=='string'){
+          const [ip,gw,sub]=response.Data.split('|');
+          if(ip||gw||sub){
+            this.$set(this.setBindResult,'cfg',{'Ip':ip,'Шлюз':gw,'Маска':sub});
+          };
+        }
+      }catch(error){
+        console.warn(`${method}.error`,error);
+        this.setBindResult= {text:"Ошибка сервиса",type:"error"};
+      };
+      console.log({path,params})
+      this.setBindLoading=!1;
+    },
+  },
+});
+
