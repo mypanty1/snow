@@ -506,7 +506,7 @@ Vue.component('AbonPortBindSearchAbon',{
     }),
     currentTaskItem(){
       if(this.$route.name!='wfm-task'){return};
-      const currentTaskItem=this.tasks.find({NumberOrder}=>NumberOrder==this.$route.params.id);
+      const currentTaskItem=this.tasks.find(({NumberOrder})=>NumberOrder==this.$route.params.id);
       return currentTaskItem?this.toListItem(currentTaskItem):null;
     },
     tasksItemsFiltered(){
