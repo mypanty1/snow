@@ -1,3 +1,4 @@
+//fix address
 Vue.component('AbonPortBindSelectAbonInternetService',{
   template:`<div name="AbonPortBindSelectAbonInternetService">
     <link-block icon="person" :text="agreement.account" :search="agreement.account" class="padding-unset"/>
@@ -46,6 +47,7 @@ Vue.component('AbonPortBindSelectAbonInternetService',{
   methods:{},
 });
 
+//fix cpeTitle
 Vue.component('AbonPortBindModal',{
   template:`<div name="AbonPortBindModal">
     <modal-container-custom ref="modal" :disabled="macsLoading||setBindLoading" header :footer="false" @open="onOpen" @close="onClose" :wrapperStyle="{'min-height':'auto','margin-top':'4px'}">
