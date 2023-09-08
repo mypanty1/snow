@@ -295,8 +295,8 @@ Vue.component('AbonPortBindForm',{
             label,
             value:props.value,
             maxlength:23,
-            filter:'[0-9\.]',
-            inputmode:'decimal',
+            filter:'[0-9\.\,]',//decimal for iphone
+            inputmode:'decimal',//numeric
             loading:props.loading,
             disabled:props.disabled,
             clearable:true,
@@ -353,7 +353,7 @@ Vue.component('AbonPortBindForm',{
           new ButtonSetBind('Привязать MAC к УЗ',{disabled,loading},{click:this.insOnlyMac}),
         ],
         6:[//ins_port_with_ip
-          new InputIp('IP',{value:clientIp,disabled,loading},{input:(value)=>this.clientIp=value.replace(/[^\d|\.]/g,'')}),
+          new InputIp('IP',{value:clientIp,disabled,loading},{input:(value)=>this.clientIp=value.replace(/[\,]/g,'.').replace(/[^\d|\.]/g,'')}),
           new ButtonSetBind('Привязать IP к УЗ',{disabled,loading},{click:()=>this.setBind(3)}),
         ],
         7:[//update_login_lbsv
