@@ -27,8 +27,8 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 
 //fix sub ext
 app.$router.afterEach((to,from)=>{
-  if(to.name=='map'&&app.$children?.[3]?.map?.buildings?.terms){
-    app.$children[3].map.buildings.terms.extended=''
+  if(to.name=='map'){
+    window.isDevInst=''
   };
 });
 
