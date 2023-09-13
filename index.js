@@ -26,9 +26,10 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/FixIptvIcon.js',type:'text/javascript'}));
 
 //fix sub ext
-app.$router.beforeEach((to,from,next)=>{
-  if(to.name=='map'){window.isDevInst=''};
-  next();
+app.$router.afterEach((to,from)=>{
+  if(to.name=='map'&&app.$children?.[3]?.map?.buildings?.terms){
+    app.$children[3].map.buildings.terms.extended=''
+  };
 });
 
 
