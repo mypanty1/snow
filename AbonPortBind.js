@@ -401,15 +401,15 @@ Vue.component('AbonPortBindForm',{
         })
       });
     },
-    setBind(typeOfBind){
-      const {vgData}=this;
+    setBind(_typeOfBind){
+      const {vgData,typeOfBind,clientIp}=this;
       this.serviceMixQuery('set_bind',{
         ...vgData,
-        type_of_bind:(this.typeOfBind&&vgData.type_of_bind!=10)?typeOfBind:vgData.type_of_bind,
-        ...this.typeOfBind==6?{
-          client_ip:this.clientIp
+        type_of_bind:(typeOfBind&&vgData.type_of_bind!=10)?_typeOfBind:vgData.type_of_bind,
+        ...typeOfBind==6&&clientIp?{//костыль для BE, (при 3 или 6 если передан пустой client_ip происходит режект валидации)
+          client_ip:clientIp
         }:null,
-        ...[5,7,9,10].includes(this.typeOfBind)?{
+        ...[5,7,9,10].includes(typeOfBind)?{
           mac:this.mac
         }:null,
         ...filterKeys(this,{
