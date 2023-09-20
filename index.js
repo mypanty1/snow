@@ -28,7 +28,22 @@ if(/http(|s):\/\/(inetcore|fx)/i.test(window.location.origin)){
 };
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/buildings.js',type:'text/javascript'}));
 
-
+function getTestNodesTree(parent=document.body,tree={}){
+  return [...parent?.children||[]].reduce((tree,el)=>{
+    const isTestNode=el.hasAttribute('cn')||el.hasAttribute('tn');
+    if(!isTestNode){
+      return {...tree,...getTestNodesTree(el,tree)}
+    }else{
+      const cn=el.getAttribute('cn')||'',cn_sel=cn?`[cn="${cn}"]`:`[cn]`;
+      const tn=el.getAttribute('tn')||'',tn_sel=tn?`[tn="${tn}"]`:``;
+      const tag=String(el.tagName).toLowerCase();
+      const sel=`${cn_sel}${tn_sel}`;
+      if(!tree[sel]){tree[sel]={tag,nst:[]}};
+      tree[sel].nst.push(getTestNodesTree(el))
+      return tree
+    }
+  },tree);
+};
 
 
 
