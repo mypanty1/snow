@@ -28,6 +28,8 @@ if(/http(|s):\/\/(inetcore|fx)/i.test(window.location.origin)){
 };
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/buildings.js',type:'text/javascript'}));
 
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/CpeSetWifiModal.js',type:'text/javascript'}));
+
 function getTestNodesTree(parent=document.body,tree={}){
   return [...parent?.children||[]].reduce((tree,el)=>{
     const isTestNode=el.hasAttribute('cn')||el.hasAttribute('tn');
