@@ -48,10 +48,10 @@ Vue.component('CpeSetWifiModal',{
             </div>
             <select-el label="Радиорежим 2,4 ГГц" v-model="wlan24.beacontype" :items="beacontype_items" :disabled="!wlan24_isEnabled||cpeUpdateLoading"/>
 
-            <div class="display-flex align-items-center justify-content-space-between gap-4px">
+            <!--<div class="display-flex align-items-center justify-content-space-between gap-4px">
               <div class="font--13-500" :class="[!wlan24_isAutoBandwidthEnabled&&'tone-500']">Ширина канала автоматически</div>
-              <switch-el class="width-40px" v-model="wlan24_isAutoBandwidthEnabled" :disabled="cpeUpdateLoading"/>
-            </div>
+              <switch-el class="width-40px" v-model="wlan24_isAutoBandwidthEnabled" :disabled="cpeUpdateLoading||!0"/>
+            </div>-->
             <select-el label="Ширина канала (МГц)" v-model="wlan24.bandwidth" :items="wlan24_bandwidth_items" :disabled="!wlan24_isEnabled||wlan24_isAutoBandwidthEnabled||cpeUpdateLoading"/>
 
             <div class="display-flex align-items-center justify-content-space-between gap-4px">
@@ -87,10 +87,10 @@ Vue.component('CpeSetWifiModal',{
             </div>
             <select-el label="Радиорежим 5 ГГц" v-model="wlan5.beacontype" :items="beacontype_items" :disabled="!wlan5_isEnabled||cpeUpdateLoading"/>
             
-            <div class="display-flex align-items-center justify-content-space-between gap-4px">
+            <!--<div class="display-flex align-items-center justify-content-space-between gap-4px">
               <div class="font--13-500" :class="[!wlan5_isAutoBandwidthEnabled&&'tone-500']">Ширина канала автоматически</div>
-              <switch-el class="width-40px" v-model="wlan5_isAutoBandwidthEnabled" :disabled="cpeUpdateLoading"/>
-            </div>
+              <switch-el class="width-40px" v-model="wlan5_isAutoBandwidthEnabled" :disabled="cpeUpdateLoading||!0"/>
+            </div>-->
             <select-el label="Ширина канала (МГц)" v-model="wlan5.bandwidth" :items="wlan5_bandwidth_items" :disabled="!wlan5_isEnabled||wlan5_isAutoBandwidthEnabled||cpeUpdateLoading"/>
             
             <div class="display-flex align-items-center justify-content-space-between gap-4px">
@@ -298,6 +298,10 @@ Vue.component('CpeSetWifiModal',{
     },
   },
 });
+
+ACS_CPE.wlan24.bandwidth.items=['Auto',...ACS_CPE.wlan24.bandwidth.items]
+ACS_CPE.wlan5.bandwidth.items=['Auto',...ACS_CPE.wlan5.bandwidth.items]
+
 Vue.component('CpeWlan',{
   template:`<div name="CpeWlan">
     <devider-line/>
