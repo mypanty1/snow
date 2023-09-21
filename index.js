@@ -30,18 +30,52 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/CpeSetWifiModal.js',type:'text/javascript'}));
 
-function getTestNodesTree(parent=document.body,tree={}){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Vue.mixin({
+  props:{
+    tn:{type:String,default:''},
+  },
+  created(){
+    let {template}=this.$options;if(!template?.match){return};
+    const addBind=(t,b)=>/\/>$/.test(t)?t.replace(/\/>$/,` ${b}/>`):/>/.test(t)?t.replace(/>/,` ${b}>`):t;
+    template=!/\W(cn)\W/.test(template)?addBind(template,`:cn="$options.name"`):template;
+    template=!/\W(tn)\W/.test(template.match(/(?<=\<)([\s\S]+?)(?=\>)/g)?.[0]||'')?addBind(template,`:tn="tn"`):template;
+    this.$options.template=template;
+  },
+});
+function getTestNodesTree(parent=document.body,tree={},_path='body'){
   return [...parent?.children||[]].reduce((tree,el)=>{
     const isTestNode=el.hasAttribute('cn')||el.hasAttribute('tn');
     if(!isTestNode){
-      return {...tree,...getTestNodesTree(el,tree)}
+      return {...tree,...getTestNodesTree(el,tree,_path)}
     }else{
       const cn=el.getAttribute('cn')||'',cn_sel=cn?`[cn="${cn}"]`:``;
       const tn=el.getAttribute('tn')||'',tn_sel=tn?`[tn="${tn}"]`:``;
       const tag=String(el.tagName).toLowerCase();
       const sel=`${cn_sel}${tn_sel}`||tag;
-      if(!tree[sel]){tree[sel]={tag,nst:[]}};
-      tree[sel].nst.push(getTestNodesTree(el))
+      const allow_sel=`${/-/.test(cn_sel)?'':cn_sel}${tn_sel}`||tag;
+      const path=_path?`${_path} ${allow_sel}`:allow_sel;
+      if(!tree[sel]){tree[sel]={path,tag,nst:[]}};
+      tree[sel].nst.push(getTestNodesTree(el,{},path))
       return tree
     }
   },tree);
