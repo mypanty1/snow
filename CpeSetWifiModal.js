@@ -50,7 +50,7 @@ Vue.component('CpeSetWifiModal',{
 
             <div class="display-flex align-items-center justify-content-space-between gap-4px">
               <div class="font--13-500" :class="[!wlan24_isAutoBandwidthEnabled&&'tone-500']">Ширина канала автоматически</div>
-              <switch-el class="width-40px" v-model="wlan24_isAutoBandwidthEnabled" :disabled="cpeUpdateLoading||!0"/>
+              <switch-el class="width-40px" v-model="wlan24_isAutoBandwidthEnabled" :disabled="cpeUpdateLoading"/>
             </div>
             <select-el label="Ширина канала (МГц)" v-model="wlan24.bandwidth" :items="wlan24_bandwidth_items" :disabled="!wlan24_isEnabled||wlan24_isAutoBandwidthEnabled||cpeUpdateLoading"/>
 
@@ -89,7 +89,7 @@ Vue.component('CpeSetWifiModal',{
             
             <div class="display-flex align-items-center justify-content-space-between gap-4px">
               <div class="font--13-500" :class="[!wlan5_isAutoBandwidthEnabled&&'tone-500']">Ширина канала автоматически</div>
-              <switch-el class="width-40px" v-model="wlan5_isAutoBandwidthEnabled" :disabled="cpeUpdateLoading||!0"/>
+              <switch-el class="width-40px" v-model="wlan5_isAutoBandwidthEnabled" :disabled="cpeUpdateLoading"/>
             </div>
             <select-el label="Ширина канала (МГц)" v-model="wlan5.bandwidth" :items="wlan5_bandwidth_items" :disabled="!wlan5_isEnabled||wlan5_isAutoBandwidthEnabled||cpeUpdateLoading"/>
             
