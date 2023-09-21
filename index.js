@@ -74,7 +74,7 @@ function getTestNodesTree(parent=document.body,tree={},_path='body'){
       const sel=`${cn_sel}${tn_sel}`||tag;
       const allow_sel=`${/-/.test(cn_sel)?'':cn_sel}${tn_sel}`||tag;
       const path=_path?`${_path} ${allow_sel}`:allow_sel;
-      if(!tree[sel]){tree[sel]={path,tag,nst:[]}};
+      if(!tree[sel]){tree[sel]={tag,path,nst:[]}};
       tree[sel].nst.push(getTestNodesTree(el,{},path))
       return tree
     }
