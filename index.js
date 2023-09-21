@@ -68,12 +68,11 @@ function getTestNodesTree(parent=document.body,tree={},_path='body'){
     if(!isTestNode){
       return {...tree,...getTestNodesTree(el,tree,_path)}
     }else{
-      const cn=el.getAttribute('cn')||'',cn_sel=cn?`[cn="${cn}"]`:``;
+      const cn=el.getAttribute('cn')||'',cn_sel=cn&&!/-/.test(cn)?`[cn="${cn}"]`:``;
       const tn=el.getAttribute('tn')||'',tn_sel=tn?`[tn="${tn}"]`:``;
       const tag=String(el.tagName).toLowerCase();
       const sel=`${cn_sel}${tn_sel}`||tag;
-      const allow_sel=`${/-/.test(cn_sel)?'':cn_sel}${tn_sel}`||tag;
-      const path=_path?`${_path} ${allow_sel}`:allow_sel;
+      const path=_path?`${_path} ${sel}`:sel;
       if(!tree[sel]){tree[sel]={tag,path,nst:[]}};
       tree[sel].nst.push(getTestNodesTree(el,{},path))
       return tree
