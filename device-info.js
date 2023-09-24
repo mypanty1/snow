@@ -168,20 +168,23 @@ Vue.component('device-info',{
     rackEntranceId(){return this.response.niossRack?.PodezdShkafa?.NCObjectKey},
     fullNiossLocation(){
       const {region:{location}}=this.networkElement;
-      const address=truncateSiteAddress(location);
-      if(!this.response.niossRack){return address};
+      const siteAddressShort=truncateSiteAddress(location);
+      if(!this.response.niossRack){return siteAddressShort};
       const {VneEtashnoeRazmechenie='',Etazh='',NomerDRS='',RaspologenieShkaf=''}=this.response.niossRack;
       const {NomerPodezda=''}=this.response.niossRackEntrance||{};
       const hMountText=NomerPodezda?`пд. ${NomerPodezda}`:'';
       const vMountText={'Чердак':`на чердаке`,'Технический этаж':`на тех.этаже`,'Подвал':`в подвале`}[VneEtashnoeRazmechenie]||`эт. ${Etazh}`;
       const drsText=!NomerDRS?'':NomerDRS.length>3?`стояк ${NomerDRS}`:NomerDRS;
       const locationFiltered=[`Подъезд ${NomerPodezda}.`,`Этаж ${Etazh}.`,`${VneEtashnoeRazmechenie}.`,hMountText,vMountText,drsText].reduce((str,sample)=>str.replace(sample,''),RaspologenieShkaf).trim().replace(/^\(|\)$/g,'').toLowerCase();
-      return [
-        address,
+      const rackLocationText=[
         hMountText,
         vMountText,
         drsText,
         locationFiltered
+      ].filter(Boolean).join(', ');
+      return [
+        siteAddressShort,
+        rackLocationText?`\n${rackLocationText}`:''
       ].filter(Boolean).join(', ');
     },
   },
