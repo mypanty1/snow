@@ -1,10 +1,72 @@
+Vue.component('PingLed',{
+  template:`<div class="display-flex align-items-center cursor-pointer" @click.stop="click">
+    <span class="ic-20" :class="pingLoading?'ic-loading rotating tone-500':pingResultClass"></span>
+  </div>`,
+  props:{
+    mr_id:{type:[String,Number],required:true,default:0},
+    ip:{type:String,required:true,default:''},
+    noPingOnCreated:{type:Boolean,default:false},
+    disabled:{type:Boolean,default:false},
+  },
+  created(){
+    if(!this.noPingOnCreated){
+      this.ping();
+    };
+  },
+  watch:{
+    'ip'(){
+      if(!this.noPingOnCreated){
+        this.ping();
+      };
+    },
+    'pingLoading'(loading){
+      this.$emit('loading',loading)
+    },
+    'pingResult'(result){
+      if(this.pingLoading){return};
+      if(!result){return};
+      this.$emit('on-result',result)
+    }
+  },
+  computed:{
+    ...mapGetters({
+      getDnmResp:'dnm/getResp',
+      getDnmLoad:'dnm/getLoad',
+    }),
+    pingResult(){return this.getDnmResp('doPing',atok(this.mr_id,this.ip))},
+    pingLoading(){return this.getDnmLoad('doPing',atok(this.mr_id,this.ip))||false},
+    state(){return this.pingResult?.state},//public
+    pingResultClass(){
+      switch(this.state){
+        case 'error':return 'ic-warning main-orange';
+        case 'online':return 'ic-status main-green';
+        case 'offline':return 'ic-status main-red';
+        default:return 'ic-status tone-500';
+      };
+    }
+  },
+  methods:{
+    ...mapActions({
+      doPing:'dnm/doPing',
+    }),
+    click(){
+      if(this.disabled){return};
+      this.ping();
+    },
+    async ping(){//public
+      const {mr_id,ip}=this;
+      return await this.doPing({mr_id,ip});
+    }
+  },
+});
+
 //add full location
 Vue.component('device-info',{
   template:`<article class="device-info padding-8px" :class="[addBorder&&'border-gray']" :style="neIsNotInstalled?'background-color:#eeeeee;':''">
     <info-text-sec v-if="showLocation" :text="fullNiossLocation" class="padding-left-right-unset margin-bottom-8px"/>
     
     <header class="device-info__header">
-      <PingLed v-if="ip&&mrId" v-bind="{ip,mr_id:mrId}" ref="PingLed" noPingOnCreated @on-result="response.ping=$event" @loading="loading.ping=$event"/>
+      <PingLed v-bind="{ip,mr_id:mrId}" ref="PingLed" noPingOnCreated @on-result="response.ping=$event" @loading="loading.ping=$event"/>
       
       <div @click="toNetworkElement" class="title display-flex align-items-center gap-4px">
         <span class="title-ip">{{networkElementPrefix}} {{networkElement.ip}}</span>
@@ -157,7 +219,7 @@ Vue.component('device-info',{
     sessionsBad(){return this.sessions.filter(s=>!s?.session?.active).length},
     
     mrId(){return this.response.networkElement?.region?.mr_id||this.networkElement.region.mr_id},
-    ip(){return this.response.niossNe?.IPAddressText||this.response.networkElement?.ip||this.networkElement.ip},
+    ip(){return this.response.niossNe?.IPAddressText||this.response.networkElement?.ip||this.networkElement.ip||''},
     snmpCommunity(){return this.response.niossNe?.SNMPCommunity||this.response.networkElement?.snmp?.community||this.networkElement?.snmp?.community},
     snmpVersion(){return this.response.niossNe?.VersionSNMP||this.response.networkElement?.snmp?.version||this.networkElement?.snmp?.version},
     
