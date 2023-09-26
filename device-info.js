@@ -236,24 +236,14 @@ Vue.component('device-info',{
       const {NomerPodezda=''}=this.response.niossRackEntrance||{};
       const hMountText=NomerPodezda?`под. ${NomerPodezda}`:'';
       const vMountText={'Чердак':`на чердаке`,'Технический этаж':`на тех.этаже`,'Подвал':`в подвале`}[VneEtashnoeRazmechenie]||`эт. ${Etazh}`;
-      const drsText=!NomerDRS?'':NomerDRS.length>3?`стояк ${NomerDRS}`:NomerDRS;
-      const locationFiltered=[`Подъезд ${NomerPodezda}.`,`Этаж ${Etazh}.`,`${VneEtashnoeRazmechenie}.`,hMountText,vMountText,drsText].reduce((str,sample)=>str.replace(sample,''),RaspologenieShkaf).trim().replace(/^\(|\)$/g,'').toLowerCase();
-      //const rackLocationText=[
-      //  hMountText,
-      //  vMountText,
-      //  drsText,
-      //  locationFiltered
-      //].filter(Boolean).join(', ');
-      //return [
-      //  siteAddressShort,
-      //  rackLocationText?`\n${rackLocationText}`:''
-      //].filter(Boolean).join(', ');
+      const drsText=!NomerDRS?'':NomerDRS.length>3?NomerDRS:`стояк ${NomerDRS}`;
+      //const locationFiltered=[`Подъезд ${NomerPodezda}.`,`Этаж ${Etazh}.`,`${VneEtashnoeRazmechenie}.`,hMountText,vMountText,drsText].reduce((str,sample)=>str.replace(sample,''),RaspologenieShkaf).trim().replace(/^\(|\)$/g,'').toLowerCase();
       return [
         siteAddressShort,
         hMountText,
         vMountText,
         drsText,
-        locationFiltered
+        //locationFiltered
       ].filter(Boolean).join(', ');
     },
   },
