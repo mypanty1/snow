@@ -1,3 +1,22 @@
+Vue.component('SiteExt',{
+  template:`<div class="display-contents">
+    <link-block icon="amount" :text="site.name" @block-click="$router.push({name:'search',params:{text:site.name}})" actionIcon="right-link" type="medium"/>
+    <devider-line />
+  </div>`,
+  props:{
+    site:{type:Object,default:null,required:true},
+    site_id:{type:String,default:'',required:true},
+    entrances:{type:Array,default:()=>([]),required:true},
+    entrance_id:{type:String,default:''},
+    loads:{type:Object,default:()=>({})},
+  },
+  data:()=>({
+    open_ext:false,
+  }),
+  created(){},
+  computed:{},
+  methods:{}
+});
 //add site ne
 app.$router.beforeEach((to,from,next)=>{
   if(to.name=='site-nodes'){
