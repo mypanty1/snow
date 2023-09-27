@@ -2,7 +2,7 @@
 app.$router.beforeEach((to,from,next)=>{
   if(to.name=='site-nodes'){
     to.matched[0].components.default=Vue.component("SiteNodesPage2",{
-      template:`<section name="SiteNodesPage">
+      template:`<section>
         <PageNavbar :title="title"/>
         <CardBlock>
           <info-text :title="site.address" :text="site_name+' • '+site.site_name_kr" class="margin-top-bottom--8px"/>
@@ -20,23 +20,23 @@ app.$router.beforeEach((to,from,next)=>{
             
             <template v-if="countRacksWithNetworkElements">
               <title-main icon="server" text="ШДУ с оборудованием" text2Class="tone-500" :text2="countRacksWithNetworkElements||''" class="padding-left-unset"/>
-              <div v-for="({props:rackProps,networkElementsProps},rack_id) in racksProps" class="display-flex flex-direction-column gap-8px">
+              <div v-for="({props:rackProps,items},rack_id) in racksProps" class="display-flex flex-direction-column gap-8px">
                 <RackBox2 :key="rack_id" v-bind="rackProps">
-                  <template v-for="({props,listeners},ne_id,i) in networkElementsProps">
+                  <template v-for="({is,props,listeners},item_id,i) in items">
                     <devider-line v-if="i"/>
-                    <NetworkElementCard :key="ne_id" v-bind="props" v-on="listeners"/>
+                    <component :key="item_id" :is="is" v-bind="props" v-on="listeners"/>
                   </template>
                 </RackBox2>
               </div>
             </template>
-
+    
             <template v-if="countNetworkElementsNotInRack">
               <title-main icon="warning" text="Место установки неизвестно" text2Class="tone-500" :text2="countNetworkElementsNotInRack||''" class="padding-left-unset"/>
               <div v-for="({props,listeners},ne_id) in networkElementsProps" class="display-flex flex-direction-column gap-8px">
                 <NetworkElementCard :key="ne_id" v-bind="props" v-on="listeners"/>
               </div>
             </template>
-
+    
           </div>
         </CardBlock>
       </section>`,
@@ -58,10 +58,15 @@ app.$router.beforeEach((to,from,next)=>{
       data:()=>({}),
       async mounted(){
         const {site_id}=this;
-        this.getSiteNodes({site_id});
-        this.getSiteEntrances({site_id});
-        await this.getSiteRacks({site_id});
-        await this.getSiteNetworkElements({site_id});
+        await Promise.allSettled([
+          this.getSiteNodes({site_id}),
+          this.getSiteEntrances({site_id}),
+          this.getSiteRacks({site_id})
+        ]);
+        await Promise.allSettled([
+          this.getSiteNetworkElements({site_id}),
+          this.getSitePatchPanels({site_id})
+        ]);
       },
       computed:{
         title(){return `площадка ${this.site_name}`},
@@ -70,6 +75,7 @@ app.$router.beforeEach((to,from,next)=>{
           getEntrancesBySiteId:'site/getEntrancesBySiteId',
           getRacksBySiteId:'site/getRacksBySiteId',
           getNetworkElementsBySiteId:'site/getNetworkElementsBySiteId',
+          getPatchPanelsBySiteId:'site/getPatchPanelsBySiteId',
         }),
         ...mapGetters({
           getSiteNetworkElementsLoads:'site/getSiteNetworkElementsLoads',
@@ -87,40 +93,55 @@ app.$router.beforeEach((to,from,next)=>{
         entrances(){return this.getEntrancesBySiteId(this.site_id)},
         racks(){return this.getRacksBySiteId(this.site_id)},
         networkElements(){return this.getNetworkElementsBySiteId(this.site_id)},
+        patchPanels(){return this.getPatchPanelsBySiteId(this.site_id)},
         racksProps(){
-          return Object.values(this.racks).reduce((racks,rack)=>{
-            const {id,type,ne_in_rack}=rack;
+          const {racks,networkElements,patchPanels}=this;
+          return Object.values(racks).reduce((racks,rack)=>{
+            const {rack_id,type,ne_in_rack}=rack;
             if(type!="Антивандальный"){return racks};
-            racks[id]={
+            racks[rack_id]={
               props:{
                 rack,
               },
-              networkElementsProps:ne_in_rack?.reduce((networkElements,_name)=>{
-                const ne=Object.values(this.networkElements).find(({ne_name})=>ne_name==_name);
-                if(!ne){return networkElements};
-                const {ne_id,site_id,ne_status,ne_name}=ne;
-                const isInstalled=testByName.neIsInstalled(ne_status);
-                networkElements[ne_id]={
-                  props:{
-                    ne_id,
-                    site_id,
-                    networkElementProps:ne,
-                    showAdminStatus:true,
-                    showSysDescr:true,
-                    showSysName:true,
-                    showServeEntrances:isInstalled,
-                    showFlatsAbons:isInstalled,
-                  },
-                  listeners:{
-                    ...isInstalled?{
-                      click:()=>{
-                        this.$router.push({name:"search",params:{text:ne_name}})
-                      }
-                    }:null
-                  }
-                };
-                return networkElements;
-              },{})
+              items:ne_in_rack?.reduce((items,_name)=>{
+                const ne=Object.values(networkElements).find(({ne_name})=>ne_name==_name);
+                const pp=Object.values(patchPanels).find(({name})=>name==_name);
+                if(ne){
+                  const {ne_id,site_id,ne_status,ne_name}=ne;
+                  const isInstalled=testByName.neIsInstalled(ne_status);
+                  items[ne_id]={
+                    is:'NetworkElementCard',
+                    props:{
+                      ne_id,
+                      site_id,
+                      networkElementProps:ne,
+                      showAdminStatus:true,
+                      showSysDescr:true,
+                      showSysName:true,
+                      showServeEntrances:isInstalled,
+                      showFlatsAbons:isInstalled,
+                    },
+                    listeners:{
+                      ...isInstalled?{
+                        click:()=>{
+                          this.$router.push({name:"search",params:{text:ne_name}})
+                        }
+                      }:null
+                    }
+                  };
+                }else if(pp){
+                  const {pp_id,site_id}=pp;
+                  items[pp_id]={
+                    is:'NetworkElementPPCard',
+                    props:{
+                      pp_id,
+                      site_id,
+                      patchPanelProps:pp,
+                    }
+                  };
+                }
+                return items;
+              },{}),
             };
             return racks
           },{})
@@ -162,6 +183,7 @@ app.$router.beforeEach((to,from,next)=>{
           getSiteEntrances:'site/getSiteEntrances',
           getSiteRacks:'site/getSiteRacks',
           getSiteNetworkElements:'site/getSiteNetworkElements',
+          getSitePatchPanels:'site/getSitePatchPanels',
         }),
       },
     });
