@@ -181,9 +181,9 @@ Vue.component('AbonPortBindSelectAbonInternetServiceItem',{
   }),
   watch:{
     'result'(result){
-      if(this.activateIsOk){
+      //if(this.activateIsOk){
         this.$emit('onVgUnblock',this.vg.vgid)
-      }
+      //}
     }
   },
   computed:{
