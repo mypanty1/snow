@@ -62,7 +62,7 @@ Vue.component('PingLed',{
 
 //add full location
 Vue.component('device-info',{
-  template:`<article class="device-info" :class="[addBorder&&'border-gray']" :style="neIsNotInstalled?'background-color:#eeeeee;':''">
+  template:`<article class="device-info padding-8px" :class="[addBorder&&'border-gray']" :style="neIsNotInstalled?'background-color:#eeeeee;':''">
     <info-text-sec tn="site-address-and-rack-location" v-if="showLocation" :text="fullNiossLocation" class="padding-left-right-unset margin-bottom-8px"/>
     
     <header class="device-info__header">
