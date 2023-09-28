@@ -62,50 +62,51 @@ Vue.component('PingLed',{
 
 //add full location
 Vue.component('device-info',{
-  template:`<article class="device-info padding-8px" :class="[addBorder&&'border-gray']" :style="neIsNotInstalled?'background-color:#eeeeee;':''">
-    <info-text-sec v-if="showLocation" :text="fullNiossLocation" class="padding-left-right-unset margin-bottom-8px"/>
+  template:`<article class="device-info" :class="[addBorder&&'border-gray']" :style="neIsNotInstalled?'background-color:#eeeeee;':''">
+    <info-text-sec tn="site-address-and-rack-location" v-if="showLocation" :text="fullNiossLocation" class="padding-left-right-unset margin-bottom-8px"/>
     
     <header class="device-info__header">
-      <PingLed v-bind="{ip,mr_id:mrId}" ref="PingLed" noPingOnCreated @on-result="response.ping=$event" @loading="loading.ping=$event"/>
+      <PingLed tn="ping-led-btn" v-bind="{ip,mr_id:mrId}" ref="PingLed" noPingOnCreated @on-result="response.ping=$event" @loading="loading.ping=$event"/>
       
       <div @click="toNetworkElement" class="title display-flex align-items-center gap-4px">
-        <span class="title-ip">{{networkElementPrefix}} {{networkElement.ip}}</span>
+        <div tn="str-name-short" class="title-ip">{{networkElementPrefix}}</div>
+        <div tn="str-ip" class="title-ip">{{networkElement.ip}}</div>
       </div>
       <div v-if="!noMinimap&&neIsETH&&!neIsNotInstalled" class="width-100px margin-left-auto">
         <PortsLineChart :name="networkElement.name" @click="toNetworkElement"/>
       </div>
       <slot name="link">
-        <button-sq v-if="showLink" @click="toNetworkElement" class="margin--10px">
+        <button-sq v-if="showLink" tn="btn-right-link" @click="toNetworkElement" class="margin--10px">
           <span class="ic-24 ic-right-link main-lilac"></span>
         </button-sq>
       </slot>
     </header>
     <div v-if="!hideEntrances" class="device-info__main" @click="toNetworkElement">
       <div class="device-info__entrances">
-        <i class="ic-16 ic-entrance"></i>
+        <span class="ic-16 ic-entrance"></span>
         <span class="device-info__entrance-dot"> • </span>
         <template v-if="networkElementEntrances.length">
           <div v-for="(entrance, index) of networkElementEntrances" class="device-info__entrance">
-            <span>{{entrance.number}}</span>
+            <span :tn="'str-entrance-'+entrance.number">{{entrance.number}}</span>
             <span>{{(index + 1 < networkElementEntrances.length)?',':''}}</span>
           </div>
         </template>
         <div v-else>Нет данных</div>
       </div>
     </div>
-    <div v-if="showNetworkElementAdminStatus" class="ne-admin-status">{{networkElementAdminStatus}}</div>
+    <div tn="str-admin-status" v-if="showNetworkElementAdminStatus" class="ne-admin-status">{{networkElementAdminStatus}}</div>
     
     <footer class="device-info__params" @click="toNetworkElement">
       <div class="display-flex gap-10px align-items-center">
-        <div class="font--11-600">{{networkElementLabel}}</div>
+        <div tn="str-name-and-model" class="font--11-600">{{networkElementLabel}}</div>
         <span v-if="isModelToUtil_r54" class="fa fa-trash tone-500 font-size-11px margin-bottom-2px"></span>
       </div>
-      <info-subtitle v-if="sysName" :text="sysName"/>
+      <info-subtitle tn="sys-name" v-if="sysName" :text="sysName"/>
       
       <div v-if="sysUpTime" class="width-100-100 display-flex align-items-center justify-content-end gap-4px">
         <div class="font--13-500 tone-500">sysUpTime:</div>
-        <div class="font--13-500">{{sysUpTime}}</div>
-        <button-sq @click.stop="updateDeviceSysInfo" class="width-20px min-width-20px height-20px">
+        <div tn="str-sys-uptime" class="font--13-500">{{sysUpTime}}</div>
+        <button-sq tn="btn-sys-info" @click.stop="updateDeviceSysInfo" class="width-20px min-width-20px height-20px">
           <span v-if="loadingSystem" class="ic-20 ic-loading rotating main-lilac"></span>
           <span v-else class="ic-20 ic-refresh main-lilac"></span>
         </button-sq>
@@ -445,3 +446,4 @@ Vue.component('device-info',{
     },
   },
 });
+
