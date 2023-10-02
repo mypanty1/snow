@@ -39,21 +39,17 @@ app.$router.beforeEach((to,from,next)=>{
             
             <template v-if="countRacksWithNetworkElements">
               <title-main icon="server" text="ШДУ с оборудованием" text2Class="tone-500" :text2="countRacksWithNetworkElements||''" class="padding-left-unset"/>
-              <div v-for="({props:rackProps,items},rack_id) in racksProps" class="display-flex flex-direction-column gap-8px">
-                <RackBox2 :key="rack_id" v-bind="rackProps">
-                  <template v-for="({is,props,listeners},item_id,i) in items">
-                    <devider-line v-if="i"/>
-                    <component :key="item_id" :is="is" v-bind="props" v-on="listeners"/>
-                  </template>
-                </RackBox2>
-              </div>
+              <RackBox2 v-for="({props:rackProps,items},rack_id) in racksProps" :key="rack_id" v-bind="rackProps">
+                <template v-for="({is,props,listeners},item_id,i) in items">
+                  <devider-line v-if="i"/>
+                  <component :key="item_id" :is="is" v-bind="props" v-on="listeners"/>
+                </template>
+              </RackBox2>
             </template>
     
             <template v-if="countNetworkElementsNotInRack">
               <title-main icon="warning" text="Место установки неизвестно" text2Class="tone-500" :text2="countNetworkElementsNotInRack||''" class="padding-left-unset"/>
-              <div v-for="({props,listeners},ne_id) in networkElementsProps" class="display-flex flex-direction-column gap-8px">
-                <NetworkElementCard :key="ne_id" v-bind="props" v-on="listeners"/>
-              </div>
+              <NetworkElementCard v-for="({props,listeners},ne_id) in networkElementsProps" :key="ne_id" v-bind="props" v-on="listeners"/>
             </template>
     
           </div>
