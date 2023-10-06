@@ -32,6 +32,10 @@
 //document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/CpeSetWifiModal.js',type:'text/javascript'}));
 //document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SiteNodesPage2.js',type:'text/javascript'}));
 
+if(['https://fx.mts.ru','http://inetcore.mts.ru'].includes(window.location.origin)){
+  delete ENGINEER_TASKS.lists.B2C_WFM;
+  delete ENGINEER_TASKS.b2cEngineerListsItems.B2C_WFM;
+};
 
 
 
