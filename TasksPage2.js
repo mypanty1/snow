@@ -2,6 +2,14 @@
 ENGINEER_TASKS.b2cEngineerListsItems=select(ENGINEER_TASKS.lists,{name:(name)=>/^B2C_/.test(name)&&name!=='B2C_WFM'})
 app.$router.beforeEach((to,from,next)=>{
   if(to.name=='tasks-list'){
+    if(to.params.tasksListName==ENGINEER_TASKS.lists.B2C_WFM.name){
+      next({
+        name:'tasks-list',
+        params:{
+          tasksListName:ENGINEER_TASKS.lists.B2C_WFM_old.name
+        }
+      })
+    };
     to.matched[0].components.default=Vue.component('TasksPage2',{
       template:`<div class="position-relative padding-bottom-8px">
         <PageNavbar :title="taskOnDateTitle" @refresh="getTasks({refresh:!0})" :loading="loadingOrUpdate||loadingSomeB2BTasksList" @back="$refs.CalendarDatePicker_modal.open()" backIcon="calendar" :disabled="loadingOrUpdate||loadingSomeB2BTasksList"">
