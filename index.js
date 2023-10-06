@@ -27,10 +27,10 @@
 //};
 
 
-document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/device-info.js',type:'text/javascript'}));
-document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/AbonPortBindSelectAbonInternetServiceItem.js',type:'text/javascript'}));
-document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/CpeSetWifiModal.js',type:'text/javascript'}));
-document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SiteNodesPage2.js',type:'text/javascript'}));
+//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/device-info.js',type:'text/javascript'}));
+//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/AbonPortBindSelectAbonInternetServiceItem.js',type:'text/javascript'}));
+//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/CpeSetWifiModal.js',type:'text/javascript'}));
+//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SiteNodesPage2.js',type:'text/javascript'}));
 
 
 
@@ -50,8 +50,7 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'h
 
 
 
-
-Vue.mixin({
+/*Vue.mixin({
   props:{
     tn:{type:String,default:''},
   },
@@ -79,8 +78,7 @@ function getTestNodesTree(parent=document.body,tree={},_path='body'){
       return tree
     }
   },tree);
-};
-
+};*/
 
 
 
