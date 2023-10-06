@@ -85,7 +85,7 @@ app.$router.beforeEach((to,from,next)=>{
     },
     computed:{
       taskOnDateTitle(){return `Наряды на ${this.date.toLocaleDateString()}`},
-      tasksListItem(){return ENGINEER_TASKS.lists[this.$route.params.tasksListName]},
+      tasksListItem(){return ENGINEER_TASKS.lists[this.$route.params.tasksListName]||{}},
       engineerTasksLists(){return this.isB2BEngineer?ENGINEER_TASKS.b2bEngineerListsItems:ENGINEER_TASKS.b2cEngineerListsItems},
       ...mapGetters([
         'isB2BEngineer'
