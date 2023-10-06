@@ -1,4 +1,5 @@
 //redirect
+ENGINEER_TASKS.b2cEngineerListsItems=select(ENGINEER_TASKS.lists,{name:(name)=>/^B2C_/.test(name)&&name!=='B2C_WFM'})
 app.$router.beforeEach((to,from,next)=>{
   if(to.name=='tasks-list'){
     to.matched[0].components.default=Vue.component('TasksPage2',{
@@ -76,10 +77,7 @@ app.$router.beforeEach((to,from,next)=>{
       computed:{
         taskOnDateTitle(){return `Наряды на ${this.date.toLocaleDateString()}`},
         tasksListItem(){return ENGINEER_TASKS.lists[this.$route.params.tasksListName]},
-        engineerTasksLists(){
-          const b2cEngineerListsItems=select(ENGINEER_TASKS.lists,{name:(name)=>/^B2C_/.test(name)&&name!=='B2C_WFM'})
-          return this.isB2BEngineer?ENGINEER_TASKS.b2bEngineerListsItems:b2cEngineerListsItems
-        },
+        engineerTasksLists(){this.isB2BEngineer?ENGINEER_TASKS.b2bEngineerListsItems:ENGINEER_TASKS.b2cEngineerListsItems},
         ...mapGetters([
           'isB2BEngineer'
         ]),
