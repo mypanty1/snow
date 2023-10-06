@@ -32,7 +32,7 @@
 //document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SiteNodesPage2.js',type:'text/javascript'}));
 
 if(['https://fx.mts.ru','http://inetcore.mts.ru','https://inetcore.mts.ru'].includes(window.location.origin)){
-  document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/TasksPage2.js',type:'text/javascript'}));
+  //document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/TasksPage2.js',type:'text/javascript'}));
 };
 
 
