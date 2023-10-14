@@ -38,7 +38,12 @@ if(['https://fx.mts.ru','http://inetcore.mts.ru','https://inetcore.mts.ru'].incl
 
 
 
-
+try{
+  ENGINEER_TASKS.lists.B2C_WFM_old.taskStatusesItemsList=ENGINEER_TASKS.lists.B2C_WFM_old.taskStatusesItemsList.map(s=>({...s,statusName:s.name}));
+  ENGINEER_TASKS.b2cEngineerListsItems.B2C_WFM_old.taskStatusesItemsList=ENGINEER_TASKS.b2cEngineerListsItems.B2C_WFM_old.taskStatusesItemsList.map(s=>({...s,statusName:s.name}));
+}catch(error){
+  
+}
 
 
 
