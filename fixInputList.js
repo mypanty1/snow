@@ -102,9 +102,6 @@ Vue.component('AbonPortBindSearchAbon',{
     vg:null,
   }),
   watch:{
-    'currentTaskItem'(currentTaskItem){
-      if(currentTaskItem){ this.account=this.account||currentTaskItem.value};
-    },
     'account'(account,_account){
       if(!account||_account){
         this.clear();
@@ -124,15 +121,7 @@ Vue.component('AbonPortBindSearchAbon',{
     ...mapGetters({
       tasks:'wfm/tasks',
     }),
-    currentTaskItem(){
-      if(this.$route.name!='wfm-task'){return};
-      const currentTaskItem=this.tasks.find(({NumberOrder})=>NumberOrder==this.$route.params.id);
-      return currentTaskItem?this.toListItem(currentTaskItem):null;
-    },
-    tasksItemsFiltered(){
-      const {currentTaskItem}=this;
-      return this.tasks.filter(({clientNumber,NumberOrder})=>clientNumber&&clientNumber!=='Потенциальный'&&(currentTaskItem?NumberOrder!=this.$route.params.id:!0)).map(this.toListItem);
-    },
+    tasksItemsFiltered(){return this.tasks.filter(({clientNumber})=>WFM.isValidAccount(clientNumber)).map(this.toListItem)},
     agreementNum(){return SIEBEL.toAgreementNum(this.account)},
     mrId(){return this.abonData?.mr_id},
   },
