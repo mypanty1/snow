@@ -20,20 +20,7 @@
   }):null,1000);
 }())*/
 
-
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/Siebel2.js',type:'text/javascript'}));
-//if(/http(|s):\/\/(inetcore|fx)/i.test(window.location.origin)){
-//  document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/FixIptvIcon.js',type:'text/javascript'}));
-//};
-
-
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/AbonPortBindSelectAbonInternetServiceItem.js',type:'text/javascript'}));
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/CpeSetWifiModal.js',type:'text/javascript'}));
-//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/SiteNodesPage2.js',type:'text/javascript'}));
-
-if(['https://fx.mts.ru','http://inetcore.mts.ru','https://inetcore.mts.ru'].includes(window.location.origin)){
-  //document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/TasksPage2.js',type:'text/javascript'}));
-};
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/fixInputList.js',type:'text/javascript'}));
 
 //fix ifalias in PortLayout
 Vue.mixin({
@@ -86,7 +73,7 @@ try{
 
 
 
-
+//add to PL
 Vue.component('SiteExt',{
   template:`<div class="display-contents">
     <link-block icon="amount" :text="site.name" @block-click="$router.push({name:'search',params:{text:site.name}})" actionIcon="right-link" type="medium"/>
@@ -107,36 +94,6 @@ Vue.component('SiteExt',{
   methods:{}
 });
 
-
-/*Vue.mixin({
-  props:{
-    tn:{type:String,default:''},
-  },
-  created(){
-    let {template}=this.$options;if(!template?.match){return};
-    const addBind=(t,b)=>/\/>$/.test(t)?t.replace(/\/>$/,` ${b}/>`):/>/.test(t)?t.replace(/>/,` ${b}>`):t;
-    template=!/\W(cn)\W/.test(template)?addBind(template,`:cn="$options.name"`):template;
-    template=!/\W(tn)\W/.test(template.match(/(?<=\<)([\s\S]+?)(?=\>)/g)?.[0]||'')?addBind(template,`:tn="tn"`):template;
-    this.$options.template=template;
-  },
-});
-function getTestNodesTree(parent=document.body,tree={},_path='body'){
-  return [...parent?.children||[]].reduce((tree,el)=>{
-    const isTestNode=el.hasAttribute('cn')||el.hasAttribute('tn');
-    if(!isTestNode){
-      return {...tree,...getTestNodesTree(el,tree,_path)}
-    }else{
-      const cn=el.getAttribute('cn')||'',cn_sel=cn&&!/-/.test(cn)?`[cn="${cn}"]`:``;
-      const tn=el.getAttribute('tn')||'',tn_sel=tn?`[tn="${tn}"]`:``;
-      const tag=String(el.tagName).toLowerCase();
-      const sel=`${cn_sel}${tn_sel}`||tag;
-      const path=_path?`${_path} ${sel}`:sel;
-      if(!tree[sel]){tree[sel]={tag,path,nst:[]}};
-      tree[sel].nst.push(getTestNodesTree(el,{},path))
-      return tree
-    }
-  },tree);
-};*/
 
 
 
