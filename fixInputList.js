@@ -75,3 +75,137 @@ Vue.component('input-el', {
     },
   },
 });
+
+//remove outside datalist
+Vue.component('AbonPortBindSearchAbon',{
+  template:`<div name="AbonPortBindSearchAbon">
+    <div class="display-flex flex-direction-column gap-8px">
+      <input-el label="ЛС" placeholder="ЛС" v-model="account" :items="tasksItemsFiltered" clearable @onKeyUpEnter="searchAbonAgreementInternetServices" class="padding-unset">
+        <template slot="postfix2">
+          <button-sq icon="search" @click="searchAbonAgreementInternetServices"/>
+        </template>
+      </input-el>
+
+      <loader-bootstrap v-if="abonDataLoading" text="поиск абонента"/>
+      <message-el v-else-if="abonDataErrorText" :text="abonDataErrorText" box type="warn"/>
+      <AbonPortBindSelectAbonInternetService v-else-if="agreement" v-bind="{abonData,agreement,vgroups}" v-model="vg" @onVgUnblock="updateVg"/>
+    </div>
+  </div>`,
+  props:{},
+  data:()=>({
+    account:'',
+    abonDataLoading:false,
+    abonDataErrorText:null,
+    abonData:null,
+    agreement:null,
+    vgroups:[],
+    vg:null,
+  }),
+  watch:{
+    'currentTaskItem'(currentTaskItem){
+      if(currentTaskItem){ this.account=this.account||currentTaskItem.value};
+    },
+    'account'(account,_account){
+      if(!account||_account){
+        this.clear();
+      };
+    },
+    'agreement'(agreement){
+      this.$emit('onAccountFind',agreement?.account||'');
+    },
+    'vg'(vg){
+      this.$emit('onVgSelect',vg||null);
+    },
+    'mrId'(mrId){
+      this.$emit('onMrId',mrId||0);
+    }
+  },
+  computed:{
+    ...mapGetters({
+      tasks:'wfm/tasks',
+    }),
+    currentTaskItem(){
+      if(this.$route.name!='wfm-task'){return};
+      const currentTaskItem=this.tasks.find(({NumberOrder})=>NumberOrder==this.$route.params.id);
+      return currentTaskItem?this.toListItem(currentTaskItem):null;
+    },
+    tasksItemsFiltered(){
+      const {currentTaskItem}=this;
+      return this.tasks.filter(({clientNumber,NumberOrder})=>clientNumber&&clientNumber!=='Потенциальный'&&(currentTaskItem?NumberOrder!=this.$route.params.id:!0)).map(this.toListItem);
+    },
+    agreementNum(){return SIEBEL.toAgreementNum(this.account)},
+    mrId(){return this.abonData?.mr_id},
+  },
+  methods:{
+    clear(){
+      //this.account='';
+      this.abonDataLoading=false;
+      this.abonDataErrorText='';
+      this.abonData=null;
+      this.agreement=null;
+      this.vgroups=[];
+      this.vg=null;
+    },
+    toListItem({AddressSiebel,Assignment,status,clientNumber}={}){
+      const flat=((AddressSiebel||'').split(', кв. ')[1]||'?'); 
+      return {label:`${Assignment} • ${status} • ${(flat.includes('кв')?flat:'кв '+flat)}`,value:clientNumber};
+    },
+    async searchAbonAgreementInternetServices(update=false){
+      const {abonDataLoading,agreementNum}=this;
+      if(!agreementNum){return};
+      if(abonDataLoading){return};
+      this.abonDataLoading=!0;
+      this.abonData=null;
+      this.abonDataErrorText='';
+      this.agreement=null;
+      this.vgroups=[];
+      this.vg=null;
+      const key=atok('account',agreementNum);
+      try{
+        const cache=!update?this.$cache.getItem(key):null;
+        const response=cache||await httpGet(buildUrl("search_ma",{pattern:agreementNum},"/call/v1/search/"));
+        if(response?.data?.lbsv){
+          this.abonData=(response.data.lbsv?.type==='single'?[response.data.lbsv.data]:response.data.lbsv.data).find(lbsvData=>{
+            return Boolean(this.agreement=lbsvData.agreements.find(item=>SIEBEL.toAgreementNum(item.account)==agreementNum));
+          });
+          if(!this.agreement||!this.abonData){
+            this.abonDataErrorText='ЛС не найден в agreements';
+          }else if(this.agreement){
+            const {agreement}=this;
+            this.vgroups=(this.abonData?.vgroups||[])?.filter(({isSession,agrmid})=>isSession&&agrmid==agreement.agrmid).sort(({vgid:a},{vgid:b})=>b-a).sort(({accondate:a},{accondate:b})=>{
+              const aDateOn=(a||a!=="0000-00-00 00:00:00")?new Date(Date.parse(a)):0;
+              const bDateOn=(b||b!=="0000-00-00 00:00:00")?new Date(Date.parse(b)):0;
+              return bDateOn-aDateOn
+            });
+          };
+        }else if(response?.data){
+          this.abonDataErrorText='ЛС не найден в Lbsv';
+          this.$cache.setItem(key,response);
+        }else{
+          this.abonDataErrorText='ЛС не найден';
+        };
+      }catch(error){
+        console.warn("search_ma.error",error);
+        this.abonDataErrorText='Ошибка сервиса';
+      }
+      this.abonDataLoading=!1;
+    },
+    async updateVg({serverid,vgid}={}){
+      if(!serverid||!vgid){return};
+      const {vgroups}=this;
+      try{
+        const response=await httpGet(buildUrl("resource_info",{serverid,vgid,lbsv_data_up:'',add_status_props:''},"/call/lbsv/"));
+        if(!response?.vgid){return};
+        const currentVg=vgroups.find(vg=>vg.vgid==vgid);
+        if(!currentVg){return};
+        const currentVgIndex=vgroups.findIndex(vg=>vg.vgid==vgid);
+        this.$set(this.vgroups,currentVgIndex,{
+          ...currentVg,
+          ...response
+        });
+      }catch(error){
+        console.warn("resource_info.error",error);
+      }
+    }
+  },
+});
