@@ -7,13 +7,13 @@ Vue.component('input-el', {
         <datalist :id="datalistId">
           <template v-for="(item,key) of items">
             <template v-if="Array.isArray(item)">
-              <option :key="key" :label="item[0]" :value="item[1]"></option>
+              <option :key="key" :label="item[0]" :value="item[1]">{{item[0]}}</option>
             </template>
             <template v-else-if="item?.label||item?.value">
-              <option :key="key" :label="item.label" :value="item.value"></option>
+              <option :key="key" :label="item.label" :value="item.value">{{item.label}}</option>
             </template>
             <template v-else>
-              <option :key="key" :label="item" :value="item"></option>
+              <option :key="key" :label="item" :value="item">{{item}}</option>
             </template>
           </template>
         </datalist>
