@@ -38,13 +38,12 @@ if(['https://fx.mts.ru','http://inetcore.mts.ru','https://inetcore.mts.ru'].incl
 //fix ifalias in PortLayout
 Vue.mixin({
   beforeCreate(){
-    if(this.doPortErrorsClean&&this.getPortLbdInfo&&this.getPortVlans){
-      this.$options.computed.ifAlias=function(){
-        const ifAlias = this.resps?.getPortLink?.if_alias;
-        const ifName = this.resps?.getPortLink?.iface || this.port?.snmp_name;
-        if (!ifAlias) return ''
-        return (/^HUAWEI,\s/.test(ifAlias) || (ifAlias).includes(ifName)) ? '' : ifAlias;
-      }
+    if(this.$options.name!=='PortLayout'){return}
+    this.$options.computed.ifAlias=function(){
+      const ifAlias = this.resps?.getPortLink?.if_alias;
+      if (!ifAlias) return ''
+      const ifName = this.resps?.getPortLink?.iface || this.port?.snmp_name;
+      return (/^HUAWEI,\s/.test(ifAlias) || (ifAlias).includes(ifName)) ? '' : ifAlias;
     };
   },
 });
