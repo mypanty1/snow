@@ -35,7 +35,19 @@ if(['https://fx.mts.ru','http://inetcore.mts.ru','https://inetcore.mts.ru'].incl
   //document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/TasksPage2.js',type:'text/javascript'}));
 };
 
-
+//fix ifalias in PortLayout
+Vue.mixin({
+  beforeCreate(){
+    if(this.doPortErrorsClean&&this.getPortLbdInfo&&this.getPortVlans){
+      this.$options.computed.ifAlias=function(){
+        const ifAlias = this.resps?.getPortLink?.if_alias;
+        const ifName = this.resps?.getPortLink?.iface || this.port?.snmp_name;
+        if (!ifAlias) return ''
+        return (/^HUAWEI,\s/.test(ifAlias) || (ifAlias).includes(ifName)) ? '' : ifAlias;
+      }
+    };
+  },
+});
 
 
 try{
