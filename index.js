@@ -20,7 +20,7 @@
   }):null,1000);
 }())*/
 
-document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/fixInputList.js',type:'text/javascript'}));
+//document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/fixInputList.js',type:'text/javascript'}));
 
 //fix ifalias in PortLayout
 Vue.mixin({
