@@ -44,29 +44,30 @@ try{
 }
 
 //fix pp without_tree
-try{
-  STORE_NIOSS.getSiteSections=(siteId)=>{
-    const NODES='nodes',DEVICES='devices',RACKS='racks',ENTRANCES='entrances',PLINTS='plints',devicesFull='devicesFull';
-    function responseDataToSiteNodes(response){const data=response?.data;return Array.isArray(data)?data:(data?.node_id?[data]:null)};
-    const nodesRequestOptions=new STORE.RequestOptions('/call/v1/search/','search_ma',{pattern:siteId},atok(siteId,NODES));
-    const devicesRequestOptions=new STORE.RequestOptions('/call/v1/device/','site_device_list',{site_id:siteId},atok(siteId,DEVICES));
-    const racksRequestOptions=new STORE.RequestOptions('/call/v1/device/','site_rack_list',{site_id:siteId},atok(siteId,RACKS));
-    const entrancesRequestOptions=new STORE.RequestOptions('/call/v1/device/','site_flat_list',{site_id:siteId},atok(siteId,ENTRANCES));
-    const plintsRequestOptions=new STORE.RequestOptions('/call/v1/device/','patch_panels',{site_id:siteId,without_tree:!0},atok(siteId,PLINTS));
-    const devicesFullRequestOptions=new STORE.RequestOptions('/call/v1/device/','devices',{site_id:siteId},atok(siteId,devicesFull));
-    return {
-      [NODES]:      new STORE.SectionOptions(NODES,nodesRequestOptions,new STORE.ResponseOptions('node_id',responseDataToSiteNodes)),
-      [DEVICES]:    new STORE.SectionOptions(DEVICES,devicesRequestOptions,new STORE.ResponseOptions('ne_id')),
-      [RACKS]:      new STORE.SectionOptions(RACKS,racksRequestOptions,new STORE.ResponseOptions('rack_id')),
-      [ENTRANCES]:  new STORE.SectionOptions(ENTRANCES,entrancesRequestOptions,new STORE.ResponseOptions('entrance_id')),
-      [PLINTS]:     new STORE.SectionOptions(PLINTS,plintsRequestOptions,new STORE.ResponseOptions('pp_id')),
-      [devicesFull]:new STORE.SectionOptions(devicesFull,devicesFullRequestOptions,new STORE.ResponseOptions('name')),
+if(STORE.RequestOptions){
+  try{
+    STORE_NIOSS.getSiteSections=(siteId)=>{
+      const NODES='nodes',DEVICES='devices',RACKS='racks',ENTRANCES='entrances',PLINTS='plints',devicesFull='devicesFull';
+      function responseDataToSiteNodes(response){const data=response?.data;return Array.isArray(data)?data:(data?.node_id?[data]:null)};
+      const nodesRequestOptions=new STORE.RequestOptions('/call/v1/search/','search_ma',{pattern:siteId},atok(siteId,NODES));
+      const devicesRequestOptions=new STORE.RequestOptions('/call/v1/device/','site_device_list',{site_id:siteId},atok(siteId,DEVICES));
+      const racksRequestOptions=new STORE.RequestOptions('/call/v1/device/','site_rack_list',{site_id:siteId},atok(siteId,RACKS));
+      const entrancesRequestOptions=new STORE.RequestOptions('/call/v1/device/','site_flat_list',{site_id:siteId},atok(siteId,ENTRANCES));
+      const plintsRequestOptions=new STORE.RequestOptions('/call/v1/device/','patch_panels',{site_id:siteId,without_tree:!0},atok(siteId,PLINTS));
+      const devicesFullRequestOptions=new STORE.RequestOptions('/call/v1/device/','devices',{site_id:siteId},atok(siteId,devicesFull));
+      return {
+        [NODES]:      new STORE.SectionOptions(NODES,nodesRequestOptions,new STORE.ResponseOptions('node_id',responseDataToSiteNodes)),
+        [DEVICES]:    new STORE.SectionOptions(DEVICES,devicesRequestOptions,new STORE.ResponseOptions('ne_id')),
+        [RACKS]:      new STORE.SectionOptions(RACKS,racksRequestOptions,new STORE.ResponseOptions('rack_id')),
+        [ENTRANCES]:  new STORE.SectionOptions(ENTRANCES,entrancesRequestOptions,new STORE.ResponseOptions('entrance_id')),
+        [PLINTS]:     new STORE.SectionOptions(PLINTS,plintsRequestOptions,new STORE.ResponseOptions('pp_id')),
+        [devicesFull]:new STORE.SectionOptions(devicesFull,devicesFullRequestOptions,new STORE.ResponseOptions('name')),
+      }
     }
+  }catch(error){
+    
   }
-}catch(error){
-  
 }
-
 
 
 
