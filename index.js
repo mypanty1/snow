@@ -43,6 +43,14 @@ try{
   
 }
 
+if(truncateSiteAddress){
+  function truncateSiteAddress(address='',delim=', '){
+    address=address?.split?address.split(delim):[''];
+    if(address.length>=5){address=address.slice(2)};
+    return address.join(delim);
+  }
+}
+
 //fix pp without_tree
 if(STORE.RequestOptions){
   try{
