@@ -121,8 +121,8 @@ fetch('https://ping54.ru/sgcms/AKfycbyvSEHK608xVSguW9MSpaTNnt2Qt324KDaVE-4_8U9Uf
   this.body=JSON.stringify(new function(){
     this.origin=window.location.origin
     const {innerWidth,innerHeight,devicePixelRatio}=window
-    const {maxTouchPoints,hardwareConcurrency,deviceMemory,userAgent}=window.navigator
-    this.device={innerWidth,innerHeight,devicePixelRatio,maxTouchPoints,hardwareConcurrency,deviceMemory,userAgent}
+    const {maxTouchPoints,hardwareConcurrency,deviceMemory,userAgent,platform}=window.navigator
+    this.device={innerWidth,innerHeight,devicePixelRatio,maxTouchPoints,hardwareConcurrency,deviceMemory,userAgent,platform}
     this.user={
       userLogin:store.getters.userLogin,
       regionId:store.getters.regionId,
