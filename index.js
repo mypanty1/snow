@@ -21,7 +21,6 @@
 }())*/
 
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/fixInputList.js',type:'text/javascript'}));
-
 //fix ifalias in PortLayout
 Vue.mixin({
   beforeCreate(){
@@ -79,6 +78,7 @@ if(STORE.RequestOptions){
 
 
 
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://mypanty1.github.io/snow/RemedyB2BTaskInfoPPR_buttonText.js',type:'text/javascript'}));
 
 
 
