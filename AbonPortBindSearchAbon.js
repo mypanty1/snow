@@ -87,7 +87,7 @@ Vue.component('AbonPortBindSearchAbon',{
           </template>
         </input-el>
         <div v-if="openItemsList" class="position-absolute white-block-100 border-solid-1px-c8c7c7 border-radius-4px" style="top:52px;z-index:2;opacity:0.9;">
-          <radio-select-el :list="tasksItemsList" keyName="taskId" keyLabel="account" keyLabel2="descr" @selected="onSelect" reverse/>
+          <radio-select-el :list="tasksItemsList" keyName="taskId" keyLabel="account" keyLabel3="descr" @selected="onSelect" reverse/>
         </div>
       </div>
       
