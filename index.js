@@ -21,59 +21,59 @@
 }())*/
 
 //fix ifalias in PortLayout
-Vue.mixin({
-  beforeCreate(){
-    if(this.$options.name!=='PortLayout'){return}
-    this.$options.computed.ifAlias=function(){
-      const ifAlias = this.resps?.getPortLink?.if_alias;
-      if (!ifAlias) return ''
-      const ifName = this.resps?.getPortLink?.iface || this.port?.snmp_name;
-      return (/^HUAWEI,\s/.test(ifAlias) || (ifAlias).includes(ifName)) ? '' : ifAlias;
-    };
-  },
-});
+// Vue.mixin({
+//   beforeCreate(){
+//     if(this.$options.name!=='PortLayout'){return}
+//     this.$options.computed.ifAlias=function(){
+//       const ifAlias = this.resps?.getPortLink?.if_alias;
+//       if (!ifAlias) return ''
+//       const ifName = this.resps?.getPortLink?.iface || this.port?.snmp_name;
+//       return (/^HUAWEI,\s/.test(ifAlias) || (ifAlias).includes(ifName)) ? '' : ifAlias;
+//     };
+//   },
+// });
 
 
-try{
-  ENGINEER_TASKS.lists.B2C_WFM_old.taskStatusesItemsList=ENGINEER_TASKS.lists.B2C_WFM_old.taskStatusesItemsList.map(s=>({...s,statusName:s.name}));
-  ENGINEER_TASKS.b2cEngineerListsItems.B2C_WFM_old.taskStatusesItemsList=ENGINEER_TASKS.b2cEngineerListsItems.B2C_WFM_old.taskStatusesItemsList.map(s=>({...s,statusName:s.name}));
-}catch(error){
+// try{
+//   ENGINEER_TASKS.lists.B2C_WFM_old.taskStatusesItemsList=ENGINEER_TASKS.lists.B2C_WFM_old.taskStatusesItemsList.map(s=>({...s,statusName:s.name}));
+//   ENGINEER_TASKS.b2cEngineerListsItems.B2C_WFM_old.taskStatusesItemsList=ENGINEER_TASKS.b2cEngineerListsItems.B2C_WFM_old.taskStatusesItemsList.map(s=>({...s,statusName:s.name}));
+// }catch(error){
   
-}
+// }
 
-if(truncateSiteAddress){
-  function truncateSiteAddress(address='',delim=', '){
-    address=address?.split?address.split(delim):[''];
-    if(address.length>=5){address=address.slice(2)};
-    return address.join(delim);
-  }
-}
+// if(truncateSiteAddress){
+//   function truncateSiteAddress(address='',delim=', '){
+//     address=address?.split?address.split(delim):[''];
+//     if(address.length>=5){address=address.slice(2)};
+//     return address.join(delim);
+//   }
+// }
 
-//fix pp without_tree
-if(STORE.RequestOptions){
-  try{
-    STORE_NIOSS.getSiteSections=(siteId)=>{
-      const NODES='nodes',DEVICES='devices',RACKS='racks',ENTRANCES='entrances',PLINTS='plints',devicesFull='devicesFull';
-      function responseDataToSiteNodes(response){const data=response?.data;return Array.isArray(data)?data:(data?.node_id?[data]:null)};
-      const nodesRequestOptions=new STORE.RequestOptions('/call/v1/search/','search_ma',{pattern:siteId},atok(siteId,NODES));
-      const devicesRequestOptions=new STORE.RequestOptions('/call/v1/device/','site_device_list',{site_id:siteId},atok(siteId,DEVICES));
-      const racksRequestOptions=new STORE.RequestOptions('/call/v1/device/','site_rack_list',{site_id:siteId},atok(siteId,RACKS));
-      const entrancesRequestOptions=new STORE.RequestOptions('/call/v1/device/','site_flat_list',{site_id:siteId},atok(siteId,ENTRANCES));
-      const plintsRequestOptions=new STORE.RequestOptions('/call/v1/device/','patch_panels',{site_id:siteId,without_tree:!0},atok(siteId,PLINTS));
-      const devicesFullRequestOptions=new STORE.RequestOptions('/call/v1/device/','devices',{site_id:siteId},atok(siteId,devicesFull));
-      return {
-        [NODES]:      new STORE.SectionOptions(NODES,nodesRequestOptions,new STORE.ResponseOptions('node_id',responseDataToSiteNodes)),
-        [DEVICES]:    new STORE.SectionOptions(DEVICES,devicesRequestOptions,new STORE.ResponseOptions('ne_id')),
-        [RACKS]:      new STORE.SectionOptions(RACKS,racksRequestOptions,new STORE.ResponseOptions('rack_id')),
-        [ENTRANCES]:  new STORE.SectionOptions(ENTRANCES,entrancesRequestOptions,new STORE.ResponseOptions('entrance_id')),
-        [PLINTS]:     new STORE.SectionOptions(PLINTS,plintsRequestOptions,new STORE.ResponseOptions('pp_id')),
-        [devicesFull]:new STORE.SectionOptions(devicesFull,devicesFullRequestOptions,new STORE.ResponseOptions('name')),
-      }
-    }
-  }catch(error){
+// //fix pp without_tree
+// if(STORE.RequestOptions){
+//   try{
+//     STORE_NIOSS.getSiteSections=(siteId)=>{
+//       const NODES='nodes',DEVICES='devices',RACKS='racks',ENTRANCES='entrances',PLINTS='plints',devicesFull='devicesFull';
+//       function responseDataToSiteNodes(response){const data=response?.data;return Array.isArray(data)?data:(data?.node_id?[data]:null)};
+//       const nodesRequestOptions=new STORE.RequestOptions('/call/v1/search/','search_ma',{pattern:siteId},atok(siteId,NODES));
+//       const devicesRequestOptions=new STORE.RequestOptions('/call/v1/device/','site_device_list',{site_id:siteId},atok(siteId,DEVICES));
+//       const racksRequestOptions=new STORE.RequestOptions('/call/v1/device/','site_rack_list',{site_id:siteId},atok(siteId,RACKS));
+//       const entrancesRequestOptions=new STORE.RequestOptions('/call/v1/device/','site_flat_list',{site_id:siteId},atok(siteId,ENTRANCES));
+//       const plintsRequestOptions=new STORE.RequestOptions('/call/v1/device/','patch_panels',{site_id:siteId,without_tree:!0},atok(siteId,PLINTS));
+//       const devicesFullRequestOptions=new STORE.RequestOptions('/call/v1/device/','devices',{site_id:siteId},atok(siteId,devicesFull));
+//       return {
+//         [NODES]:      new STORE.SectionOptions(NODES,nodesRequestOptions,new STORE.ResponseOptions('node_id',responseDataToSiteNodes)),
+//         [DEVICES]:    new STORE.SectionOptions(DEVICES,devicesRequestOptions,new STORE.ResponseOptions('ne_id')),
+//         [RACKS]:      new STORE.SectionOptions(RACKS,racksRequestOptions,new STORE.ResponseOptions('rack_id')),
+//         [ENTRANCES]:  new STORE.SectionOptions(ENTRANCES,entrancesRequestOptions,new STORE.ResponseOptions('entrance_id')),
+//         [PLINTS]:     new STORE.SectionOptions(PLINTS,plintsRequestOptions,new STORE.ResponseOptions('pp_id')),
+//         [devicesFull]:new STORE.SectionOptions(devicesFull,devicesFullRequestOptions,new STORE.ResponseOptions('name')),
+//       }
+//     }
+//   }catch(error){
     
-  }
-}
+//   }
+// }
 
 
 
