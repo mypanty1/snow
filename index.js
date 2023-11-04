@@ -33,6 +33,23 @@
 //   },
 // });
 
+//fix task toMap
+Vue.mixin({
+  beforeCreate(){
+    if(!['task-main-account-2','task-main-incident','task-main-works'].includes(this.$options.name)){return};
+    this.$options.methods.toMap=function(){
+      if(!this.site){return};
+      this.$router.push({
+        name:'map',
+        query:{
+          lat:this.site?.coordinates?.latitude,
+          lon:this.site?.coordinates?.longitude,
+        },
+      });
+    };
+  },
+});
+
 
 // try{
 //   ENGINEER_TASKS.lists.B2C_WFM_old.taskStatusesItemsList=ENGINEER_TASKS.lists.B2C_WFM_old.taskStatusesItemsList.map(s=>({...s,statusName:s.name}));
