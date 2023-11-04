@@ -38,13 +38,49 @@ Vue.mixin({
   beforeCreate(){
     if(!['task-main-account-2','task-main-incident','task-main-works'].includes(this.$options.name)){return};
     this.$options.methods.toMap=function(){
-      if(!this.site){return};
-      this.$router.push({
-        name:'map',
-        query:{
-          lat:this.site?.coordinates?.latitude,
-          lon:this.site?.coordinates?.longitude,
-        },
+      const {site}=this;if(!site?.coordinates){return};
+      const {latitude:lat,longitude:lon}=site.coordinates
+      this.$router.push({name:'map',query:{lat,lon}});
+    };
+  },
+});
+
+//fix MapPage
+Vue.mixin({
+  beforeCreate(){
+    if(!['MapPage'].includes(this.$options.name)){return};
+    this.$options.methods.init=function(){
+      this.start_init=true;
+      const mapContainer=document.getElementById('mapContainer');
+      mapContainer.innerHTML='';
+      window.ymaps.ready(()=>{
+        console.log('Map ready');
+        this.map=new Maps(mapContainer,document.getElementById('searchInputSuggest'),this);
+        this.map.beforeSelect=function(){
+          console.log('map::beforeSelect');
+        };
+        this.map.onSelect=function(currentCoords){
+          console.log('map::onSelect',currentCoords);
+        };
+        const self=this;
+        this.map.onChange=function(currentCoords){
+          self.$store.dispatch('main/doBackupCoords',currentCoords);
+          console.log('map::onChange',currentCoords);
+        };
+        const {lat:lat1=null,lon:lon1=null}=this.$route.query;
+        const {lat:lat2=null,lon:lon2=null}=this.$route.params;
+        if(lat1&&lon1){
+          this.map.setCenter([lat1,lon1],18);
+        }else if(lat2&&lon2){
+          this.map.setCenter([lat2,lon2],18);
+        }else{
+          const backupCoords=this.$store.getters['main/backupCoords'];
+          if(backupCoords){
+            this.map.setCenter(backupCoords,18);
+          }else{
+            this.map.centerGeolocation();
+          }
+        }
       });
     };
   },
