@@ -141,7 +141,7 @@ Vue.component('AbonPortBindSearchAbon',{
         return list;
       },[]);
     },
-    hasItems(){return Boolean(this.taskItemsList.length)},
+    hasItems(){return Boolean(this.tasksItemsList.length)},
   },
   methods:{
     clear(){
